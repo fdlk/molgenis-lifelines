@@ -18,7 +18,7 @@ import org.apache.http.params.HttpParams;
 import org.molgenis.DatabaseConfig;
 import org.molgenis.dataexplorer.config.DataExplorerConfig;
 import org.molgenis.elasticsearch.config.EmbeddedElasticSearchConfig;
-import org.molgenis.lifelines.catalogue.CatalogLoaderController;
+import org.molgenis.lifelines.catalog.CatalogLoaderController;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
 import org.molgenis.lifelines.studydefinition.StudyDefinitionLoaderController;
 import org.molgenis.lifelines.utils.GenericLayerDataBinder;

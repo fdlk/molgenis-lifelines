@@ -1,4 +1,4 @@
-package org.molgenis.lifelines.catalogue;
+package org.molgenis.lifelines.catalog;
 
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -13,6 +13,9 @@ import java.util.List;
 import org.mockito.Mockito;
 import org.molgenis.framework.db.DatabaseException;
 import org.molgenis.mock.MockDatabase;
+import org.molgenis.omx.catalog.CatalogInfo;
+import org.molgenis.omx.catalog.CatalogLoaderService;
+import org.molgenis.omx.catalog.UnknownCatalogException;
 import org.molgenis.util.Entity;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;

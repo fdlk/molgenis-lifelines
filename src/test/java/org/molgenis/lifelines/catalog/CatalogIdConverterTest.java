@@ -1,7 +1,8 @@
-package org.molgenis.lifelines.catalogue;
+package org.molgenis.lifelines.catalog;
 
 import static org.testng.Assert.assertEquals;
 
+import org.molgenis.lifelines.catalog.CatalogIdConverter;
 import org.testng.annotations.Test;
 
 public class CatalogIdConverterTest

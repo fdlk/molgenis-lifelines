@@ -24,9 +24,9 @@ import org.molgenis.atom.FeedType;
 import org.molgenis.hl7.ObjectFactory;
 import org.molgenis.hl7.POQMMT000001UVQualityMeasureDocument;
 import org.molgenis.hl7.ST;
-import org.molgenis.lifelines.catalogue.CatalogInfo;
 import org.molgenis.lifelines.utils.GenericLayerDataBinder;
 import org.molgenis.lifelines.utils.OutputStreamHttpEntity;
+import org.molgenis.omx.catalog.CatalogInfo;
 import org.molgenis.omx.study.StudyDefinitionInfo;
 import org.w3c.dom.Node;
 
