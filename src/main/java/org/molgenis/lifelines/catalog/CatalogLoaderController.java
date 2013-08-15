@@ -1,4 +1,4 @@
-package org.molgenis.lifelines.catalogue;
+package org.molgenis.lifelines.catalog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,13 +8,20 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.log4j.Logger;
 import org.molgenis.framework.db.Database;
 import org.molgenis.framework.db.DatabaseException;
+import org.molgenis.omx.catalog.CatalogInfo;
+import org.molgenis.omx.catalog.CatalogLoaderService;
+import org.molgenis.omx.catalog.CatalogPreview;
+import org.molgenis.omx.catalog.UnknownCatalogException;
 import org.molgenis.omx.observ.Characteristic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  * Controller for showing available catalogs and loading a specific catalog
@@ -121,6 +128,14 @@ public class CatalogLoaderController
 		}
 
 		return listCatalogs(model);
+	}
+
+	@RequestMapping(value = "/preview/{id}", method = RequestMethod.GET)
+	@ResponseBody
+	public CatalogPreview previewCatalog(@PathVariable
+	String id) throws UnknownCatalogException
+	{
+		return catalogLoaderService.getCatalogPreview(id);
 	}
 
 	@ExceptionHandler(Exception.class)

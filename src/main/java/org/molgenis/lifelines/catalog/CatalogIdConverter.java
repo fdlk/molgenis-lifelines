@@ -1,4 +1,4 @@
-package org.molgenis.lifelines.catalogue;
+package org.molgenis.lifelines.catalog;
 
 /**
  * Helper class to convert a omx catalog identifier to a LL catalogue id and vice versa. Prefix is used to prevent

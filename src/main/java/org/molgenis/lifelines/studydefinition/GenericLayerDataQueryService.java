@@ -30,7 +30,7 @@ import org.molgenis.hl7.REPCMT000400UV01ActCategory;
 import org.molgenis.hl7.REPCMT000400UV01Component4;
 import org.molgenis.hl7.ST;
 import org.molgenis.hl7.TS;
-import org.molgenis.lifelines.catalogue.CatalogIdConverter;
+import org.molgenis.lifelines.catalog.CatalogIdConverter;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
 import org.molgenis.lifelines.utils.GenericLayerDataBinder;
 import org.molgenis.lifelines.utils.OmxIdentifierGenerator;

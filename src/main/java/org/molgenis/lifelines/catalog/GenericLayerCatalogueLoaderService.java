@@ -1,4 +1,4 @@
-package org.molgenis.lifelines.catalogue;
+package org.molgenis.lifelines.catalog;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +31,11 @@ import org.molgenis.hl7.ValueSets.ValueSet.Code;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
 import org.molgenis.lifelines.utils.HL7DataTypeMapper;
 import org.molgenis.lifelines.utils.OmxIdentifierGenerator;
+import org.molgenis.omx.catalog.CatalogInfo;
+import org.molgenis.omx.catalog.CatalogLoaderService;
+import org.molgenis.omx.catalog.CatalogPreview;
+import org.molgenis.omx.catalog.CatalogPreview.CatalogPreviewNode;
+import org.molgenis.omx.catalog.UnknownCatalogException;
 import org.molgenis.omx.observ.Category;
 import org.molgenis.omx.observ.DataSet;
 import org.molgenis.omx.observ.ObservableFeature;
@@ -85,6 +90,78 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 	}
 
 	@Override
+	public CatalogPreview getCatalogPreview(String id) throws UnknownCatalogException
+	{
+		// retrieve catalog data from LifeLines Generic Layer catalog service
+		REPCMT000100UV01Organizer catalog = retrieveCatalog(id);
+
+		CatalogPreview catalogPreview = new CatalogPreview();
+
+		CatalogPreviewNode root = new CatalogPreviewNode();
+		for (REPCMT000100UV01Component3 rootComponent : catalog.getComponent())
+			createCatalogPreviewNode(rootComponent, root);
+		catalogPreview.setRoot(root);
+
+		return catalogPreview;
+	}
+
+	@Override
+	public CatalogPreview getCatalogOfStudyDefinitionPreview(String id) throws UnknownCatalogException
+	{
+		// retrieve catalog data from LifeLines Generic Layer catalog service
+		REPCMT000100UV01Organizer catalog = retrieveCatalogOfStudyDefinition(id);
+
+		CatalogPreview catalogPreview = new CatalogPreview();
+
+		CatalogPreviewNode root = new CatalogPreviewNode();
+		for (REPCMT000100UV01Component3 rootComponent : catalog.getComponent())
+			createCatalogPreviewNode(rootComponent, root);
+		catalogPreview.setRoot(root);
+
+		return catalogPreview;
+	}
+
+	private void createCatalogPreviewNode(REPCMT000100UV01Component3 component, CatalogPreviewNode node)
+	{
+		// parse feature
+		if (component.getObservation() != null)
+		{
+			REPCMT000100UV01Observation observation = component.getObservation().getValue();
+			CD observationCode = observation.getCode();
+
+			String observationName = observationCode.getDisplayName();
+			if (observationName == null)
+			{
+				logger.warn("observation does not have a display name '" + observationCode.getCode() + "'");
+				observationName = observationCode.getCode();
+			}
+			node.addItem(observationName);
+		}
+
+		// parse sub-protocol
+		if (component.getOrganizer() != null)
+		{
+			REPCMT000100UV01Organizer organizer = component.getOrganizer().getValue();
+			CD organizerCode = organizer.getCode();
+
+			String organizerName = organizerCode.getDisplayName();
+			if (organizerName == null)
+			{
+				logger.warn("organizer does not have a display name '" + organizerCode.getCode() + "'");
+				organizerName = organizerCode.getCode();
+			}
+
+			// recurse over nested protocols
+			CatalogPreviewNode childNode = new CatalogPreviewNode();
+			childNode.setName(organizerName);
+
+			for (REPCMT000100UV01Component3 subComponent : organizer.getComponent())
+				createCatalogPreviewNode(subComponent, childNode);
+			node.addChild(childNode);
+		}
+	}
+
+	@Override
 	public void loadCatalog(String id) throws UnknownCatalogException
 	{
 		try
@@ -92,7 +169,7 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 			database.beginTx();
 
 			// retrieve catalog data from LifeLines Generic Layer catalog service
-			GetCatalogResult catalogResult = genericLayerCatalogService.getCatalog(id, null);
+			REPCMT000100UV01Organizer catalog = retrieveCatalog(id);
 
 			// convert to MOLGENIS OMX model and add to database
 			DataSet dataSet = new DataSet();
@@ -105,7 +182,7 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 
 			dataSet.setProtocolUsed(rootProtocol);
 
-			Map<String, String> valueSetMap = parseCatalog(dataSet, rootProtocol, catalogResult);
+			Map<String, String> valueSetMap = parseCatalog(dataSet, rootProtocol, catalog);
 
 			database.add(rootProtocol);
 			database.add(dataSet);
@@ -138,7 +215,7 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 			database.beginTx();
 
 			// retrieve catalog data from LifeLines Generic Layer catalog service
-			GetCatalogResult catalogResult = genericLayerCatalogService.getCatalog(null, id);
+			REPCMT000100UV01Organizer catalog = retrieveCatalogOfStudyDefinition(id);
 
 			// convert to MOLGENIS OMX model and add to database
 			DataSet dataSet = new DataSet();
@@ -153,7 +230,7 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 
 			// FIXME add patient protocol/features
 
-			Map<String, String> valueSetMap = parseCatalog(dataSet, rootProtocol, catalogResult);
+			Map<String, String> valueSetMap = parseCatalog(dataSet, rootProtocol, catalog);
 
 			database.add(rootProtocol);
 			database.add(dataSet);
@@ -233,9 +310,10 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 		}
 	}
 
-	private Map<String, String> parseCatalog(DataSet dataSet, Protocol rootProtocol, GetCatalogResult catalogResult)
-			throws DatabaseException
+	private REPCMT000100UV01Organizer retrieveCatalog(String id)
 	{
+		// retrieve catalog data from LifeLines Generic Layer catalog service
+		GetCatalogResult catalogResult = genericLayerCatalogService.getCatalog(id, null);
 
 		// convert to HL7 organizer
 		REPCMT000100UV01Organizer catalog;
@@ -249,6 +327,32 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 			throw new RuntimeException(e);
 		}
 
+		return catalog;
+	}
+
+	private REPCMT000100UV01Organizer retrieveCatalogOfStudyDefinition(String id)
+	{
+		// retrieve catalog data from LifeLines Generic Layer catalog service
+		GetCatalogResult catalogResult = genericLayerCatalogService.getCatalog(null, id);
+
+		// convert to HL7 organizer
+		REPCMT000100UV01Organizer catalog;
+		try
+		{
+			Unmarshaller um = JAXB_CONTEXT_ORGANIZER.createUnmarshaller();
+			catalog = um.unmarshal((Node) catalogResult.getAny(), REPCMT000100UV01Organizer.class).getValue();
+		}
+		catch (JAXBException e)
+		{
+			throw new RuntimeException(e);
+		}
+
+		return catalog;
+	}
+
+	private Map<String, String> parseCatalog(DataSet dataSet, Protocol rootProtocol, REPCMT000100UV01Organizer catalog)
+			throws DatabaseException
+	{
 		Map<String, String> featureMap = new HashMap<String, String>();
 		OntologyIndex ontologyIndex = new OntologyIndex();
 

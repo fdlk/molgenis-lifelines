@@ -6,7 +6,10 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.molgenis.framework.db.Database;
 import org.molgenis.framework.db.DatabaseException;
-import org.molgenis.lifelines.catalogue.CatalogIdConverter;
+import org.molgenis.lifelines.catalog.CatalogIdConverter;
+import org.molgenis.omx.catalog.CatalogLoaderService;
+import org.molgenis.omx.catalog.CatalogPreview;
+import org.molgenis.omx.catalog.UnknownCatalogException;
 import org.molgenis.omx.observ.Characteristic;
 import org.molgenis.omx.study.StudyDefinitionInfo;
 import org.molgenis.omx.study.StudyDefinitionService;
@@ -14,8 +17,11 @@ import org.molgenis.omx.study.UnknownStudyDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequestMapping(StudyDefinitionLoaderController.BASE_URL)
@@ -29,14 +35,18 @@ public class StudyDefinitionLoaderController
 	private static final Logger LOG = Logger.getLogger(StudyDefinitionLoaderController.class);
 	private final Database database;
 	private final StudyDefinitionService studyDefinitionService;
+	private final CatalogLoaderService catalogLoaderService;
 
 	@Autowired
-	public StudyDefinitionLoaderController(Database database, StudyDefinitionService studyDefinitionService)
+	public StudyDefinitionLoaderController(Database database, StudyDefinitionService studyDefinitionService,
+			CatalogLoaderService catalogLoaderService)
 	{
 		if (database == null) throw new IllegalArgumentException("database is null");
 		if (studyDefinitionService == null) throw new IllegalArgumentException("study definition service is null");
+		if (catalogLoaderService == null) throw new IllegalArgumentException("catalog loader service is null");
 		this.database = database;
 		this.studyDefinitionService = studyDefinitionService;
+		this.catalogLoaderService = catalogLoaderService;
 	}
 
 	/**
@@ -81,6 +91,14 @@ public class StudyDefinitionLoaderController
 		model.addAttribute("studyDefinitions", models);
 
 		return VIEW_NAME;
+	}
+
+	@RequestMapping(value = "/preview/{id}", method = RequestMethod.GET)
+	@ResponseBody
+	public CatalogPreview previewStudyDefinition(@PathVariable
+	String id) throws UnknownCatalogException
+	{
+		return catalogLoaderService.getCatalogOfStudyDefinitionPreview(id);
 	}
 
 	/**

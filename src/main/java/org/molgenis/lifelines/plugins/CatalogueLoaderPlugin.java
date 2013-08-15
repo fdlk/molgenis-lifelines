@@ -2,7 +2,7 @@ package org.molgenis.lifelines.plugins;
 
 import org.molgenis.framework.ui.IframePlugin;
 import org.molgenis.framework.ui.ScreenController;
-import org.molgenis.lifelines.catalogue.CatalogLoaderController;
+import org.molgenis.lifelines.catalog.CatalogLoaderController;
 
 /**
  * CatalogueLoader plugin.

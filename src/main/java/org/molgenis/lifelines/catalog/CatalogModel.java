@@ -1,4 +1,4 @@
-package org.molgenis.lifelines.catalogue;
+package org.molgenis.lifelines.catalog;
 
 public class CatalogModel
 {
