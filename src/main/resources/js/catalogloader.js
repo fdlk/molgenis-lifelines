@@ -25,12 +25,14 @@
 			if (treeContainer.children('ul').length > 0)
 				treeContainer.dynatree('destroy');
 			treeContainer.empty();
+			treeContainer.html('Loading preview ...');
 			
 			// create new tree
 			var catalogId = $('#catalogForm input[type="radio"]:checked').val();
 			$.get('/plugin/catalog/preview/' + catalogId, function(data) {
 				var nodes = [];
 				createTreeConfig(data.root, nodes);
+				treeContainer.empty();
 				treeContainer.dynatree({'minExpandLevel': 2, 'children': nodes});
 			});
 		});

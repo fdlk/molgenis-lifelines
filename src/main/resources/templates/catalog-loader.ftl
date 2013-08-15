@@ -19,7 +19,6 @@
 				parent.hideSpinner();
 				
 				$('#catalogForm').submit(function() {
-					$('#submitButton').attr("disabled", "disabled");
 					parent.showSpinner(); 
 					return true;
 				});
@@ -56,26 +55,24 @@
 										<div id="resultsTable">
 											<table class="table table-striped table-hover listtable selection-table">
 												<thead>
-													<th></th>
-													<th>Id</th>
-													<th>Name</th>
+													<tr>
+														<th></th>
+														<th>Id</th>
+														<th>Name</th>
+													</tr>
 												</thead>
 											<#assign foundCatalog = false>
 												<tbody>
 											<#list catalogs as catalog>
 												<tr>
 													<td class="listEntryRadio">
-														<#if catalog.loaded>
-															LOADED
-														<#else>
-															<input id="catalog_${catalog.id}" type="radio" name="id" value="${catalog.id}" <#if !foundCatalog>checked<#assign foundCatalog = true></#if> >
-														</#if>
+														<input id="catalog_${catalog.id}" type="radio" name="id" value="${catalog.id}" <#if !foundCatalog>checked<#assign foundCatalog = true></#if> >
 													</td>
 													<td class="listEntryId">
 														<label for="catalog_${catalog.id}">${catalog.id}</label>
 													</td>
 													<td>
-														<label for="catalog_${catalog.id}">${catalog.name}</label>
+														<label for="catalog_${catalog.id}">${catalog.name}<#if catalog.loaded><input type="submit" name="unload" class="btn btn-small pull-right" value="Unload" /></#if></label>
 													</td>
 												</tr>
 											</#list>
@@ -91,7 +88,7 @@
 									</div>
 								</div>
 							<#if foundCatalog>
-								<input id="submitButton" type="submit" class="btn pull-right" value="Load" />
+								<input type="submit" name="load" class="btn pull-right" value="Load" />
 							</#if>
 							</form>
 						</#if>

@@ -56,9 +56,11 @@
 										<div id="resultsTable">
 											<table class="table table-striped table-hover listtable selection-table">
 												<thead>
-													<th></th>
-													<th>Id</th>
-													<th>Name</th>
+													<tr>
+														<th></th>
+														<th>Id</th>
+														<th>Name</th>
+													</tr>
 												</thead>
 												<#assign foundStudyDefinition = false>
 												<tbody>

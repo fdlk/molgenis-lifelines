@@ -33,12 +33,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping(CatalogLoaderController.BASE_URL)
 public class CatalogLoaderController
 {
+	private static final Logger LOG = Logger.getLogger(CatalogLoaderController.class);
+
 	public static final String BASE_URL = "/plugin/catalog";
 	public static final String LIST_URI = "/list";
 	public static final String LOAD_LIST_URI = "/load-list";
 	public static final String LOAD_URI = "/load";
 	public static final String VIEW_NAME = "catalog-loader";
-	private static final Logger LOG = Logger.getLogger(CatalogLoaderController.class);
+
 	private final CatalogLoaderService catalogLoaderService;
 	private final Database database;
 
@@ -46,7 +48,7 @@ public class CatalogLoaderController
 	public CatalogLoaderController(CatalogLoaderService catalogLoaderService, Database database)
 	{
 		if (catalogLoaderService == null) throw new IllegalArgumentException("CatalogLoaderService is null");
-		if (database == null) throw new IllegalArgumentException("Database id null");
+		if (database == null) throw new IllegalArgumentException("Database is null");
 		this.catalogLoaderService = catalogLoaderService;
 		this.database = database;
 	}
@@ -105,7 +107,7 @@ public class CatalogLoaderController
 	 * @return
 	 * @throws DatabaseException
 	 */
-	@RequestMapping(LOAD_URI)
+	@RequestMapping(value = LOAD_URI, params = "load", method = RequestMethod.POST)
 	public String loadCatalog(@RequestParam(value = "id", required = false)
 	String id, Model model) throws DatabaseException
 	{
@@ -116,6 +118,31 @@ public class CatalogLoaderController
 				catalogLoaderService.loadCatalog(id);
 				model.addAttribute("successMessage", "Catalog loaded");
 				LOG.info("Loaded catalog with id [" + id + "]");
+			}
+			else
+			{
+				model.addAttribute("errorMessage", "Please select a catalogue");
+			}
+		}
+		catch (UnknownCatalogException e)
+		{
+			model.addAttribute("errorMessage", e.getMessage());
+		}
+
+		return listCatalogs(model);
+	}
+
+	@RequestMapping(value = LOAD_URI, params = "unload", method = RequestMethod.POST)
+	public String unloadCatalog(@RequestParam(value = "id", required = false)
+	String id, Model model) throws DatabaseException
+	{
+		try
+		{
+			if (id != null)
+			{
+				catalogLoaderService.unloadCatalog(id);
+				model.addAttribute("successMessage", "Catalog unloaded");
+				LOG.info("Unloaded catalog with id [" + id + "]");
 			}
 			else
 			{

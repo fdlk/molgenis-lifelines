@@ -25,6 +25,7 @@
 			if (treeContainer.children('ul').length > 0)
 				treeContainer.dynatree('destroy');
 			treeContainer.empty();
+			treeContainer.html('Loading preview ...');
 			
 			// create new tree
 			
@@ -32,6 +33,7 @@
 			$.get('/plugin/studydefinition/preview/' + catalogOfStudyDefinitionId, function(data) {
 				var nodes = [];
 				createTreeConfig(data.root, nodes);
+				treeContainer.empty();
 				treeContainer.dynatree({'minExpandLevel': 2, 'children': nodes});
 			});
 		});
