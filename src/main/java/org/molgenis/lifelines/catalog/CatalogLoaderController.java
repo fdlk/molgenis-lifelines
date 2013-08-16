@@ -14,6 +14,7 @@ import org.molgenis.omx.catalog.CatalogPreview;
 import org.molgenis.omx.catalog.UnknownCatalogException;
 import org.molgenis.omx.observ.Characteristic;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * Controller for showing available catalogs and loading a specific catalog
@@ -36,9 +38,6 @@ public class CatalogLoaderController
 	private static final Logger LOG = Logger.getLogger(CatalogLoaderController.class);
 
 	public static final String BASE_URL = "/plugin/catalog";
-	public static final String LIST_URI = "/list";
-	public static final String LOAD_LIST_URI = "/load-list";
-	public static final String LOAD_URI = "/load";
 	public static final String VIEW_NAME = "catalog-loader";
 
 	private final CatalogLoaderService catalogLoaderService;
@@ -54,19 +53,6 @@ public class CatalogLoaderController
 	}
 
 	/**
-	 * Shows a loading spinner in the iframe and loads the catalogs list page
-	 * 
-	 * @param model
-	 * @return
-	 */
-	@RequestMapping(LOAD_LIST_URI)
-	public String showSpinner(Model model)
-	{
-		model.addAttribute("url", BASE_URL + LIST_URI);
-		return "spinner";
-	}
-
-	/**
 	 * Show the available catalogs.
 	 * 
 	 * Catalogs are exposed via a 'catalogs' model attribute that contains a list of CatalogModel objects.
@@ -75,7 +61,7 @@ public class CatalogLoaderController
 	 * @return
 	 * @throws DatabaseException
 	 */
-	@RequestMapping(LIST_URI)
+	@RequestMapping(value = "/list", method = RequestMethod.GET)
 	public String listCatalogs(Model model) throws DatabaseException
 	{
 		List<CatalogInfo> catalogs = catalogLoaderService.findCatalogs();
@@ -84,9 +70,7 @@ public class CatalogLoaderController
 		List<CatalogModel> models = new ArrayList<CatalogModel>(catalogs.size());
 		for (CatalogInfo catalog : catalogs)
 		{
-			String identifier = CatalogIdConverter.catalogIdToOmxIdentifier(catalog.getId());
-			Characteristic dataset = Characteristic.findByIdentifier(database, identifier);
-			boolean catalogLoaded = dataset != null;
+			boolean catalogLoaded = isCatalogLoaded(catalog.getId());
 			models.add(new CatalogModel(catalog.getId(), catalog.getName(), catalogLoaded));
 		}
 
@@ -107,7 +91,7 @@ public class CatalogLoaderController
 	 * @return
 	 * @throws DatabaseException
 	 */
-	@RequestMapping(value = LOAD_URI, params = "load", method = RequestMethod.POST)
+	@RequestMapping(value = "/load", params = "load", method = RequestMethod.POST)
 	public String loadCatalog(@RequestParam(value = "id", required = false)
 	String id, Model model) throws DatabaseException
 	{
@@ -132,7 +116,7 @@ public class CatalogLoaderController
 		return listCatalogs(model);
 	}
 
-	@RequestMapping(value = LOAD_URI, params = "unload", method = RequestMethod.POST)
+	@RequestMapping(value = "/load", params = "unload", method = RequestMethod.POST)
 	public String unloadCatalog(@RequestParam(value = "id", required = false)
 	String id, Model model) throws DatabaseException
 	{
@@ -140,9 +124,16 @@ public class CatalogLoaderController
 		{
 			if (id != null)
 			{
-				catalogLoaderService.unloadCatalog(id);
-				model.addAttribute("successMessage", "Catalog unloaded");
-				LOG.info("Unloaded catalog with id [" + id + "]");
+				if (isCatalogLoaded(id))
+				{
+					catalogLoaderService.unloadCatalog(id);
+					model.addAttribute("successMessage", "Catalog unloaded");
+					LOG.info("Unloaded catalog with id [" + id + "]");
+				}
+				else
+				{
+					model.addAttribute("errorMessage", "Catalog not loaded");
+				}
 			}
 			else
 			{
@@ -174,5 +165,18 @@ public class CatalogLoaderController
 				"An error occured. Please contact the administrator.<br />Message:" + e.getMessage());
 
 		return VIEW_NAME;
+	}
+
+	@ExceptionHandler(UnknownCatalogException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public void handleUnknownCatalogException()
+	{
+	}
+
+	boolean isCatalogLoaded(String id) throws DatabaseException
+	{
+		String identifier = CatalogIdConverter.catalogIdToOmxIdentifier(id);
+		Characteristic dataset = Characteristic.findByIdentifier(database, identifier);
+		return dataset != null;
 	}
 }
