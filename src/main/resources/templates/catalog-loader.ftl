@@ -66,7 +66,7 @@
 											<#list catalogs as catalog>
 												<tr>
 													<td class="listEntryRadio">
-														<input id="catalog_${catalog.id}" type="radio" name="id" value="${catalog.id}" <#if !foundCatalog>checked<#assign foundCatalog = true></#if> >
+														<input id="catalog_${catalog.id}" type="radio" name="id" value="${catalog.id}" data-loaded="<#if catalog.loaded>true<#else>false</#if>" <#if !foundCatalog>checked<#assign foundCatalog = true></#if> >
 													</td>
 													<td class="listEntryId">
 														<label for="catalog_${catalog.id}">${catalog.id}</label>
@@ -88,7 +88,7 @@
 									</div>
 								</div>
 							<#if foundCatalog>
-								<input type="submit" name="load" class="btn pull-right" value="Load" />
+								<input id="loadButton" type="submit" name="load" class="btn pull-right" value="Load" />
 							</#if>
 							</form>
 						</#if>

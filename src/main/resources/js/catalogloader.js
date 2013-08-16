@@ -21,6 +21,11 @@
 		};
 		
 		$('#catalogForm input[type="radio"]').change(function() {
+//			if($(this).data('loaded'))
+//				$('#loadButton').attr('disabled', 'disabled');
+//			else
+//				$('#loadButton').removeAttr('disabled');
+			
 			// clear previous tree
 			if (treeContainer.children('ul').length > 0)
 				treeContainer.dynatree('destroy');
@@ -36,6 +41,6 @@
 				treeContainer.dynatree({'minExpandLevel': 2, 'children': nodes});
 			});
 		});
-		$('#catalogForm input[type="radio"]').change();
+		$('#catalogForm input[type="radio"]:checked').change();
 	});
 }($, window.top));

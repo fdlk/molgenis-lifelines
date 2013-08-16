@@ -38,6 +38,7 @@ public class CatalogLoaderController
 	private static final Logger LOG = Logger.getLogger(CatalogLoaderController.class);
 
 	public static final String URI = "/plugin/catalog";
+	public static final String LOAD_LIST_URI = "/load-list";
 	public static final String VIEW_NAME = "catalog-loader";
 
 	private final CatalogLoaderService catalogLoaderService;
@@ -50,6 +51,19 @@ public class CatalogLoaderController
 		if (database == null) throw new IllegalArgumentException("Database is null");
 		this.catalogLoaderService = catalogLoaderService;
 		this.database = database;
+	}
+
+	/**
+	 * Shows a loading spinner in the iframe and loads the studydefinitions list page
+	 * 
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(LOAD_LIST_URI)
+	public String showSpinner(Model model)
+	{
+		model.addAttribute("url", URI);
+		return "spinner";
 	}
 
 	/**
@@ -99,9 +113,16 @@ public class CatalogLoaderController
 		{
 			if (id != null)
 			{
-				catalogLoaderService.loadCatalog(id);
-				model.addAttribute("successMessage", "Catalog loaded");
-				LOG.info("Loaded catalog with id [" + id + "]");
+				if (!isCatalogLoaded(id))
+				{
+					catalogLoaderService.loadCatalog(id);
+					model.addAttribute("successMessage", "Catalog loaded");
+					LOG.info("Loaded catalog with id [" + id + "]");
+				}
+				else
+				{
+					model.addAttribute("errorMessage", "Catalog already loaded");
+				}
 			}
 			else
 			{

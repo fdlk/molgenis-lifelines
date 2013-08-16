@@ -94,7 +94,7 @@ public class CatalogLoaderControllerTest extends AbstractTestNGSpringContextTest
 		when(query.find()).thenReturn(Collections.<Characteristic> emptyList());
 		when(database.query(Characteristic.class)).thenReturn(query);
 
-		this.mockMvc.perform(get("/plugin/catalog/list")).andExpect(status().isOk())
+		this.mockMvc.perform(get("/plugin/catalog")).andExpect(status().isOk())
 				.andExpect(view().name("catalog-loader"))
 				.andExpect(model().attribute("catalogs", Arrays.asList(new CatalogModel("id1", "name1", false))));
 	}
@@ -111,7 +111,7 @@ public class CatalogLoaderControllerTest extends AbstractTestNGSpringContextTest
 		when(query.find()).thenReturn(Arrays.<Characteristic> asList(mock(Characteristic.class)));
 		when(database.query(Characteristic.class)).thenReturn(query);
 
-		this.mockMvc.perform(get("/plugin/catalog/list")).andExpect(status().isOk())
+		this.mockMvc.perform(get("/plugin/catalog")).andExpect(status().isOk())
 				.andExpect(view().name("catalog-loader"))
 				.andExpect(model().attribute("catalogs", Arrays.asList(new CatalogModel("id1", "name1", true))));
 	}
@@ -134,6 +134,26 @@ public class CatalogLoaderControllerTest extends AbstractTestNGSpringContextTest
 								.contentType(MediaType.APPLICATION_FORM_URLENCODED)).andExpect(status().isOk())
 				.andExpect(view().name("catalog-loader")).andExpect(model().attributeExists("successMessage"))
 				.andExpect(model().attribute("catalogs", Arrays.asList(new CatalogModel("id1", "name1", false))));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void loadLoadedCatalog() throws Exception
+	{
+		CatalogInfo catalogInfo1 = new CatalogInfo("id1", "name1");
+		when(catalogLoaderService.findCatalogs()).thenReturn(Arrays.asList(catalogInfo1));
+
+		Query<Characteristic> query = mock(Query.class);
+		when(query.eq(eq(Characteristic.IDENTIFIER), anyObject())).thenReturn(query);
+		when(query.find()).thenReturn(Arrays.<Characteristic> asList(mock(Characteristic.class)));
+		when(database.query(Characteristic.class)).thenReturn(query);
+
+		this.mockMvc
+				.perform(
+						post("/plugin/catalog/load").param("id", "1").param("load", "load")
+								.contentType(MediaType.APPLICATION_FORM_URLENCODED)).andExpect(status().isOk())
+				.andExpect(view().name("catalog-loader")).andExpect(model().attributeExists("errorMessage"))
+				.andExpect(model().attribute("catalogs", Arrays.asList(new CatalogModel("id1", "name1", true))));
 	}
 
 	@Test
