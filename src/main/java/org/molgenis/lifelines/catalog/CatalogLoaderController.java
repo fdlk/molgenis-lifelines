@@ -54,7 +54,7 @@ public class CatalogLoaderController
 	}
 
 	/**
-	 * Shows a loading spinner in the iframe and loads the studydefinitions list page
+	 * Shows a loading spinner in the iframe and loads the catalogs list page
 	 * 
 	 * @param model
 	 * @return
