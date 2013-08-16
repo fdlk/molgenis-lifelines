@@ -3,6 +3,7 @@
 	
 	// on document ready
 	$(function() {
+		var infoContainer = $('#catalog-preview-info');
 		var treeContainer = $('#catalog-preview-tree');
 		
 		function createTreeConfig(node, dynaNode) {
@@ -29,12 +30,22 @@
 			// clear previous tree
 			if (treeContainer.children('ul').length > 0)
 				treeContainer.dynatree('destroy');
+			infoContainer.empty();
 			treeContainer.empty();
-			treeContainer.html('Loading preview ...');
+			infoContainer.html('Loading preview ...');
 			
-			// create new tree
+			// create new catalog preview
 			var catalogId = $('#catalogForm input[type="radio"]:checked').val();
 			$.get('/plugin/catalog/preview/' + catalogId, function(data) {
+				var items= [];
+				items.push('<table class="table table-condensed table-borderless">');
+				items.push('<tr><td>Version</td><td>' + data.version + '</td></tr>');
+				items.push('<tr><td>Description</td><td>' + data.description + '</td></tr>');
+				items.push('<tr><td>Authors</td><td>' + data.authors.join(', ') + '</td></tr>');
+				items.push('</table>');
+				infoContainer.html(items.join(''));
+				
+				// create new tree
 				var nodes = [];
 				createTreeConfig(data.root, nodes);
 				treeContainer.empty();

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.JAXBContext;
@@ -21,7 +22,16 @@ import org.apache.log4j.Logger;
 import org.molgenis.atom.ContentType;
 import org.molgenis.atom.EntryType;
 import org.molgenis.atom.FeedType;
+import org.molgenis.hl7.COCTMT090107UVAssignedPerson;
+import org.molgenis.hl7.COCTMT090107UVPerson;
+import org.molgenis.hl7.COCTMT150007UVOrganization;
+import org.molgenis.hl7.ED;
+import org.molgenis.hl7.II;
+import org.molgenis.hl7.INT;
+import org.molgenis.hl7.ON;
 import org.molgenis.hl7.ObjectFactory;
+import org.molgenis.hl7.PN;
+import org.molgenis.hl7.POQMMT000001UVAuthor;
 import org.molgenis.hl7.POQMMT000001UVQualityMeasureDocument;
 import org.molgenis.hl7.ST;
 import org.molgenis.lifelines.utils.GenericLayerDataBinder;
@@ -57,7 +67,7 @@ public class GenericLayerResourceManagerService
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	private final HttpClient httpClient;
 	private final String resourceManagerServiceUrl;
 	private final GenericLayerDataBinder genericLayerDataBinder;
@@ -80,7 +90,7 @@ public class GenericLayerResourceManagerService
 	 */
 	public List<StudyDefinitionInfo> findStudyDefinitions()
 	{
-		List<CatalogSearchResult> catalogs = findCatalogs("/studydefinition");
+		List<CatalogSearchResult> catalogs = findCatalogReleases("/studydefinition");
 		return Lists.transform(catalogs, new Function<CatalogSearchResult, StudyDefinitionInfo>()
 		{
 			@Override
@@ -167,13 +177,29 @@ public class GenericLayerResourceManagerService
 	}
 
 	/**
+	 * Get the catalog with the given id
+	 * 
+	 * @return List of CatalogInfo
+	 */
+	public CatalogInfo findCatalog(String id)
+	{
+		CatalogSearchResult catalogSearchResult = findCatalogRelease("/catalogrelease/" + id);
+
+		CatalogInfo catalogInfo = new CatalogInfo(catalogSearchResult.getId(), catalogSearchResult.getName());
+		catalogInfo.setDescription(catalogSearchResult.getDescription());
+		catalogInfo.setVersion(catalogSearchResult.getVersion());
+		catalogInfo.setAuthors(catalogSearchResult.getAuthors());
+		return catalogInfo;
+	}
+
+	/**
 	 * Gets all available catalogs
 	 * 
 	 * @return List of CatalogInfo
 	 */
 	public List<CatalogInfo> findCatalogs()
 	{
-		List<CatalogSearchResult> catalogs = findCatalogs("/catalogrelease");
+		List<CatalogSearchResult> catalogs = findCatalogReleases("/catalogrelease");
 		return Lists.transform(catalogs, new Function<CatalogSearchResult, CatalogInfo>()
 		{
 			@Override
@@ -184,7 +210,39 @@ public class GenericLayerResourceManagerService
 		});
 	}
 
-	private List<CatalogSearchResult> findCatalogs(String uri)
+	private CatalogSearchResult findCatalogRelease(String uri)
+	{
+		HttpGet httpGet = new HttpGet(resourceManagerServiceUrl + uri);
+		InputStream xmlStream = null;
+		try
+		{
+			HttpResponse response = httpClient.execute(httpGet);
+			xmlStream = response.getEntity().getContent();
+			POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = genericLayerDataBinder
+					.createQualityMeasureDocumentUnmarshaller()
+					.unmarshal(new StreamSource(xmlStream), POQMMT000001UVQualityMeasureDocument.class).getValue();
+			return createCatalogSearchResult(qualityMeasureDocument);
+		}
+		catch (RuntimeException e)
+		{
+			httpGet.abort();
+			throw e;
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException(e);
+		}
+		catch (JAXBException e)
+		{
+			throw new RuntimeException(e);
+		}
+		finally
+		{
+			IOUtils.closeQuietly(xmlStream);
+		}
+	}
+
+	private List<CatalogSearchResult> findCatalogReleases(String uri)
 	{
 		try
 		{
@@ -215,9 +273,8 @@ public class GenericLayerResourceManagerService
 								.getValue();
 						if (qualityMeasureDocument.getId() != null)
 						{
-							ST title = qualityMeasureDocument.getTitle();
-							catalogs.add(new CatalogSearchResult(qualityMeasureDocument.getId().getExtension(),
-									title != null ? title.getContent().toString() : ""));
+							CatalogSearchResult catalogSearchResult = createCatalogSearchResult(qualityMeasureDocument);
+							catalogs.add(catalogSearchResult);
 						}
 						else
 						{
@@ -225,7 +282,6 @@ public class GenericLayerResourceManagerService
 						}
 					}
 				}
-
 			}
 
 			return catalogs;
@@ -241,6 +297,79 @@ public class GenericLayerResourceManagerService
 			throw new RuntimeException(e);
 		}
 
+	}
+
+	private CatalogSearchResult createCatalogSearchResult(POQMMT000001UVQualityMeasureDocument qualityMeasureDocument)
+	{
+		// id and title
+		II id = qualityMeasureDocument.getId();
+		ST title = qualityMeasureDocument.getTitle();
+		CatalogSearchResult catalogSearchResult = new CatalogSearchResult(id.getExtension(), title != null ? title
+				.getContent().toString() : "");
+
+		// description
+		ED description = qualityMeasureDocument.getText();
+		if (description != null)
+		{
+			catalogSearchResult.setDescription(description.getContent().toString());
+		}
+
+		// version
+		INT versionNumber = qualityMeasureDocument.getVersionNumber();
+		if (versionNumber != null)
+		{
+			catalogSearchResult.setVersion(versionNumber.getValue().toString());
+		}
+
+		// author(s)
+		List<POQMMT000001UVAuthor> authors = qualityMeasureDocument.getAuthor();
+		if (authors != null)
+		{
+			for (POQMMT000001UVAuthor author : authors)
+			{
+				COCTMT090107UVAssignedPerson personContainer = author.getAssignedPerson();
+				if (personContainer != null && personContainer.getAssignedPerson() != null)
+				{
+
+					COCTMT090107UVPerson person = personContainer.getAssignedPerson().getValue();
+
+					if (person.getName() != null)
+					{
+						StringBuilder authorBuilder = new StringBuilder();
+
+						// author name
+						for (PN namePart : person.getName())
+						{
+							if (authorBuilder.length() > 0) authorBuilder.append(' ');
+							authorBuilder.append(namePart.getContent().toString());
+						}
+
+						JAXBElement<COCTMT150007UVOrganization> organizationNode = personContainer
+								.getRepresentedOrganization();
+						if (organizationNode != null && organizationNode.getValue() != null)
+						{
+							COCTMT150007UVOrganization organization = organizationNode.getValue();
+
+							if (organization.getName() != null)
+							{
+								// author organization
+								StringBuilder organizationBuilder = new StringBuilder();
+								for (ON namePart : organization.getName())
+								{
+									if (organizationBuilder.length() > 0) organizationBuilder.append(' ');
+									organizationBuilder.append(namePart.getContent().toString());
+								}
+								if (organizationBuilder.length() > 0) authorBuilder.append(" (")
+										.append(organizationBuilder).append(')');
+							}
+						}
+
+						catalogSearchResult.addAuthor(authorBuilder.toString());
+					}
+				}
+			}
+		}
+		return catalogSearchResult;
 	}
 
 	private FeedType getFeed(String uri) throws JAXBException, IOException
@@ -278,6 +407,9 @@ public class GenericLayerResourceManagerService
 	{
 		private final String id;
 		private final String name;
+		private String description;
+		private String version;
+		private List<String> authors;
 
 		public CatalogSearchResult(String id, String name)
 		{
@@ -295,5 +427,35 @@ public class GenericLayerResourceManagerService
 			return name;
 		}
 
+		public String getDescription()
+		{
+			return description;
+		}
+
+		public void setDescription(String description)
+		{
+			this.description = description;
+		}
+
+		public String getVersion()
+		{
+			return version;
+		}
+
+		public void setVersion(String version)
+		{
+			this.version = version;
+		}
+
+		public List<String> getAuthors()
+		{
+			return authors != null ? authors : Collections.<String> emptyList();
+		}
+
+		public void addAuthor(String author)
+		{
+			if (authors == null) authors = new ArrayList<String>();
+			authors.add(author);
+		}
 	}
 }

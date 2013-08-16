@@ -82,6 +82,8 @@
 									</div>
 									<div class="span6">
 										<div id="catalog-preview">
+											<div id="catalog-preview-info">
+											</div>
 											<div id="catalog-preview-tree">
 											</div>
 										</div>

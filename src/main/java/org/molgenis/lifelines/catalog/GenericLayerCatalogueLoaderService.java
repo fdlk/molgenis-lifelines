@@ -93,15 +93,16 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 	@Override
 	public CatalogPreview getCatalogPreview(String id) throws UnknownCatalogException
 	{
-		// retrieve catalog data from LifeLines Generic Layer catalog service
+
+		// retrieve catalog data
 		REPCMT000100UV01Organizer catalog = retrieveCatalog(id);
+		CatalogPreview catalogPreview = createCatalogPreview(catalog);
 
-		CatalogPreview catalogPreview = new CatalogPreview();
-
-		CatalogPreviewNode root = new CatalogPreviewNode();
-		for (REPCMT000100UV01Component3 rootComponent : catalog.getComponent())
-			createCatalogPreviewNode(rootComponent, root);
-		catalogPreview.setRoot(root);
+		// retrieve catalog info
+		CatalogInfo catalogInfo = resourceManagerService.findCatalog(id);
+		catalogPreview.setDescription(catalogInfo.getDescription());
+		catalogPreview.setVersion(catalogInfo.getVersion());
+		catalogPreview.setAuthors(catalogInfo.getAuthors());
 
 		return catalogPreview;
 	}
@@ -111,7 +112,11 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 	{
 		// retrieve catalog data from LifeLines Generic Layer catalog service
 		REPCMT000100UV01Organizer catalog = retrieveCatalogOfStudyDefinition(id);
+		return createCatalogPreview(catalog);
+	}
 
+	private CatalogPreview createCatalogPreview(REPCMT000100UV01Organizer catalog)
+	{
 		CatalogPreview catalogPreview = new CatalogPreview();
 
 		CatalogPreviewNode root = new CatalogPreviewNode();
