@@ -24,3 +24,17 @@
 	max-height: 450px;
 	overflow: auto;
 }
+
+#catalog-preview, #study-definition-preview {
+	max-height: 450px;
+	overflow: auto;
+	margin: 10px 0px;
+}
+
+#catalog-preview-info, #study-definition-preview-info {
+	font-size: 10px;
+}
+
+.table-borderless th, .table-borderless td {
+	border-top: none;
+}

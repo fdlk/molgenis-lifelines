@@ -42,6 +42,7 @@ import org.molgenis.omx.observ.ObservableFeature;
 import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.observ.target.Ontology;
 import org.molgenis.omx.observ.target.OntologyTerm;
+import org.molgenis.omx.utils.ProtocolUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Node;
@@ -92,15 +93,16 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 	@Override
 	public CatalogPreview getCatalogPreview(String id) throws UnknownCatalogException
 	{
-		// retrieve catalog data from LifeLines Generic Layer catalog service
+
+		// retrieve catalog data
 		REPCMT000100UV01Organizer catalog = retrieveCatalog(id);
+		CatalogPreview catalogPreview = createCatalogPreview(catalog);
 
-		CatalogPreview catalogPreview = new CatalogPreview();
-
-		CatalogPreviewNode root = new CatalogPreviewNode();
-		for (REPCMT000100UV01Component3 rootComponent : catalog.getComponent())
-			createCatalogPreviewNode(rootComponent, root);
-		catalogPreview.setRoot(root);
+		// retrieve catalog info
+		CatalogInfo catalogInfo = resourceManagerService.findCatalog(id);
+		catalogPreview.setDescription(catalogInfo.getDescription());
+		catalogPreview.setVersion(catalogInfo.getVersion());
+		catalogPreview.setAuthors(catalogInfo.getAuthors());
 
 		return catalogPreview;
 	}
@@ -110,7 +112,11 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 	{
 		// retrieve catalog data from LifeLines Generic Layer catalog service
 		REPCMT000100UV01Organizer catalog = retrieveCatalogOfStudyDefinition(id);
+		return createCatalogPreview(catalog);
+	}
 
+	private CatalogPreview createCatalogPreview(REPCMT000100UV01Organizer catalog)
+	{
 		CatalogPreview catalogPreview = new CatalogPreview();
 
 		CatalogPreviewNode root = new CatalogPreviewNode();
@@ -208,6 +214,13 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 	}
 
 	@Override
+	public void unloadCatalog(String id) throws UnknownCatalogException
+	{
+		String dataSetId = CatalogIdConverter.catalogIdToOmxIdentifier(id);
+		deleteDataSetAndProtocols(dataSetId);
+	}
+
+	@Override
 	public void loadCatalogOfStudyDefinition(String id) throws UnknownCatalogException
 	{
 		try
@@ -253,6 +266,45 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 			}
 			throw new RuntimeException(e);
 		}
+	}
+
+	private void deleteDataSetAndProtocols(String dataSetIdentifier) throws UnknownCatalogException
+	{
+		try
+		{
+			database.beginTx();
+
+			DataSet dataSet = DataSet.findByIdentifier(database, dataSetIdentifier);
+			if (dataSet == null)
+			{
+				throw new UnknownCatalogException("unknown catalog identifier [" + dataSetIdentifier + "]");
+			}
+			List<Protocol> protocols = ProtocolUtils.getProtocolDescendants(dataSet.getProtocolUsed());
+
+			database.remove(dataSet);
+			database.remove(protocols);
+
+			database.commitTx();
+		}
+		catch (DatabaseException e)
+		{
+			try
+			{
+				database.rollbackTx();
+			}
+			catch (DatabaseException e1)
+			{
+				throw new RuntimeException(e1);
+			}
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public void unloadCatalogOfStudyDefinition(String id) throws UnknownCatalogException
+	{
+		String dataSetIdentifier = CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id);
+		deleteDataSetAndProtocols(dataSetIdentifier);
 	}
 
 	private void loadValueSets(GetValuesetsResult valueSetsResult, Map<String, String> featureMap)

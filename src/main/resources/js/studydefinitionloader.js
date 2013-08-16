@@ -25,16 +25,17 @@
 			if (treeContainer.children('ul').length > 0)
 				treeContainer.dynatree('destroy');
 			treeContainer.empty();
+			treeContainer.html('Loading preview ...');
 			
 			// create new tree
-			
 			var catalogOfStudyDefinitionId = $('#studyDefinitionForm input[type="radio"]:checked').val();
 			$.get('/plugin/studydefinition/preview/' + catalogOfStudyDefinitionId, function(data) {
 				var nodes = [];
 				createTreeConfig(data.root, nodes);
+				treeContainer.empty();
 				treeContainer.dynatree({'minExpandLevel': 2, 'children': nodes});
 			});
 		});
-		$('#studyDefinitionForm input[type="radio"]').change();
+		$('#studyDefinitionForm input[type="radio"]:checked').change();
 	});
 }($, window.top));
