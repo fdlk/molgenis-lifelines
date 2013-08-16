@@ -21,10 +21,10 @@
 		};
 		
 		$('#catalogForm input[type="radio"]').change(function() {
-//			if($(this).data('loaded'))
-//				$('#loadButton').attr('disabled', 'disabled');
-//			else
-//				$('#loadButton').removeAttr('disabled');
+			if($(this).data('loaded'))
+				$('#loadButton').attr('disabled', 'disabled');
+			else
+				$('#loadButton').removeAttr('disabled');
 			
 			// clear previous tree
 			if (treeContainer.children('ul').length > 0)
