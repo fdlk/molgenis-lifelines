@@ -87,6 +87,8 @@
 									</div>
 									<div class="span6">
 										<div id="study-definition-preview">
+											<div id="study-definition-preview-info">
+											</div>
 											<div id="study-definition-preview-tree">
 											</div>
 										</div>

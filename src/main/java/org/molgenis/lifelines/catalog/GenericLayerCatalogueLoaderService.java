@@ -42,6 +42,7 @@ import org.molgenis.omx.observ.ObservableFeature;
 import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.observ.target.Ontology;
 import org.molgenis.omx.observ.target.OntologyTerm;
+import org.molgenis.omx.study.StudyDefinitionInfo;
 import org.molgenis.omx.utils.ProtocolUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -110,9 +111,17 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 	@Override
 	public CatalogPreview getCatalogOfStudyDefinitionPreview(String id) throws UnknownCatalogException
 	{
-		// retrieve catalog data from LifeLines Generic Layer catalog service
+		// retrieve catalog data
 		REPCMT000100UV01Organizer catalog = retrieveCatalogOfStudyDefinition(id);
-		return createCatalogPreview(catalog);
+		CatalogPreview catalogPreview = createCatalogPreview(catalog);
+
+		// retrieve catalog info
+		StudyDefinitionInfo studyDefinitionInfo = resourceManagerService.findStudyDefinition(id);
+		catalogPreview.setDescription(studyDefinitionInfo.getDescription());
+		catalogPreview.setVersion(studyDefinitionInfo.getVersion());
+		catalogPreview.setAuthors(studyDefinitionInfo.getAuthors());
+
+		return catalogPreview;
 	}
 
 	private CatalogPreview createCatalogPreview(REPCMT000100UV01Organizer catalog)

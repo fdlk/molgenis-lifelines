@@ -86,7 +86,7 @@ public class GenericLayerStudyDefinitionService implements StudyDefinitionServic
 			throw new UnknownStudyDefinitionException(e);
 		}
 
-		dataQueryService.loadStudyDefinitionData(resourceManagerService.findStudyDefinition(id));
+		dataQueryService.loadStudyDefinitionData(resourceManagerService.findStudyDefinitionHL7(id));
 	}
 
 	@Override

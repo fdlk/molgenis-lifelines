@@ -88,6 +88,23 @@ public class GenericLayerResourceManagerService
 	 * 
 	 * @return
 	 */
+	public StudyDefinitionInfo findStudyDefinition(String id)
+	{
+		CatalogSearchResult catalogSearchResult = findCatalogRelease("/studydefinition/" + id);
+
+		StudyDefinitionInfo studyDefinitionInfo = new StudyDefinitionInfo(catalogSearchResult.getId(),
+				catalogSearchResult.getName());
+		studyDefinitionInfo.setDescription(catalogSearchResult.getDescription());
+		studyDefinitionInfo.setVersion(catalogSearchResult.getVersion());
+		studyDefinitionInfo.setAuthors(catalogSearchResult.getAuthors());
+		return studyDefinitionInfo;
+	}
+
+	/**
+	 * Gets all available StudyDefinitions
+	 * 
+	 * @return
+	 */
 	public List<StudyDefinitionInfo> findStudyDefinitions()
 	{
 		List<CatalogSearchResult> catalogs = findCatalogReleases("/studydefinition");
@@ -101,7 +118,7 @@ public class GenericLayerResourceManagerService
 		});
 	}
 
-	public POQMMT000001UVQualityMeasureDocument findStudyDefinition(String id)
+	public POQMMT000001UVQualityMeasureDocument findStudyDefinitionHL7(String id)
 	{
 		HttpGet httpGet = new HttpGet(resourceManagerServiceUrl + "/studydefinition/" + id);
 		InputStream xmlStream = null;
