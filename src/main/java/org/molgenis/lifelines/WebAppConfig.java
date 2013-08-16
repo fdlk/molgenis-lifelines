@@ -241,7 +241,7 @@ public class WebAppConfig extends WebMvcConfigurerAdapter
 	public MappedInterceptor catalogLoaderMappedInterceptor()
 	{
 		return new MappedInterceptor(new String[]
-		{ CatalogLoaderController.BASE_URL + "/**" }, catalogLoaderHandlerInterceptor());
+		{ CatalogLoaderController.URI + "/**" }, catalogLoaderHandlerInterceptor());
 	}
 
 	@Bean

@@ -32,12 +32,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * 
  */
 @Controller
-@RequestMapping(CatalogLoaderController.BASE_URL)
+@RequestMapping(CatalogLoaderController.URI)
 public class CatalogLoaderController
 {
 	private static final Logger LOG = Logger.getLogger(CatalogLoaderController.class);
 
-	public static final String BASE_URL = "/plugin/catalog";
+	public static final String URI = "/plugin/catalog";
 	public static final String VIEW_NAME = "catalog-loader";
 
 	private final CatalogLoaderService catalogLoaderService;
@@ -61,7 +61,7 @@ public class CatalogLoaderController
 	 * @return
 	 * @throws DatabaseException
 	 */
-	@RequestMapping(value = "/list", method = RequestMethod.GET)
+	@RequestMapping(method = RequestMethod.GET)
 	public String listCatalogs(Model model) throws DatabaseException
 	{
 		List<CatalogInfo> catalogs = catalogLoaderService.findCatalogs();
