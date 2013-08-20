@@ -19,7 +19,7 @@
 					dynaNode.push(dynaChild);
 				});
 			}
-		};
+		}
 		
 		$('#studyDefinitionForm input[type="radio"]').change(function() {
 			// clear previous tree

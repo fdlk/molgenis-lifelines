@@ -19,7 +19,7 @@
 					dynaNode.push(dynaChild);
 				});
 			}
-		};
+		}
 		
 		$('#catalogForm input[type="radio"]').change(function() {
 			if($(this).data('loaded'))
