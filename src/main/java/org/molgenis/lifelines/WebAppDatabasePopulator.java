@@ -10,7 +10,7 @@ import org.molgenis.framework.db.DatabaseException;
 import org.molgenis.framework.db.QueryRule;
 import org.molgenis.framework.db.QueryRule.Operator;
 import org.molgenis.framework.security.Login;
-import org.molgenis.lifelines.plugins.HomePlugin;
+import org.molgenis.lifelines.controller.HomeController;
 import org.molgenis.omx.auth.MolgenisGroup;
 import org.molgenis.omx.auth.MolgenisRole;
 import org.molgenis.omx.auth.MolgenisRoleGroupLink;
@@ -95,8 +95,8 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 
 		RuntimeProperty runtimePropertyHomeHtml = new RuntimeProperty();
 		runtimePropertyHomeHtml.setIdentifier(RuntimeProperty.class.getSimpleName() + '_'
-				+ HomePlugin.KEY_APP_HOME_HTML);
-		runtimePropertyHomeHtml.setName(HomePlugin.KEY_APP_HOME_HTML);
+				+ HomeController.KEY_APP_HOME_HTML);
+		runtimePropertyHomeHtml.setName(HomeController.KEY_APP_HOME_HTML);
 		runtimePropertyHomeHtml.setValue(homeHtml);
 		database.add(runtimePropertyHomeHtml);
 
