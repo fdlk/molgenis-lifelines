@@ -10,11 +10,14 @@ import org.molgenis.framework.db.DatabaseException;
 import org.molgenis.framework.db.QueryRule;
 import org.molgenis.framework.db.QueryRule.Operator;
 import org.molgenis.framework.security.Login;
+import org.molgenis.framework.server.MolgenisPermissionService;
+import org.molgenis.framework.server.MolgenisPermissionService.Permission;
 import org.molgenis.lifelines.controller.HomeController;
 import org.molgenis.omx.auth.MolgenisGroup;
 import org.molgenis.omx.auth.MolgenisRole;
 import org.molgenis.omx.auth.MolgenisRoleGroupLink;
 import org.molgenis.omx.auth.MolgenisUser;
+import org.molgenis.omx.auth.OmxPermissionService;
 import org.molgenis.omx.auth.service.AccountService;
 import org.molgenis.omx.core.RuntimeProperty;
 import org.molgenis.omx.filter.StudyDataRequest;
@@ -31,7 +34,10 @@ import org.molgenis.search.SearchSecurityHandlerInterceptor;
 import org.molgenis.servlet.GuiService;
 import org.molgenis.ui.CatalogueLoaderPluginPlugin;
 import org.molgenis.ui.DataExplorerPluginPlugin;
+import org.molgenis.ui.HomePluginPlugin;
+import org.molgenis.ui.MolgenisMenuController.VoidPluginController;
 import org.molgenis.ui.StudyDefinitionLoaderPluginPlugin;
+import org.molgenis.util.Entity;
 import org.springframework.beans.factory.annotation.Value;
 
 public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
@@ -66,6 +72,8 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 		Login login = database.getLogin();
 		database.setLogin(null);
 		login.login(database, Login.USER_ADMIN_NAME, adminPassword);
+
+		MolgenisPermissionService permissionService = new OmxPermissionService(database, login);
 
 		// set app name
 		RuntimeProperty runtimeProperty = new RuntimeProperty();
@@ -139,7 +147,7 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 			molgenisRoles.add(userResearcher);
 			molgenisRoles.add(allUsersGroup);
 
-			List<Class<?>> visibleClasses = new ArrayList<Class<?>>();
+			List<Class<? extends Entity>> visibleClasses = new ArrayList<Class<? extends Entity>>();
 			// add entity dependencies for protocol viewer plugin
 			visibleClasses.add(DataSet.class);
 			visibleClasses.add(Protocol.class);
@@ -148,32 +156,49 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 			visibleClasses.add(Category.class);
 			visibleClasses.add(ObservedValue.class);
 
-			for (Class<?> entityClass : visibleClasses)
+			for (Class<? extends Entity> entityClass : visibleClasses)
 			{
 				for (MolgenisRole molgenisRole : molgenisRoles)
 				{
-					createPermission(database, entityClass, molgenisRole, "read");
+					permissionService.setPermissionOnEntity(entityClass, molgenisRole.getId(), Permission.READ);
 				}
 			}
-			createPermission(database, StudyDataRequest.class, allUsersGroup, "own");
+			permissionService.setPermissionOnEntity(StudyDataRequest.class, allUsersGroup.getId(), Permission.OWN);
 		}
 
-		createPermission(database, Characteristic.class, groupDataManagers, "write");
-		createPermission(database, OntologyTerm.class, groupDataManagers, "write");
-		createPermission(database, Ontology.class, groupDataManagers, "write");
-		createPermission(database, DataSet.class, groupDataManagers, "write");
-		createPermission(database, Protocol.class, groupDataManagers, "write");
-		createPermission(database, ObservationSet.class, groupDataManagers, "write");
-		createPermission(database, ObservableFeature.class, groupDataManagers, "write");
-		createPermission(database, Category.class, groupDataManagers, "write");
-		createPermission(database, ObservedValue.class, groupDataManagers, "write");
-		createPermission(database, MolgenisUser.class, groupDataManagers, "write");
-		createPermission(database, MolgenisUser.class, groupResearchers, "write");
-		createPermission(database, MolgenisUser.class, allUsersGroup, "write");
+		permissionService.setPermissionOnEntity(Characteristic.class, groupDataManagers.getId(), Permission.WRITE);
+		permissionService.setPermissionOnEntity(OntologyTerm.class, groupDataManagers.getId(), Permission.WRITE);
+		permissionService.setPermissionOnEntity(Ontology.class, groupDataManagers.getId(), Permission.WRITE);
+		permissionService.setPermissionOnEntity(DataSet.class, groupDataManagers.getId(), Permission.WRITE);
+		permissionService.setPermissionOnEntity(Protocol.class, groupDataManagers.getId(), Permission.WRITE);
+		permissionService.setPermissionOnEntity(ObservationSet.class, groupDataManagers.getId(), Permission.WRITE);
+		permissionService.setPermissionOnEntity(ObservableFeature.class, groupDataManagers.getId(), Permission.WRITE);
+		permissionService.setPermissionOnEntity(Category.class, groupDataManagers.getId(), Permission.WRITE);
+		permissionService.setPermissionOnEntity(ObservedValue.class, groupDataManagers.getId(), Permission.WRITE);
+		permissionService.setPermissionOnEntity(MolgenisUser.class, groupDataManagers.getId(), Permission.WRITE);
+
+		permissionService.setPermissionOnEntity(MolgenisUser.class, groupResearchers.getId(), Permission.WRITE);
+		permissionService.setPermissionOnEntity(MolgenisUser.class, allUsersGroup.getId(), Permission.WRITE);
+
+		MolgenisUser anonymousUser = MolgenisUser.findByName(database, Login.USER_ANONYMOUS_NAME);
+
+		permissionService.setPermissionOnPlugin(VoidPluginController.class, allUsersGroup.getId(), Permission.READ);
+		permissionService.setPermissionOnPlugin(VoidPluginController.class, groupResearchers.getId(), Permission.READ);
+		permissionService.setPermissionOnPlugin(VoidPluginController.class, anonymousUser.getId(), Permission.READ);
+		permissionService.setPermissionOnPlugin(HomeController.class, allUsersGroup.getId(), Permission.READ);
+		permissionService.setPermissionOnPlugin(HomeController.class, groupResearchers.getId(), Permission.READ);
+		permissionService.setPermissionOnPlugin(HomeController.class, anonymousUser.getId(), Permission.READ);
+		permissionService.setPermissionOnPlugin(HomePluginPlugin.class.getSimpleName(), allUsersGroup.getId(),
+				Permission.READ);
+		permissionService.setPermissionOnPlugin(HomePluginPlugin.class.getSimpleName(), groupResearchers.getId(),
+				Permission.READ);
+		permissionService.setPermissionOnPlugin(HomePluginPlugin.class.getSimpleName(), anonymousUser.getId(),
+				Permission.READ);
 
 		if ("website".equals(appProfile))
 		{
-			createPermission(database, CatalogueLoaderPluginPlugin.class, userDataManager, "read");
+			permissionService.setPermissionOnPlugin(CatalogueLoaderPluginPlugin.class.getSimpleName(),
+					userDataManager.getId(), Permission.READ);
 
 			RuntimeProperty runtimePropertyAllowAnonymousSearch = new RuntimeProperty();
 			runtimePropertyAllowAnonymousSearch.setIdentifier(RuntimeProperty.class.getSimpleName() + '_'
@@ -185,9 +210,12 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 		}
 		else if ("workspace".equals(appProfile))
 		{
-			createPermission(database, DataExplorerPluginPlugin.class, groupDataManagers, "read");
-			createPermission(database, DataExplorerPluginPlugin.class, groupResearchers, "read");
-			createPermission(database, StudyDefinitionLoaderPluginPlugin.class, groupDataManagers, "read");
+			permissionService.setPermissionOnPlugin(DataExplorerPluginPlugin.class.getSimpleName(),
+					groupDataManagers.getId(), Permission.READ);
+			permissionService.setPermissionOnPlugin(DataExplorerPluginPlugin.class.getSimpleName(),
+					groupResearchers.getId(), Permission.READ);
+			permissionService.setPermissionOnPlugin(StudyDefinitionLoaderPluginPlugin.class.getSimpleName(),
+					groupDataManagers.getId(), Permission.READ);
 		}
 		else
 		{

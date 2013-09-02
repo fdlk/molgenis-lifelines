@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.molgenis.framework.db.Database;
 import org.molgenis.framework.db.DatabaseException;
+import org.molgenis.framework.ui.MolgenisPlugin;
 import org.molgenis.lifelines.catalog.CatalogIdConverter;
 import org.molgenis.omx.catalog.CatalogLoaderService;
 import org.molgenis.omx.catalog.CatalogPreview;
@@ -24,14 +25,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
-@RequestMapping(StudyDefinitionLoaderController.BASE_URL)
-public class StudyDefinitionLoaderController
+@RequestMapping(StudyDefinitionLoaderController.URI)
+public class StudyDefinitionLoaderController extends MolgenisPlugin
 {
-	public static final String BASE_URL = "/plugin/studydefinition";
+	public static final String URI = MolgenisPlugin.PLUGIN_URI_PREFIX + "studydefinition";
 	public static final String LOAD_LIST_URI = "/load-list";
-	public static final String LIST_URI = "/list";
-	public static final String LOAD_URI = "/load";
-	public static final String VIEW_NAME = "study-definition-loader";
+	public static final String VIEW_NAME = "view-studydefinitionloader";
 	private static final Logger LOG = Logger.getLogger(StudyDefinitionLoaderController.class);
 	private final Database database;
 	private final StudyDefinitionService studyDefinitionService;
@@ -41,6 +40,7 @@ public class StudyDefinitionLoaderController
 	public StudyDefinitionLoaderController(Database database, StudyDefinitionService studyDefinitionService,
 			CatalogLoaderService catalogLoaderService)
 	{
+		super(URI);
 		if (database == null) throw new IllegalArgumentException("database is null");
 		if (studyDefinitionService == null) throw new IllegalArgumentException("study definition service is null");
 		if (catalogLoaderService == null) throw new IllegalArgumentException("catalog loader service is null");
@@ -58,7 +58,7 @@ public class StudyDefinitionLoaderController
 	@RequestMapping(LOAD_LIST_URI)
 	public String showSpinner(Model model)
 	{
-		model.addAttribute("url", BASE_URL + LIST_URI);
+		model.addAttribute("url", URI);
 		return "spinner";
 	}
 
@@ -72,7 +72,7 @@ public class StudyDefinitionLoaderController
 	 * @return
 	 * @throws DatabaseException
 	 */
-	@RequestMapping(LIST_URI)
+	@RequestMapping(method = RequestMethod.GET)
 	public String listStudyDefinitions(Model model) throws DatabaseException
 	{
 		List<StudyDefinitionInfo> studyDefinitions = studyDefinitionService.findStudyDefinitions();
@@ -95,8 +95,7 @@ public class StudyDefinitionLoaderController
 
 	@RequestMapping(value = "/preview/{id}", method = RequestMethod.GET)
 	@ResponseBody
-	public CatalogPreview previewStudyDefinition(@PathVariable
-	String id) throws UnknownCatalogException
+	public CatalogPreview previewStudyDefinition(@PathVariable String id) throws UnknownCatalogException
 	{
 		return catalogLoaderService.getCatalogOfStudyDefinitionPreview(id);
 	}
@@ -113,9 +112,9 @@ public class StudyDefinitionLoaderController
 	 * @return
 	 * @throws DatabaseException
 	 */
-	@RequestMapping(LOAD_URI)
-	public String loadStudyDefinition(@RequestParam(value = "id", required = false)
-	String id, Model model) throws DatabaseException
+	@RequestMapping(value = "/load", method = RequestMethod.POST)
+	public String loadStudyDefinition(@RequestParam(value = "id", required = false) String id, Model model)
+			throws DatabaseException
 	{
 		try
 		{

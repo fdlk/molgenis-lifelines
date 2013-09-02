@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.log4j.Logger;
 import org.molgenis.framework.db.Database;
 import org.molgenis.framework.db.DatabaseException;
+import org.molgenis.framework.ui.MolgenisPlugin;
 import org.molgenis.omx.catalog.CatalogInfo;
 import org.molgenis.omx.catalog.CatalogLoaderService;
 import org.molgenis.omx.catalog.CatalogPreview;
@@ -33,13 +34,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  */
 @Controller
 @RequestMapping(CatalogLoaderController.URI)
-public class CatalogLoaderController
+public class CatalogLoaderController extends MolgenisPlugin
 {
 	private static final Logger LOG = Logger.getLogger(CatalogLoaderController.class);
 
-	public static final String URI = "/plugin/catalog";
+	public static final String URI = MolgenisPlugin.PLUGIN_URI_PREFIX + "catalog";
 	public static final String LOAD_LIST_URI = "/load-list";
-	public static final String VIEW_NAME = "catalog-loader";
+	public static final String VIEW_NAME = "view-catalogloader";
 
 	private final CatalogLoaderService catalogLoaderService;
 	private final Database database;
@@ -47,6 +48,7 @@ public class CatalogLoaderController
 	@Autowired
 	public CatalogLoaderController(CatalogLoaderService catalogLoaderService, Database database)
 	{
+		super(URI);
 		if (catalogLoaderService == null) throw new IllegalArgumentException("CatalogLoaderService is null");
 		if (database == null) throw new IllegalArgumentException("Database is null");
 		this.catalogLoaderService = catalogLoaderService;
@@ -106,8 +108,8 @@ public class CatalogLoaderController
 	 * @throws DatabaseException
 	 */
 	@RequestMapping(value = "/load", params = "load", method = RequestMethod.POST)
-	public String loadCatalog(@RequestParam(value = "id", required = false)
-	String id, Model model) throws DatabaseException
+	public String loadCatalog(@RequestParam(value = "id", required = false) String id, Model model)
+			throws DatabaseException
 	{
 		try
 		{
@@ -138,8 +140,8 @@ public class CatalogLoaderController
 	}
 
 	@RequestMapping(value = "/load", params = "unload", method = RequestMethod.POST)
-	public String unloadCatalog(@RequestParam(value = "id", required = false)
-	String id, Model model) throws DatabaseException
+	public String unloadCatalog(@RequestParam(value = "id", required = false) String id, Model model)
+			throws DatabaseException
 	{
 		try
 		{
@@ -171,8 +173,7 @@ public class CatalogLoaderController
 
 	@RequestMapping(value = "/preview/{id}", method = RequestMethod.GET)
 	@ResponseBody
-	public CatalogPreview previewCatalog(@PathVariable
-	String id) throws UnknownCatalogException
+	public CatalogPreview previewCatalog(@PathVariable String id) throws UnknownCatalogException
 	{
 		return catalogLoaderService.getCatalogPreview(id);
 	}
