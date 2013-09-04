@@ -22,18 +22,13 @@ import org.apache.log4j.Logger;
 import org.molgenis.atom.ContentType;
 import org.molgenis.atom.EntryType;
 import org.molgenis.atom.FeedType;
-import org.molgenis.hl7.COCTMT090107UVAssignedPerson;
-import org.molgenis.hl7.COCTMT090107UVPerson;
-import org.molgenis.hl7.COCTMT150007UVOrganization;
 import org.molgenis.hl7.ED;
 import org.molgenis.hl7.II;
 import org.molgenis.hl7.INT;
-import org.molgenis.hl7.ON;
 import org.molgenis.hl7.ObjectFactory;
-import org.molgenis.hl7.PN;
-import org.molgenis.hl7.POQMMT000001UVAuthor;
 import org.molgenis.hl7.POQMMT000001UVQualityMeasureDocument;
 import org.molgenis.hl7.ST;
+import org.molgenis.lifelines.studydefinition.QualityMeasureDocumentStudyDefinition;
 import org.molgenis.lifelines.utils.GenericLayerDataBinder;
 import org.molgenis.lifelines.utils.OutputStreamHttpEntity;
 import org.molgenis.omx.catalog.CatalogInfo;
@@ -152,8 +147,9 @@ public class GenericLayerResourceManagerService
 	 * Persist a studydefinition
 	 * 
 	 * @param studyDefinition
+	 * @return generic layer study definition id
 	 */
-	public void persistStudyDefinition(final POQMMT000001UVQualityMeasureDocument studyDefinition)
+	public String persistStudyDefinition(final POQMMT000001UVQualityMeasureDocument studyDefinition)
 	{
 		HttpPost httpPost = new HttpPost(resourceManagerServiceUrl + "/studydefinition");
 		httpPost.setHeader("Content-Type", "application/xml");
@@ -175,12 +171,20 @@ public class GenericLayerResourceManagerService
 			}
 		});
 
+		InputStream xmlStream = null;
 		try
 		{
 			HttpResponse response = httpClient.execute(httpPost);
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode < 200 || statusCode > 299) throw new IOException(
 					"Error persisting study definition (statuscode " + statusCode + ")");
+
+			xmlStream = response.getEntity().getContent();
+			POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = genericLayerDataBinder
+					.createQualityMeasureDocumentUnmarshaller()
+					.unmarshal(new StreamSource(xmlStream), POQMMT000001UVQualityMeasureDocument.class).getValue();
+
+			return qualityMeasureDocument.getId().getExtension();
 		}
 		catch (RuntimeException e)
 		{
@@ -190,6 +194,14 @@ public class GenericLayerResourceManagerService
 		catch (IOException e)
 		{
 			throw new RuntimeException(e);
+		}
+		catch (JAXBException e)
+		{
+			throw new RuntimeException(e);
+		}
+		finally
+		{
+			IOUtils.closeQuietly(xmlStream);
 		}
 	}
 
@@ -339,52 +351,11 @@ public class GenericLayerResourceManagerService
 		}
 
 		// author(s)
-		List<POQMMT000001UVAuthor> authors = qualityMeasureDocument.getAuthor();
+		List<String> authors = new QualityMeasureDocumentStudyDefinition(qualityMeasureDocument).getAuthors();
 		if (authors != null)
 		{
-			for (POQMMT000001UVAuthor author : authors)
-			{
-				COCTMT090107UVAssignedPerson personContainer = author.getAssignedPerson();
-				if (personContainer != null && personContainer.getAssignedPerson() != null)
-				{
-
-					COCTMT090107UVPerson person = personContainer.getAssignedPerson().getValue();
-
-					if (person.getName() != null)
-					{
-						StringBuilder authorBuilder = new StringBuilder();
-
-						// author name
-						for (PN namePart : person.getName())
-						{
-							if (authorBuilder.length() > 0) authorBuilder.append(' ');
-							authorBuilder.append(namePart.getContent().toString());
-						}
-
-						JAXBElement<COCTMT150007UVOrganization> organizationNode = personContainer
-								.getRepresentedOrganization();
-						if (organizationNode != null && organizationNode.getValue() != null)
-						{
-							COCTMT150007UVOrganization organization = organizationNode.getValue();
-
-							if (organization.getName() != null)
-							{
-								// author organization
-								StringBuilder organizationBuilder = new StringBuilder();
-								for (ON namePart : organization.getName())
-								{
-									if (organizationBuilder.length() > 0) organizationBuilder.append(' ');
-									organizationBuilder.append(namePart.getContent().toString());
-								}
-								if (organizationBuilder.length() > 0) authorBuilder.append(" (")
-										.append(organizationBuilder).append(')');
-							}
-						}
-
-						catalogSearchResult.addAuthor(authorBuilder.toString());
-					}
-				}
-			}
+			for (String author : authors)
+				catalogSearchResult.addAuthor(author);
 		}
 		return catalogSearchResult;
 	}

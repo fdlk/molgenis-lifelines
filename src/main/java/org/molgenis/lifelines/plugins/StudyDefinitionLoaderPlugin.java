@@ -2,7 +2,7 @@ package org.molgenis.lifelines.plugins;
 
 import org.molgenis.framework.ui.IframePlugin;
 import org.molgenis.framework.ui.ScreenController;
-import org.molgenis.lifelines.studydefinition.StudyDefinitionLoaderController;
+import org.molgenis.lifelines.studydefinition.StudyDefinitionManagerController;
 
 /**
  * StudyDefinitionLoader plugin.
@@ -24,7 +24,7 @@ public class StudyDefinitionLoaderPlugin extends IframePlugin
 	@Override
 	public String getIframeSrc()
 	{
-		return StudyDefinitionLoaderController.URI + StudyDefinitionLoaderController.LOAD_LIST_URI;
+		return StudyDefinitionManagerController.URI + StudyDefinitionManagerController.LOAD_LIST_URI;
 	}
 
 }

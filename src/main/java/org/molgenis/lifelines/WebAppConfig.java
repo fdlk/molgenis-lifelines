@@ -25,7 +25,7 @@ import org.molgenis.framework.server.MolgenisSettings;
 import org.molgenis.framework.ui.MolgenisPlugin;
 import org.molgenis.lifelines.catalog.CatalogLoaderController;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
-import org.molgenis.lifelines.studydefinition.StudyDefinitionLoaderController;
+import org.molgenis.lifelines.studydefinition.StudyDefinitionManagerController;
 import org.molgenis.lifelines.utils.GenericLayerDataBinder;
 import org.molgenis.lifelines.utils.SecurityHandlerInterceptor;
 import org.molgenis.omx.OmxConfig;
@@ -282,7 +282,7 @@ public class WebAppConfig extends WebMvcConfigurerAdapter
 	public MappedInterceptor studyDefinitionLoaderMappedInterceptor()
 	{
 		return new MappedInterceptor(new String[]
-		{ StudyDefinitionLoaderController.URI + "/**" }, studyDefinitionLoaderHandlerInterceptor());
+		{ StudyDefinitionManagerController.URI + "/**" }, studyDefinitionLoaderHandlerInterceptor());
 	}
 
 	@Bean
