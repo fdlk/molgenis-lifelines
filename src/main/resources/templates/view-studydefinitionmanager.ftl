@@ -2,7 +2,7 @@
 <#include "molgenis-header.ftl">
 <#include "molgenis-footer.ftl">
 <#assign css=["ui.dynatree.css", "protocolviewer.css", "loaders.css"]>
-<#assign js=["jquery-ui-1.9.2.custom.min.js", "jquery.dynatree.min.js", "studydefinitionloader.js"]>
+<#assign js=["jquery-ui-1.9.2.custom.min.js", "jquery.dynatree.min.js", "studydefinitionmanager.js"]>
 <@header css js/>
 	<div class="span2"></div>
 	<div class="span8">
@@ -59,19 +59,32 @@
 									</tbody>
 								</table>
 							</div>
+						<#if foundStudyDefinition>
+							<input id="submitButton" type="submit" class="btn pull-right" value="Load" />
+						</#if>
 						</div>
-						<div class="span6">
-							<div id="study-definition-preview">
-								<div id="study-definition-preview-info">
-								</div>
-								<div id="study-definition-preview-tree">
-								</div>
+						<div class="span6" id="study-definition-info">
+							<ul class="nav nav-tabs">
+								<li class="active"><a href="#study-definition-viewer" class="active" data-toggle="tab">Details</a></li>
+								<li><a href="#study-definition-editor" class="active" data-toggle="tab">Manage</a></li>
+							</ul>
+							<div class="tab-content">
+							    <div class="tab-pane active" id="study-definition-viewer">
+									<div id="study-definition-viewer-info">
+									</div>
+									<div id="study-definition-viewer-tree">
+									</div>
+							    </div>
+							    <div class="tab-pane" id="study-definition-editor">
+							    	<div id="study-definition-editor-info">
+									</div>
+									<div id="study-definition-editor-tree">
+									</div>
+									<input id="updateButton" type="submit" class="btn pull-right" value="Save" />
+							    </div>
 							</div>
 						</div>
 					</div>
-				<#if foundStudyDefinition>
-					<input id="submitButton" type="submit" class="btn pull-right" value="Load" />
-				</#if>
 				</form>
 			</#if>
 			</div>
@@ -96,7 +109,7 @@
 		<script type="text/javascript" src="/js/bootstrap.min.js"></script>
 		<script type="text/javascript" src="/js/jquery.dynatree.min.js"></script>
 		<script type="text/javascript" src="/js/molgenis-all.js"></script>
-		<script type="text/javascript" src="/js/studydefinitionloader.js"></script>
+		<script type="text/javascript" src="/js/studydefinitionmanager.js"></script>
 		<script type="text/javascript">
 			$(function() {
 				parent.hideSpinner();
@@ -167,19 +180,32 @@
 												</tbody>
 											</table>
 										</div>
+									<#if foundStudyDefinition>
+										<input id="submitButton" type="submit" class="btn pull-right" value="Load" />
+									</#if>
 									</div>
-									<div class="span6">
-										<div id="study-definition-preview">
-											<div id="study-definition-preview-info">
-											</div>
-											<div id="study-definition-preview-tree">
-											</div>
+									<div class="span6" id="study-definition-info">
+										<ul class="nav nav-tabs">
+											<li class="active"><a href="#study-definition-viewer" class="active" data-toggle="tab">Details</a></li>
+											<li><a href="#study-definition-editor" class="active" data-toggle="tab">Manage</a></li>
+										</ul>
+										<div class="tab-content">
+										    <div class="tab-pane active" id="study-definition-viewer">
+												<div id="study-definition-viewer-info">
+												</div>
+												<div id="study-definition-viewer-tree">
+												</div>
+										    </div>
+										    <div class="tab-pane" id="study-definition-editor">
+										    	<div id="study-definition-editor-info">
+												</div>
+												<div id="study-definition-editor-tree">
+												</div>
+												<input id="updateButton" type="submit" class="btn pull-right" value="Save" />
+										    </div>
 										</div>
 									</div>
 								</div>
-							<#if foundStudyDefinition>
-								<input id="submitButton" type="submit" class="btn pull-right" value="Load" />
-							</#if>
 							</form>
 						</#if>
 						</div>

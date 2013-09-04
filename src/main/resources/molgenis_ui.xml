@@ -6,7 +6,7 @@
 		<plugin id="protocolviewer" label="Catalogue" name="ProtocolViewerController" type="org.molgenis.omx.protocolviewer.ProtocolViewerPlugin"/>
 		<plugin id="dataexplorer" label="Research Data" name="DataExplorerPlugin" type="org.molgenis.dataexplorer.plugin.DataExplorerPlugin"/>
 		<plugin id="catalog" label="Catalogue Loader" name="CatalogueLoaderPlugin" type="org.molgenis.lifelines.plugins.CatalogueLoaderPlugin" />
-		<plugin id="studydefinition" label="Research Data Loader" name="StudyDefinitionLoaderPlugin" type="org.molgenis.lifelines.plugins.StudyDefinitionLoaderPlugin" />
+		<plugin id="studydefinitionmanager" label="Research Data Loader" name="StudyDefinitionLoaderPlugin" type="org.molgenis.lifelines.plugins.StudyDefinitionLoaderPlugin" />
 		<plugin id="importwizard" label="Upload" name="ImportWizardController" type="org.molgenis.omx.importer.ImportWizardPlugin" />
         <menu name="Admin">
 	        <menu name ="Entities">

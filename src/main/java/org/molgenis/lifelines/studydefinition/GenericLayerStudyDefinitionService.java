@@ -3,6 +3,7 @@ package org.molgenis.lifelines.studydefinition;
 import java.math.BigInteger;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.molgenis.hl7.ActClass;
 import org.molgenis.hl7.ActMood;
 import org.molgenis.hl7.CD;
@@ -37,13 +38,11 @@ import org.molgenis.hl7.StrucDocItem;
 import org.molgenis.hl7.StrucDocList;
 import org.molgenis.hl7.StrucDocText;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
-import org.molgenis.omx.auth.MolgenisUser;
 import org.molgenis.omx.catalog.CatalogLoaderService;
 import org.molgenis.omx.catalog.UnknownCatalogException;
-import org.molgenis.omx.observ.ObservableFeature;
-import org.molgenis.omx.observ.target.OntologyTerm;
 import org.molgenis.omx.study.StudyDefinition;
 import org.molgenis.omx.study.StudyDefinitionInfo;
+import org.molgenis.omx.study.StudyDefinitionItem;
 import org.molgenis.omx.study.StudyDefinitionService;
 import org.molgenis.omx.study.UnknownStudyDefinitionException;
 import org.molgenis.omx.utils.I18nTools;
@@ -59,6 +58,18 @@ public class GenericLayerStudyDefinitionService implements StudyDefinitionServic
 	private CatalogLoaderService catalogLoaderService;
 	@Autowired
 	private GenericLayerDataQueryService dataQueryService;
+
+	/**
+	 * Find the study definition with the given id
+	 * 
+	 * @return
+	 */
+	@Override
+	public StudyDefinition getStudyDefinition(String id)
+	{
+		POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = resourceManagerService.findStudyDefinitionHL7(id);
+		return new QualityMeasureDocumentStudyDefinition(qualityMeasureDocument);
+	}
 
 	/**
 	 * Find all studydefinitions
@@ -90,11 +101,12 @@ public class GenericLayerStudyDefinitionService implements StudyDefinitionServic
 	}
 
 	@Override
-	public void persistStudyDefinition(StudyDefinition studyDefinition)
+	public StudyDefinition persistStudyDefinition(StudyDefinition studyDefinition)
 	{
-
 		POQMMT000001UVQualityMeasureDocument eMeasure = createQualityMeasureDocument(studyDefinition);
-		resourceManagerService.persistStudyDefinition(eMeasure);
+		String id = resourceManagerService.persistStudyDefinition(eMeasure);
+		studyDefinition.setId(StudyDefinitionIdConverter.studyDefinitionIdToOmxIdentifier(id));
+		return studyDefinition;
 	}
 
 	private POQMMT000001UVQualityMeasureDocument createQualityMeasureDocument(StudyDefinition studyDefinition)
@@ -119,10 +131,9 @@ public class GenericLayerStudyDefinitionService implements StudyDefinitionServic
 		title.getContent().add(studyDefinition.getName());
 		eMeasure.setTitle(title);
 
-		MolgenisUser molgenisUser = studyDefinition.getAuthor();
-		StringBuilder textBuilder = new StringBuilder();
-		textBuilder.append("Created by ").append(molgenisUser.getFirstName()).append(' ')
-				.append(molgenisUser.getLastName()).append(" (").append(molgenisUser.getEmail()).append(')');
+		StringBuilder textBuilder = new StringBuilder("Created by ")
+				.append(StringUtils.join(studyDefinition.getAuthors(), ' ')).append(" (")
+				.append(studyDefinition.getAuthorEmail()).append(')');
 
 		ED text = new ED();
 		text.getContent().add(textBuilder.toString());
@@ -198,16 +209,16 @@ public class GenericLayerStudyDefinitionService implements StudyDefinitionServic
 
 		StrucDocText sectionText = new StrucDocText();
 		StrucDocList strucDocList = new StrucDocList();
-		for (ObservableFeature feature : studyDefinition.getFeatures())
+		for (StudyDefinitionItem item : studyDefinition.getItems())
 		{
 			StrucDocItem strucDocItem = new StrucDocItem();
-			strucDocItem.getContent().add(feature.getName());
+			strucDocItem.getContent().add(item.getName());
 			strucDocList.getItem().add(strucDocItem);
 		}
 		sectionText.getContent().add(new ObjectFactory().createStrucDocTextList(strucDocList));
 		section.setText(sectionText);
 
-		for (ObservableFeature feature : studyDefinition.getFeatures())
+		for (StudyDefinitionItem item : studyDefinition.getItems())
 		{
 			POQMMT000001UVEntry entry = new POQMMT000001UVEntry();
 			entry.setTypeCode("DRIV");
@@ -215,25 +226,20 @@ public class GenericLayerStudyDefinitionService implements StudyDefinitionServic
 			observation.setClassCode(ActClass.OBS);
 			observation.setMoodCode(ActMood.CRT);
 
-			String observationCodeCode, observationCodeCodesystem;
-			OntologyTerm ontologyTerm = feature.getDefinition();
-			if (ontologyTerm != null)
-			{
-				observationCodeCode = ontologyTerm.getTermAccession();
-				observationCodeCodesystem = ontologyTerm.getOntology().getOntologyAccession();
-			}
-			else
+			String observationCodeCode = item.getCode();
+			String observationCodeCodesystem = item.getCodeSystem();
+			if (observationCodeCode == null || observationCodeCodesystem == null)
 			{
 				// TODO remove once catalogues are always loaded from LL GL
-				observationCodeCode = feature.getIdentifier();
+				observationCodeCode = item.getId();
 				observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.4";
 			}
 			CD observationCode = new CD();
-			observationCode.setDisplayName(feature.getName());
+			observationCode.setDisplayName(item.getName());
 			observationCode.setCode(observationCodeCode);
 			observationCode.setCodeSystem(observationCodeCodesystem);
 			ED observationOriginalText = new ED();
-			observationOriginalText.getContent().add(I18nTools.get(feature.getDescription()));
+			observationOriginalText.getContent().add(I18nTools.get(item.getDescription()));
 			observationCode.setOriginalText(observationOriginalText);
 			observation.setCode(observationCode);
 			entry.setObservation(observation);

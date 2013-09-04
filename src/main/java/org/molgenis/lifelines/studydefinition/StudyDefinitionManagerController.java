@@ -3,63 +3,56 @@ package org.molgenis.lifelines.studydefinition;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.validation.Valid;
+
 import org.apache.log4j.Logger;
 import org.molgenis.framework.db.Database;
 import org.molgenis.framework.db.DatabaseException;
 import org.molgenis.framework.ui.MolgenisPlugin;
 import org.molgenis.lifelines.catalog.CatalogIdConverter;
-import org.molgenis.omx.catalog.CatalogLoaderService;
 import org.molgenis.omx.catalog.CatalogPreview;
 import org.molgenis.omx.catalog.UnknownCatalogException;
 import org.molgenis.omx.observ.Characteristic;
 import org.molgenis.omx.study.StudyDefinitionInfo;
-import org.molgenis.omx.study.StudyDefinitionService;
+import org.molgenis.omx.study.StudyDefinitionTree;
 import org.molgenis.omx.study.UnknownStudyDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @Controller
-@RequestMapping(StudyDefinitionLoaderController.URI)
-public class StudyDefinitionLoaderController extends MolgenisPlugin
+@RequestMapping(StudyDefinitionManagerController.URI)
+public class StudyDefinitionManagerController extends MolgenisPlugin
 {
-	public static final String URI = MolgenisPlugin.PLUGIN_URI_PREFIX + "studydefinition";
+	private static final Logger LOG = Logger.getLogger(StudyDefinitionManagerController.class);
+
+	public static final String URI = MolgenisPlugin.PLUGIN_URI_PREFIX + "studydefinitionmanager";
 	public static final String LOAD_LIST_URI = "/load-list";
-	public static final String VIEW_NAME = "view-studydefinitionloader";
-	private static final Logger LOG = Logger.getLogger(StudyDefinitionLoaderController.class);
+	public static final String VIEW_NAME = "view-studydefinitionmanager";
+
+	private final StudyDefinitionManagerService studyDefinitionManagerService;
 	private final Database database;
-	private final StudyDefinitionService studyDefinitionService;
-	private final CatalogLoaderService catalogLoaderService;
 
 	@Autowired
-	public StudyDefinitionLoaderController(Database database, StudyDefinitionService studyDefinitionService,
-			CatalogLoaderService catalogLoaderService)
+	public StudyDefinitionManagerController(StudyDefinitionManagerService studyDefinitionManagerService,
+			Database database)
 	{
 		super(URI);
+		if (studyDefinitionManagerService == null)
+		{
+			throw new IllegalArgumentException("StudyDefinitionManagerService is null");
+		}
 		if (database == null) throw new IllegalArgumentException("database is null");
-		if (studyDefinitionService == null) throw new IllegalArgumentException("study definition service is null");
-		if (catalogLoaderService == null) throw new IllegalArgumentException("catalog loader service is null");
+		this.studyDefinitionManagerService = studyDefinitionManagerService;
 		this.database = database;
-		this.studyDefinitionService = studyDefinitionService;
-		this.catalogLoaderService = catalogLoaderService;
-	}
-
-	/**
-	 * Shows a loading spinner in the iframe and loads the studydefinitions list page
-	 * 
-	 * @param model
-	 * @return
-	 */
-	@RequestMapping(LOAD_LIST_URI)
-	public String showSpinner(Model model)
-	{
-		model.addAttribute("url", URI);
-		return "spinner";
 	}
 
 	/**
@@ -73,9 +66,9 @@ public class StudyDefinitionLoaderController extends MolgenisPlugin
 	 * @throws DatabaseException
 	 */
 	@RequestMapping(method = RequestMethod.GET)
-	public String listStudyDefinitions(Model model) throws DatabaseException
+	public String getStudyDefinitions(Model model) throws DatabaseException
 	{
-		List<StudyDefinitionInfo> studyDefinitions = studyDefinitionService.findStudyDefinitions();
+		List<StudyDefinitionInfo> studyDefinitions = studyDefinitionManagerService.findStudyDefinitions();
 		LOG.debug("Got [" + studyDefinitions.size() + "] catalogs from service");
 
 		List<StudyDefinitionModel> models = new ArrayList<StudyDefinitionModel>(studyDefinitions.size());
@@ -93,11 +86,28 @@ public class StudyDefinitionLoaderController extends MolgenisPlugin
 		return VIEW_NAME;
 	}
 
-	@RequestMapping(value = "/preview/{id}", method = RequestMethod.GET)
+	@RequestMapping(value = "/view/{id}", method = RequestMethod.GET)
 	@ResponseBody
 	public CatalogPreview previewStudyDefinition(@PathVariable String id) throws UnknownCatalogException
 	{
-		return catalogLoaderService.getCatalogOfStudyDefinitionPreview(id);
+		return studyDefinitionManagerService.getCatalogOfStudyDefinitionPreview(id);
+	}
+
+	@RequestMapping(value = "/edit/{id}", method = RequestMethod.GET)
+	@ResponseBody
+	public StudyDefinitionTree getStudyDefinitionCatalog(@PathVariable String id) throws UnknownCatalogException,
+			UnknownStudyDefinitionException
+	{
+		return studyDefinitionManagerService.getStudyDefinitionCatalog(id);
+	}
+
+	// Tunnel PUT through POST
+	@RequestMapping(value = "/{id}", method = RequestMethod.POST, params = "_method=PUT")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void updateStudyDefinition(@PathVariable Integer id, @Valid @RequestBody Object studyDefinitionRequest)
+			throws DatabaseException
+	{
+
 	}
 
 	/**
@@ -120,7 +130,7 @@ public class StudyDefinitionLoaderController extends MolgenisPlugin
 		{
 			if (id != null)
 			{
-				studyDefinitionService.loadStudyDefinition(id);
+				studyDefinitionManagerService.loadStudyDefinition(id);
 				model.addAttribute("successMessage", "Studydefinition loaded");
 				LOG.info("Loaded studydefinition with id [" + id + "]");
 			}
@@ -134,7 +144,6 @@ public class StudyDefinitionLoaderController extends MolgenisPlugin
 			model.addAttribute("errorMessage", e.getMessage());
 		}
 
-		return listStudyDefinitions(model);
+		return getStudyDefinitions(model);
 	}
-
 }
