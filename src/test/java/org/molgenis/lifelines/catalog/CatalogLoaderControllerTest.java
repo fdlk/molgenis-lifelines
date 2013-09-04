@@ -95,7 +95,7 @@ public class CatalogLoaderControllerTest extends AbstractTestNGSpringContextTest
 		when(database.query(Characteristic.class)).thenReturn(query);
 
 		this.mockMvc.perform(get("/plugin/catalog")).andExpect(status().isOk())
-				.andExpect(view().name("catalog-loader"))
+				.andExpect(view().name("view-catalogloader"))
 				.andExpect(model().attribute("catalogs", Arrays.asList(new CatalogModel("id1", "name1", false))));
 	}
 
@@ -112,7 +112,7 @@ public class CatalogLoaderControllerTest extends AbstractTestNGSpringContextTest
 		when(database.query(Characteristic.class)).thenReturn(query);
 
 		this.mockMvc.perform(get("/plugin/catalog")).andExpect(status().isOk())
-				.andExpect(view().name("catalog-loader"))
+				.andExpect(view().name("view-catalogloader"))
 				.andExpect(model().attribute("catalogs", Arrays.asList(new CatalogModel("id1", "name1", true))));
 	}
 
@@ -132,7 +132,7 @@ public class CatalogLoaderControllerTest extends AbstractTestNGSpringContextTest
 				.perform(
 						post("/plugin/catalog/load").param("id", "1").param("load", "load")
 								.contentType(MediaType.APPLICATION_FORM_URLENCODED)).andExpect(status().isOk())
-				.andExpect(view().name("catalog-loader")).andExpect(model().attributeExists("successMessage"))
+				.andExpect(view().name("view-catalogloader")).andExpect(model().attributeExists("successMessage"))
 				.andExpect(model().attribute("catalogs", Arrays.asList(new CatalogModel("id1", "name1", false))));
 	}
 
@@ -152,7 +152,7 @@ public class CatalogLoaderControllerTest extends AbstractTestNGSpringContextTest
 				.perform(
 						post("/plugin/catalog/load").param("id", "1").param("load", "load")
 								.contentType(MediaType.APPLICATION_FORM_URLENCODED)).andExpect(status().isOk())
-				.andExpect(view().name("catalog-loader")).andExpect(model().attributeExists("errorMessage"))
+				.andExpect(view().name("view-catalogloader")).andExpect(model().attributeExists("errorMessage"))
 				.andExpect(model().attribute("catalogs", Arrays.asList(new CatalogModel("id1", "name1", true))));
 	}
 
@@ -165,7 +165,7 @@ public class CatalogLoaderControllerTest extends AbstractTestNGSpringContextTest
 				.perform(
 						post("/plugin/catalog/load").param("id", "bogus").param("load", "load")
 								.contentType(MediaType.APPLICATION_FORM_URLENCODED)).andExpect(status().isOk())
-				.andExpect(view().name("catalog-loader")).andExpect(model().attributeExists("errorMessage"));
+				.andExpect(view().name("view-catalogloader")).andExpect(model().attributeExists("errorMessage"));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -184,7 +184,7 @@ public class CatalogLoaderControllerTest extends AbstractTestNGSpringContextTest
 				.perform(
 						post("/plugin/catalog/load").param("id", "id1").param("unload", "unload")
 								.contentType(MediaType.APPLICATION_FORM_URLENCODED)).andExpect(status().isOk())
-				.andExpect(view().name("catalog-loader")).andExpect(model().attributeExists("successMessage"))
+				.andExpect(view().name("view-catalogloader")).andExpect(model().attributeExists("successMessage"))
 				.andExpect(model().attribute("catalogs", Arrays.asList(new CatalogModel("id1", "name1", true))));
 	}
 
@@ -204,7 +204,7 @@ public class CatalogLoaderControllerTest extends AbstractTestNGSpringContextTest
 				.perform(
 						post("/plugin/catalog/load").param("id", "1").param("unload", "unload")
 								.contentType(MediaType.APPLICATION_FORM_URLENCODED)).andExpect(status().isOk())
-				.andExpect(view().name("catalog-loader")).andExpect(model().attributeExists("errorMessage"))
+				.andExpect(view().name("view-catalogloader")).andExpect(model().attributeExists("errorMessage"))
 				.andExpect(model().attribute("catalogs", Arrays.asList(new CatalogModel("id1", "name1", false))));
 	}
 
@@ -218,7 +218,7 @@ public class CatalogLoaderControllerTest extends AbstractTestNGSpringContextTest
 				.perform(
 						post("/plugin/catalog/load").param("id", "bogus").param("unload", "unload")
 								.contentType(MediaType.APPLICATION_FORM_URLENCODED)).andExpect(status().isOk())
-				.andExpect(view().name("catalog-loader")).andExpect(model().attributeExists("errorMessage"));
+				.andExpect(view().name("view-catalogloader")).andExpect(model().attributeExists("errorMessage"));
 	}
 
 	@Test
