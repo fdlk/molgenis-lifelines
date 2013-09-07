@@ -1,4 +1,4 @@
-package org.molgenis.lifelines.studydefinition;
+package org.molgenis.lifelines.studymanager;
 
 /**
  * Helper class to convert a omx studydefinition identifier to a LL studydefinition id and vice versa. Prefix is used to

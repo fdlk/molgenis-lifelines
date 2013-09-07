@@ -1,10 +1,11 @@
-package org.molgenis.lifelines.studydefinition;
+package org.molgenis.lifelines.studymanager;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.JAXBElement;
 
+import org.molgenis.catalog.CatalogItem;
 import org.molgenis.hl7.COCTMT090107UVAssignedPerson;
 import org.molgenis.hl7.COCTMT090107UVPerson;
 import org.molgenis.hl7.COCTMT150007UVOrganization;
@@ -16,8 +17,8 @@ import org.molgenis.hl7.POQMMT000001UVAuthor;
 import org.molgenis.hl7.POQMMT000001UVComponent2;
 import org.molgenis.hl7.POQMMT000001UVEntry;
 import org.molgenis.hl7.POQMMT000001UVQualityMeasureDocument;
-import org.molgenis.omx.study.StudyDefinition;
-import org.molgenis.omx.study.StudyDefinitionItem;
+import org.molgenis.lifelines.catalog.PoqmObservationCatalogItem;
+import org.molgenis.study.StudyDefinition;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -65,23 +66,21 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 	}
 
 	@Override
-	public Iterable<StudyDefinitionItem> getItems()
+	public List<CatalogItem> getItems()
 	{
 		List<POQMMT000001UVComponent2> components = qualityMeasureDocument.getComponent();
 		if (components == null || components.isEmpty() || components.size() > 1) throw new RuntimeException(
 				"expected exactly one component");
 		POQMMT000001UVComponent2 component = components.iterator().next();
 
-		return Lists.transform(component.getSection().getEntry(),
-				new Function<POQMMT000001UVEntry, StudyDefinitionItem>()
-				{
-
-					@Override
-					public StudyDefinitionItem apply(POQMMT000001UVEntry input)
-					{
-						return new ObservationStudyDefinitionItem(input.getObservation());
-					}
-				});
+		return Lists.transform(component.getSection().getEntry(), new Function<POQMMT000001UVEntry, CatalogItem>()
+		{
+			@Override
+			public CatalogItem apply(POQMMT000001UVEntry input)
+			{
+				return new PoqmObservationCatalogItem(input.getObservation());
+			}
+		});
 	}
 
 	@Override
@@ -139,14 +138,14 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 	@Override
 	public String getAuthorEmail()
 	{
-		throw new UnsupportedOperationException();
+		return null;
 	}
 
 	@Override
-	public boolean containsItem(StudyDefinitionItem anItem)
+	public boolean containsItem(CatalogItem anItem)
 	{
 		boolean contains = false;
-		for (StudyDefinitionItem item : getItems())
+		for (CatalogItem item : getItems())
 		{
 			if (item.getId().equals(anItem.getId()))
 			{

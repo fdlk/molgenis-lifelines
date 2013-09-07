@@ -1,4 +1,4 @@
-package org.molgenis.lifelines.studydefinition;
+package org.molgenis.lifelines.studymanager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,11 +44,7 @@ import org.molgenis.omx.observ.value.BoolValue;
 import org.molgenis.omx.observ.value.CategoricalValue;
 import org.molgenis.omx.observ.value.LongValue;
 import org.molgenis.omx.observ.value.StringValue;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
-@Service
 public class GenericLayerDataQueryService
 {
 	private static final Logger logger = Logger.getLogger(GenericLayerResourceManagerService.class);
@@ -66,15 +62,24 @@ public class GenericLayerDataQueryService
 			throw new RuntimeException(e);
 		}
 	}
-	
-	@Autowired
-	private HttpClient httpClient;
-	@Autowired
-	private Database database;
-	@Value("${lifelines.data.query.service.url}")
-	private String dataQueryServiceUrl;
-	@Autowired
-	private GenericLayerDataBinder genericLayerDataBinder;
+
+	private final HttpClient httpClient;
+	private final Database database;
+	private final String dataQueryServiceUrl;
+	private final GenericLayerDataBinder genericLayerDataBinder;
+
+	public GenericLayerDataQueryService(HttpClient httpClient, String dataQueryServiceUrl,
+			GenericLayerDataBinder genericLayerDataBinder, Database database)
+	{
+		if (httpClient == null) throw new IllegalArgumentException("Http client is null");
+		if (dataQueryServiceUrl == null) throw new IllegalArgumentException("Data query service URL is null");
+		if (genericLayerDataBinder == null) throw new IllegalArgumentException("Generic layer data binder is null");
+		if (database == null) throw new IllegalArgumentException("Database is null");
+		this.httpClient = httpClient;
+		this.dataQueryServiceUrl = dataQueryServiceUrl;
+		this.genericLayerDataBinder = genericLayerDataBinder;
+		this.database = database;
+	}
 
 	public void loadStudyDefinitionData(final POQMMT000001UVQualityMeasureDocument studyDefinition)
 	{
@@ -220,6 +225,21 @@ public class GenericLayerDataQueryService
 			logger.error(e);
 			throw new RuntimeException(e);
 		}
+	}
+
+	public boolean isStudyDataLoaded(String id)
+	{
+		String dataSetId = CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id);
+		DataSet dataSet;
+		try
+		{
+			dataSet = DataSet.findByIdentifier(database, dataSetId);
+		}
+		catch (DatabaseException e)
+		{
+			throw new RuntimeException(e);
+		}
+		return dataSet != null;
 	}
 
 	private org.molgenis.omx.observ.value.Value toValue(ANY anyValue) throws DatabaseException

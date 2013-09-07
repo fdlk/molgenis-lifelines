@@ -1,13 +1,16 @@
-package org.molgenis.lifelines.studydefinition;
+package org.molgenis.lifelines.catalog;
 
-import org.molgenis.hl7.POQMMT000002UVObservation;
-import org.molgenis.omx.study.StudyDefinitionItem;
+import java.util.List;
 
-public class ObservationStudyDefinitionItem implements StudyDefinitionItem
+import org.molgenis.catalog.CatalogItem;
+import org.molgenis.hl7.CD;
+import org.molgenis.hl7.REPCMT000100UV01Observation;
+
+public class RepcObservationCatalogItem implements CatalogItem
 {
-	private final POQMMT000002UVObservation observation;
+	private final REPCMT000100UV01Observation observation;
 
-	public ObservationStudyDefinitionItem(POQMMT000002UVObservation observation)
+	public RepcObservationCatalogItem(REPCMT000100UV01Observation observation)
 	{
 		if (observation == null) throw new IllegalArgumentException("observation is null");
 		this.observation = observation;
@@ -22,7 +25,8 @@ public class ObservationStudyDefinitionItem implements StudyDefinitionItem
 	@Override
 	public String getName()
 	{
-		return observation.getCode().getDisplayName();
+		String displayName = observation.getCode().getDisplayName();
+		return displayName != null ? displayName : getCode();
 	}
 
 	@Override
@@ -34,7 +38,17 @@ public class ObservationStudyDefinitionItem implements StudyDefinitionItem
 	@Override
 	public String getCode()
 	{
-		return observation.getCode().getCode();
+		CD code = observation.getCode();
+
+		// 1. get code from code
+		if (code.getCode() != null) return code.getCode();
+
+		// 2. use code from first translation in code
+		List<CD> translations = code.getTranslation();
+		if (translations != null && !translations.isEmpty()) return translations.get(0).getCode();
+
+		// 3. use code system name + display name
+		return code.getCodeSystemName() + '.' + code.getDisplayName();
 	}
 
 	@Override

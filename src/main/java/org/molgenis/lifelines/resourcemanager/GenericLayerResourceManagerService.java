@@ -18,21 +18,22 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.log4j.Logger;
 import org.molgenis.atom.ContentType;
 import org.molgenis.atom.EntryType;
 import org.molgenis.atom.FeedType;
+import org.molgenis.catalog.CatalogMeta;
 import org.molgenis.hl7.ED;
 import org.molgenis.hl7.II;
 import org.molgenis.hl7.INT;
 import org.molgenis.hl7.ObjectFactory;
 import org.molgenis.hl7.POQMMT000001UVQualityMeasureDocument;
 import org.molgenis.hl7.ST;
-import org.molgenis.lifelines.studydefinition.QualityMeasureDocumentStudyDefinition;
+import org.molgenis.lifelines.studymanager.QualityMeasureDocumentStudyDefinition;
 import org.molgenis.lifelines.utils.GenericLayerDataBinder;
 import org.molgenis.lifelines.utils.OutputStreamHttpEntity;
-import org.molgenis.omx.catalog.CatalogInfo;
-import org.molgenis.omx.study.StudyDefinitionInfo;
+import org.molgenis.study.StudyDefinitionMeta;
 import org.w3c.dom.Node;
 
 import com.google.common.base.Function;
@@ -83,11 +84,11 @@ public class GenericLayerResourceManagerService
 	 * 
 	 * @return
 	 */
-	public StudyDefinitionInfo findStudyDefinition(String id)
+	public StudyDefinitionMeta findStudyDefinition(String id)
 	{
 		CatalogSearchResult catalogSearchResult = findCatalogRelease("/studydefinition/" + id);
 
-		StudyDefinitionInfo studyDefinitionInfo = new StudyDefinitionInfo(catalogSearchResult.getId(),
+		StudyDefinitionMeta studyDefinitionInfo = new StudyDefinitionMeta(catalogSearchResult.getId(),
 				catalogSearchResult.getName());
 		studyDefinitionInfo.setDescription(catalogSearchResult.getDescription());
 		studyDefinitionInfo.setVersion(catalogSearchResult.getVersion());
@@ -100,15 +101,15 @@ public class GenericLayerResourceManagerService
 	 * 
 	 * @return
 	 */
-	public List<StudyDefinitionInfo> findStudyDefinitions()
+	public List<StudyDefinitionMeta> findStudyDefinitions()
 	{
 		List<CatalogSearchResult> catalogs = findCatalogReleases("/studydefinition");
-		return Lists.transform(catalogs, new Function<CatalogSearchResult, StudyDefinitionInfo>()
+		return Lists.transform(catalogs, new Function<CatalogSearchResult, StudyDefinitionMeta>()
 		{
 			@Override
-			public StudyDefinitionInfo apply(CatalogSearchResult input)
+			public StudyDefinitionMeta apply(CatalogSearchResult input)
 			{
-				return new StudyDefinitionInfo(input.getId(), input.getName());
+				return new StudyDefinitionMeta(input.getId(), input.getName());
 			}
 		});
 	}
@@ -205,16 +206,62 @@ public class GenericLayerResourceManagerService
 		}
 	}
 
+	public void updateStudyDefinition(String studyDefinitionId,
+			final POQMMT000001UVQualityMeasureDocument studyDefinition) throws JAXBException
+	{
+		HttpPut httpPut = new HttpPut(resourceManagerServiceUrl + "/studydefinition/" + studyDefinitionId);
+		httpPut.setHeader("Content-Type", "application/xml");
+		httpPut.setEntity(new OutputStreamHttpEntity()
+		{
+			@Override
+			public void writeTo(final OutputStream outstream) throws IOException
+			{
+				try
+				{
+					genericLayerDataBinder.createQualityMeasureDocumentMarshaller().marshal(
+							new ObjectFactory().createQualityMeasureDocument(studyDefinition), outstream);
+				}
+				catch (JAXBException e)
+				{
+					throw new RuntimeException(e);
+				}
+				outstream.close();
+			}
+		});
+
+		InputStream xmlStream = null;
+		try
+		{
+			HttpResponse response = httpClient.execute(httpPut);
+			int statusCode = response.getStatusLine().getStatusCode();
+			if (statusCode < 200 || statusCode > 299) throw new IOException(
+					"Error updating study definition (statuscode " + statusCode + ")");
+		}
+		catch (RuntimeException e)
+		{
+			httpPut.abort();
+			throw e;
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException(e);
+		}
+		finally
+		{
+			IOUtils.closeQuietly(xmlStream);
+		}
+	}
+
 	/**
 	 * Get the catalog with the given id
 	 * 
 	 * @return List of CatalogInfo
 	 */
-	public CatalogInfo findCatalog(String id)
+	public CatalogMeta findCatalog(String id)
 	{
 		CatalogSearchResult catalogSearchResult = findCatalogRelease("/catalogrelease/" + id);
 
-		CatalogInfo catalogInfo = new CatalogInfo(catalogSearchResult.getId(), catalogSearchResult.getName());
+		CatalogMeta catalogInfo = new CatalogMeta(catalogSearchResult.getId(), catalogSearchResult.getName());
 		catalogInfo.setDescription(catalogSearchResult.getDescription());
 		catalogInfo.setVersion(catalogSearchResult.getVersion());
 		catalogInfo.setAuthors(catalogSearchResult.getAuthors());
@@ -226,15 +273,15 @@ public class GenericLayerResourceManagerService
 	 * 
 	 * @return List of CatalogInfo
 	 */
-	public List<CatalogInfo> findCatalogs()
+	public List<CatalogMeta> findCatalogs()
 	{
 		List<CatalogSearchResult> catalogs = findCatalogReleases("/catalogrelease");
-		return Lists.transform(catalogs, new Function<CatalogSearchResult, CatalogInfo>()
+		return Lists.transform(catalogs, new Function<CatalogSearchResult, CatalogMeta>()
 		{
 			@Override
-			public CatalogInfo apply(CatalogSearchResult input)
+			public CatalogMeta apply(CatalogSearchResult input)
 			{
-				return new CatalogInfo(input.getId(), input.getName());
+				return new CatalogMeta(input.getId(), input.getName());
 			}
 		});
 	}

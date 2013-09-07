@@ -5,10 +5,10 @@
 		<plugin id="home" label="Home" name="HomePlugin" type="org.molgenis.lifelines.plugins.HomePlugin"/>
 		<plugin id="protocolviewer" label="Catalogue" name="ProtocolViewerController" type="org.molgenis.omx.protocolviewer.ProtocolViewerPlugin"/>
 		<plugin id="dataexplorer" label="Research Data" name="DataExplorerPlugin" type="org.molgenis.dataexplorer.plugin.DataExplorerPlugin"/>
-		<plugin id="catalog" label="Catalogue Loader" name="CatalogueLoaderPlugin" type="org.molgenis.lifelines.plugins.CatalogueLoaderPlugin" />
-		<plugin id="studydefinitionmanager" label="Research Data Loader" name="StudyDefinitionLoaderPlugin" type="org.molgenis.lifelines.plugins.StudyDefinitionLoaderPlugin" />
 		<plugin id="importwizard" label="Upload" name="ImportWizardController" type="org.molgenis.omx.importer.ImportWizardPlugin" />
         <menu name="Admin">
+        	<plugin id="catalogmanager" label="Catalog Manager" name="CatalogManagerPlugin" type="org.molgenis.catalogmanager.CatalogManagerPlugin" />
+			<plugin id="studymanager" label="Study Manager" name="StudyManagerPlugin" type="org.molgenis.studymanager.StudyManagerPlugin" />       
 	        <menu name ="Entities">
 	        	<plugin id="form/DataSet" label="DataSet" name="DataSetFormPlugin" type="org.molgenis.ui.form.MolgenisEntityFormPlugin" />
 	        	<plugin id="form/Protocol" label="Protocol" name="ProtocolFormPlugin" type="org.molgenis.ui.form.MolgenisEntityFormPlugin" />
