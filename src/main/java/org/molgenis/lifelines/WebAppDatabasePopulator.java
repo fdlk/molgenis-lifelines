@@ -20,7 +20,6 @@ import org.molgenis.omx.auth.MolgenisUser;
 import org.molgenis.omx.auth.OmxPermissionService;
 import org.molgenis.omx.auth.service.AccountService;
 import org.molgenis.omx.core.RuntimeProperty;
-import org.molgenis.omx.filter.StudyDataRequest;
 import org.molgenis.omx.observ.Category;
 import org.molgenis.omx.observ.Characteristic;
 import org.molgenis.omx.observ.DataSet;
@@ -30,20 +29,24 @@ import org.molgenis.omx.observ.ObservedValue;
 import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.observ.target.Ontology;
 import org.molgenis.omx.observ.target.OntologyTerm;
+import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.search.SearchSecurityHandlerInterceptor;
 import org.molgenis.servlet.GuiService;
-import org.molgenis.ui.CatalogueLoaderPluginPlugin;
+import org.molgenis.ui.CatalogManagerPluginPlugin;
 import org.molgenis.ui.DataExplorerPluginPlugin;
 import org.molgenis.ui.HomePluginPlugin;
 import org.molgenis.ui.MolgenisMenuController.VoidPluginController;
-import org.molgenis.ui.StudyDefinitionLoaderPluginPlugin;
+import org.molgenis.ui.StudyManagerPluginPlugin;
 import org.molgenis.util.Entity;
 import org.springframework.beans.factory.annotation.Value;
 
 public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 {
+	static final String KEY_APP_HREF_LOGO = "app.href.logo";
+	static final String KEY_APP_HREF_CSS = "app.href.css";
+
 	@Value("${lifelines.profile:@null}")
-	private String appProfile;
+	private String appProfileStr;
 	@Value("${admin.password:@null}")
 	private String adminPassword;
 	@Value("${lifelines.datamanager.password:@null}")
@@ -58,16 +61,17 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 	@Override
 	protected void initializeApplicationDatabase(Database database) throws Exception
 	{
-		if (appProfile == null || dataManagerPassword == null || researcherPassword == null || adminPassword == null)
+		if (appProfileStr == null || dataManagerPassword == null || researcherPassword == null || adminPassword == null)
 		{
 			StringBuilder message = new StringBuilder("please configure: ");
-			if (appProfile == null) message.append("lifelines.profile(possible values: workspace or website), ");
+			if (appProfileStr == null) message.append("lifelines.profile(possible values: workspace or website), ");
 			if (dataManagerPassword == null) message.append("default lifelines.datamanager.password, ");
 			if (researcherPassword == null) message.append("default lifelines.researcher.password ");
 			if (adminPassword == null) message.append("default admin.password ");
 			message.append("in your molgenis-server.properties.");
 			throw new RuntimeException(message.toString());
 		}
+		LifeLinesAppProfile appProfile = LifeLinesAppProfile.valueOf(appProfileStr.toUpperCase());
 
 		Login login = database.getLogin();
 		database.setLogin(null);
@@ -76,11 +80,23 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 		MolgenisPermissionService permissionService = new OmxPermissionService(database, login);
 
 		// set app name
-		RuntimeProperty runtimeProperty = new RuntimeProperty();
-		runtimeProperty.setIdentifier(RuntimeProperty.class.getSimpleName() + '_' + GuiService.KEY_APP_NAME);
-		runtimeProperty.setName(GuiService.KEY_APP_NAME);
-		runtimeProperty.setValue("LifeLines");
-		database.add(runtimeProperty);
+		RuntimeProperty appNameProperty = new RuntimeProperty();
+		appNameProperty.setIdentifier(RuntimeProperty.class.getSimpleName() + '_' + GuiService.KEY_APP_NAME);
+		appNameProperty.setName(GuiService.KEY_APP_NAME);
+		appNameProperty.setValue("LifeLines");
+		database.add(appNameProperty);
+
+		RuntimeProperty appHrefLogoProperty = new RuntimeProperty();
+		appHrefLogoProperty.setIdentifier(RuntimeProperty.class.getSimpleName() + '_' + KEY_APP_HREF_LOGO);
+		appHrefLogoProperty.setName(KEY_APP_HREF_LOGO);
+		appHrefLogoProperty.setValue("/img/lifelines_letterbox_270x100.png");
+		database.add(appHrefLogoProperty);
+
+		RuntimeProperty appHrefCssProperty = new RuntimeProperty();
+		appHrefCssProperty.setIdentifier(RuntimeProperty.class.getSimpleName() + '_' + KEY_APP_HREF_CSS);
+		appHrefCssProperty.setName(KEY_APP_HREF_CSS);
+		appHrefCssProperty.setValue("lifelines.css");
+		database.add(appHrefCssProperty);
 
 		RuntimeProperty runtimePropertyAuthentication = new RuntimeProperty();
 		runtimePropertyAuthentication.setIdentifier(RuntimeProperty.class.getSimpleName() + '_'
@@ -195,9 +211,9 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 		permissionService.setPermissionOnPlugin(HomePluginPlugin.class.getSimpleName(), anonymousUser.getId(),
 				Permission.READ);
 
-		if ("website".equals(appProfile))
+		if (appProfile == LifeLinesAppProfile.WEBSITE)
 		{
-			permissionService.setPermissionOnPlugin(CatalogueLoaderPluginPlugin.class.getSimpleName(),
+			permissionService.setPermissionOnPlugin(CatalogManagerPluginPlugin.class.getSimpleName(),
 					userDataManager.getId(), Permission.READ);
 
 			RuntimeProperty runtimePropertyAllowAnonymousSearch = new RuntimeProperty();
@@ -208,13 +224,13 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 			runtimePropertyAllowAnonymousSearch.setValue("true");
 			database.add(runtimePropertyAllowAnonymousSearch);
 		}
-		else if ("workspace".equals(appProfile))
+		else if (appProfile == LifeLinesAppProfile.WORKSPACE)
 		{
 			permissionService.setPermissionOnPlugin(DataExplorerPluginPlugin.class.getSimpleName(),
 					groupDataManagers.getId(), Permission.READ);
 			permissionService.setPermissionOnPlugin(DataExplorerPluginPlugin.class.getSimpleName(),
 					groupResearchers.getId(), Permission.READ);
-			permissionService.setPermissionOnPlugin(StudyDefinitionLoaderPluginPlugin.class.getSimpleName(),
+			permissionService.setPermissionOnPlugin(StudyManagerPluginPlugin.class.getSimpleName(),
 					groupDataManagers.getId(), Permission.READ);
 		}
 		else
