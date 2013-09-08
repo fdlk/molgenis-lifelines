@@ -29,6 +29,7 @@ import org.molgenis.omx.observ.ObservedValue;
 import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.observ.target.Ontology;
 import org.molgenis.omx.observ.target.OntologyTerm;
+import org.molgenis.omx.protocolviewer.ProtocolViewerController;
 import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.search.SearchSecurityHandlerInterceptor;
 import org.molgenis.servlet.GuiService;
@@ -36,6 +37,7 @@ import org.molgenis.ui.CatalogManagerPluginPlugin;
 import org.molgenis.ui.DataExplorerPluginPlugin;
 import org.molgenis.ui.HomePluginPlugin;
 import org.molgenis.ui.MolgenisMenuController.VoidPluginController;
+import org.molgenis.ui.ProtocolViewerControllerPlugin;
 import org.molgenis.ui.StudyManagerPluginPlugin;
 import org.molgenis.util.Entity;
 import org.springframework.beans.factory.annotation.Value;
@@ -210,6 +212,16 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 				Permission.READ);
 		permissionService.setPermissionOnPlugin(HomePluginPlugin.class.getSimpleName(), anonymousUser.getId(),
 				Permission.READ);
+		permissionService.setPermissionOnPlugin(ProtocolViewerController.class, allUsersGroup.getId(), Permission.READ);
+		permissionService.setPermissionOnPlugin(ProtocolViewerController.class, groupResearchers.getId(),
+				Permission.READ);
+		permissionService.setPermissionOnPlugin(ProtocolViewerController.class, anonymousUser.getId(), Permission.READ);
+		permissionService.setPermissionOnPlugin(ProtocolViewerControllerPlugin.class.getSimpleName(),
+				allUsersGroup.getId(), Permission.READ);
+		permissionService.setPermissionOnPlugin(ProtocolViewerControllerPlugin.class.getSimpleName(),
+				groupResearchers.getId(), Permission.READ);
+		permissionService.setPermissionOnPlugin(ProtocolViewerControllerPlugin.class.getSimpleName(),
+				anonymousUser.getId(), Permission.READ);
 
 		if (appProfile == LifeLinesAppProfile.WEBSITE)
 		{
