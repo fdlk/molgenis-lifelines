@@ -10,20 +10,20 @@
         	<plugin id="catalogmanager" label="Catalog Manager" name="CatalogManagerController" type="org.molgenis.catalogmanager.CatalogManagerPlugin"/>
 			<plugin id="studymanager" label="Study Manager" name="StudyManagerController" type="org.molgenis.studymanager.StudyManagerPlugin"/>       
 	        <menu label="Entities" name ="entities">
-	        	<plugin id="form/DataSet" label="DataSet" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-	        	<plugin id="form/Protocol" label="Protocol" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-	        	<plugin id="form/ObservableFeature" label="Feature" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-	        	<plugin id="form/Category" label="Category" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-	        	<plugin id="form/Ontology" label="Ontology" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-	        	<plugin id="form/OntologyTerm" label="OntologyTerm" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-	        	<plugin id="form/StudyDataRequest" label="StudyDataRequest" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-	        	<plugin id="form/RuntimeProperty" label="RuntimeProperty" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
+	        	<plugin id="form.DataSet" label="DataSet" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
+	        	<plugin id="form.Protocol" label="Protocol" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
+	        	<plugin id="form.ObservableFeature" label="Feature" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
+	        	<plugin id="form.Category" label="Category" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
+	        	<plugin id="form.Ontology" label="Ontology" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
+	        	<plugin id="form.OntologyTerm" label="OntologyTerm" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
+	        	<plugin id="form.StudyDataRequest" label="StudyDataRequest" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
+	        	<plugin id="form.RuntimeProperty" label="RuntimeProperty" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
 		        <menu label="Users and permissions" name="security">
-		        	<plugin id="form/MolgenisUser" label="MolgenisUser" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-		        	<plugin id="form/MolgenisGroup" label="MolgenisGroup" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-		        	<plugin id="form/MolgenisRoleGroupLink" label="MolgenisRoleGroupLink" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-		        	<plugin id="form/MolgenisEntity" label="MolgenisEntity" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-		        	<plugin id="form/MolgenisPermission" label="MolgenisPermission" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
+		        	<plugin id="form.MolgenisUser" label="MolgenisUser" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
+		        	<plugin id="form.MolgenisGroup" label="MolgenisGroup" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
+		        	<plugin id="form.MolgenisRoleGroupLink" label="MolgenisRoleGroupLink" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
+		        	<plugin id="form.MolgenisEntity" label="MolgenisEntity" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
+		        	<plugin id="form.MolgenisPermission" label="MolgenisPermission" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
 				</menu>
 	       	</menu>
 			<plugin id="dataindexer" label="Index datasets" name="DataSetsIndexerController" type="org.molgenis.omx.plugin.DataSetsIndexerPlugin"/>
