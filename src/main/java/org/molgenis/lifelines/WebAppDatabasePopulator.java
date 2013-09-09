@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.molgenis.MolgenisDatabasePopulator;
+import org.molgenis.catalogmanager.CatalogManagerController;
+import org.molgenis.dataexplorer.controller.DataExplorerController;
 import org.molgenis.framework.db.Database;
 import org.molgenis.framework.db.DatabaseException;
 import org.molgenis.framework.db.QueryRule;
@@ -33,6 +35,7 @@ import org.molgenis.omx.protocolviewer.ProtocolViewerController;
 import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.search.SearchSecurityHandlerInterceptor;
 import org.molgenis.servlet.GuiService;
+import org.molgenis.studymanager.StudyManagerController;
 import org.molgenis.ui.CatalogManagerPluginPlugin;
 import org.molgenis.ui.DataExplorerPluginPlugin;
 import org.molgenis.ui.HomePluginPlugin;
@@ -227,6 +230,8 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 		{
 			permissionService.setPermissionOnPlugin(CatalogManagerPluginPlugin.class.getSimpleName(),
 					userDataManager.getId(), Permission.READ);
+			permissionService.setPermissionOnPlugin(CatalogManagerController.class.getSimpleName(),
+					userDataManager.getId(), Permission.READ);
 
 			RuntimeProperty runtimePropertyAllowAnonymousSearch = new RuntimeProperty();
 			runtimePropertyAllowAnonymousSearch.setIdentifier(RuntimeProperty.class.getSimpleName() + '_'
@@ -242,7 +247,13 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 					groupDataManagers.getId(), Permission.READ);
 			permissionService.setPermissionOnPlugin(DataExplorerPluginPlugin.class.getSimpleName(),
 					groupResearchers.getId(), Permission.READ);
+			permissionService.setPermissionOnPlugin(DataExplorerController.class.getSimpleName(),
+					groupDataManagers.getId(), Permission.READ);
+			permissionService.setPermissionOnPlugin(DataExplorerController.class.getSimpleName(),
+					groupResearchers.getId(), Permission.READ);
 			permissionService.setPermissionOnPlugin(StudyManagerPluginPlugin.class.getSimpleName(),
+					groupDataManagers.getId(), Permission.READ);
+			permissionService.setPermissionOnPlugin(StudyManagerController.class.getSimpleName(),
 					groupDataManagers.getId(), Permission.READ);
 		}
 		else
