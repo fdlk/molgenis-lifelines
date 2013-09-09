@@ -1,4 +1,4 @@
-package org.molgenis.lifelines.studydefinition;
+package org.molgenis.lifelines.studymanager;
 
 public class StudyDefinitionModel
 {

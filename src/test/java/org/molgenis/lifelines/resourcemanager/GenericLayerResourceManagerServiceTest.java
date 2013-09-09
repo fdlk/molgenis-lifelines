@@ -19,9 +19,9 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.molgenis.catalog.CatalogMeta;
 import org.molgenis.lifelines.utils.GenericLayerDataBinder;
-import org.molgenis.omx.catalog.CatalogInfo;
-import org.molgenis.omx.study.StudyDefinitionInfo;
+import org.molgenis.study.StudyDefinitionMeta;
 import org.molgenis.util.SchemaLoader;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -66,7 +66,7 @@ public class GenericLayerResourceManagerServiceTest
 
 		GenericLayerResourceManagerService resourceManagerService = new GenericLayerResourceManagerService(httpClient,
 				resourceManagerUrl, genericLayerDataBinder);
-		List<CatalogInfo> catalogs = resourceManagerService.findCatalogs();
+		List<CatalogMeta> catalogs = resourceManagerService.findCatalogs();
 		assertEquals(catalogs.size(), 1);
 		assertEquals(catalogs.get(0).getId(), "1");
 		assertEquals(catalogs.get(0).getName(), "[Catalog Release 1]");
@@ -127,7 +127,7 @@ public class GenericLayerResourceManagerServiceTest
 
 		GenericLayerResourceManagerService resourceManagerService = new GenericLayerResourceManagerService(httpClient,
 				resourceManagerUrl, genericLayerDataBinder);
-		List<StudyDefinitionInfo> studyDefinitions = resourceManagerService.findStudyDefinitions();
+		List<StudyDefinitionMeta> studyDefinitions = resourceManagerService.findStudyDefinitions();
 		assertEquals(studyDefinitions.size(), 2);
 		assertEquals(studyDefinitions.get(0).getId(), "1");
 		assertEquals(studyDefinitions.get(0).getName(), "[Study 1]");

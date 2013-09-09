@@ -1,13 +1,13 @@
-package org.molgenis.lifelines.studydefinition;
+package org.molgenis.lifelines.catalog;
 
+import org.molgenis.catalog.CatalogItem;
 import org.molgenis.hl7.POQMMT000002UVObservation;
-import org.molgenis.omx.study.StudyDefinitionItem;
 
-public class ObservationStudyDefinitionItem implements StudyDefinitionItem
+public class PoqmObservationCatalogItem implements CatalogItem
 {
 	private final POQMMT000002UVObservation observation;
 
-	public ObservationStudyDefinitionItem(POQMMT000002UVObservation observation)
+	public PoqmObservationCatalogItem(POQMMT000002UVObservation observation)
 	{
 		if (observation == null) throw new IllegalArgumentException("observation is null");
 		this.observation = observation;

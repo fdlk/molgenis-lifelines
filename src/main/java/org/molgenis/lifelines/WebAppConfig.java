@@ -17,25 +17,27 @@ import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.molgenis.DatabaseConfig;
+import org.molgenis.catalogmanager.CatalogManagerService;
 import org.molgenis.elasticsearch.config.EmbeddedElasticSearchConfig;
 import org.molgenis.framework.db.Database;
 import org.molgenis.framework.security.Login;
 import org.molgenis.framework.server.MolgenisPermissionService;
 import org.molgenis.framework.server.MolgenisSettings;
 import org.molgenis.framework.ui.MolgenisPlugin;
-import org.molgenis.lifelines.catalog.CatalogLoaderController;
+import org.molgenis.lifelines.catalog.GenericLayerCatalogueManagerService;
+import org.molgenis.lifelines.catalog.LifeLinesCatalogManagerService;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
-import org.molgenis.lifelines.studydefinition.StudyDefinitionManagerController;
+import org.molgenis.lifelines.studymanager.GenericLayerDataQueryService;
+import org.molgenis.lifelines.studymanager.GenericLayerStudyManagerService;
 import org.molgenis.lifelines.utils.GenericLayerDataBinder;
-import org.molgenis.lifelines.utils.SecurityHandlerInterceptor;
 import org.molgenis.omx.OmxConfig;
 import org.molgenis.omx.auth.OmxPermissionService;
+import org.molgenis.omx.catalogmanager.OmxCatalogManagerService;
 import org.molgenis.omx.config.DataExplorerConfig;
 import org.molgenis.search.SearchSecurityConfig;
-import org.molgenis.ui.CatalogueLoaderPluginPlugin;
+import org.molgenis.studymanager.StudyManagerService;
 import org.molgenis.ui.MolgenisPluginInterceptor;
 import org.molgenis.ui.MolgenisUi;
-import org.molgenis.ui.StudyDefinitionLoaderPluginPlugin;
 import org.molgenis.ui.XmlMolgenisUi;
 import org.molgenis.ui.XmlMolgenisUiLoader;
 import org.molgenis.util.ApplicationContextProvider;
@@ -65,7 +67,6 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-import org.springframework.web.servlet.handler.MappedInterceptor;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver;
 
@@ -78,6 +79,10 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver;
 		SearchSecurityConfig.class })
 public class WebAppConfig extends WebMvcConfigurerAdapter
 {
+	@Autowired
+	@Qualifier("database")
+	private Database database;
+
 	@Autowired
 	@Qualifier("unauthorizedDatabase")
 	private Database unauthorizedDatabase;
@@ -243,6 +248,11 @@ public class WebAppConfig extends WebMvcConfigurerAdapter
 		return connectionManager;
 	}
 
+	@Value("${lifelines.resource.manager.service.url}")
+	private String resourceManagerServiceUrl; // Specify in molgenis-server.properties
+	@Value("${lifelines.data.query.service.url}")
+	private String dataQueryServiceUrl; // Specify in molgenis-server.properties
+
 	@Bean
 	public GenericLayerDataBinder genericLayerDataBinder()
 	{
@@ -250,45 +260,42 @@ public class WebAppConfig extends WebMvcConfigurerAdapter
 		return new GenericLayerDataBinder(eMeasureSchema);
 	}
 
+	@Value("${lifelines.profile:@null}")
+	private String appProfile;
+
 	@Bean
-	public GenericLayerCatalogService genericLayerCatalogService()
+	public CatalogManagerService catalogManagerService()
 	{
-		return new CatalogService().getBasicHttpBindingGenericLayerCatalogService();
+		if (appProfile == null || LifeLinesAppProfile.valueOf(appProfile.toUpperCase()) == LifeLinesAppProfile.WEBSITE)
+		{
+			return new LifeLinesCatalogManagerService(new OmxCatalogManagerService(database));
+		}
+		else
+		{
+			GenericLayerCatalogService genericLayerCatalogService = new CatalogService()
+					.getBasicHttpBindingGenericLayerCatalogService();
+			return new GenericLayerCatalogueManagerService(database, genericLayerCatalogService,
+					genericLayerResourceManagerService());
+		}
 	}
 
-	@Value("${lifelines.resource.manager.service.url}")
-	private String resourceManagerServiceUrl;// Specify in molgenis-server.properties
+	@Bean
+	public StudyManagerService studyDefinitionManagerService()
+	{
+		return new GenericLayerStudyManagerService(genericLayerResourceManagerService(), catalogManagerService(),
+				genericLayerDataQueryService());
+	}
+
+	@Bean
+	public GenericLayerDataQueryService genericLayerDataQueryService()
+	{
+		return new GenericLayerDataQueryService(httpClient(), dataQueryServiceUrl, genericLayerDataBinder(), database);
+	}
 
 	@Bean
 	public GenericLayerResourceManagerService genericLayerResourceManagerService()
 	{
 		return new GenericLayerResourceManagerService(httpClient(), resourceManagerServiceUrl, genericLayerDataBinder());
-	}
-
-	@Bean
-	public SecurityHandlerInterceptor catalogLoaderHandlerInterceptor()
-	{
-		return new SecurityHandlerInterceptor(CatalogueLoaderPluginPlugin.class);
-	}
-
-	@Bean
-	public MappedInterceptor catalogLoaderMappedInterceptor()
-	{
-		return new MappedInterceptor(new String[]
-		{ CatalogLoaderController.URI + "/**" }, catalogLoaderHandlerInterceptor());
-	}
-
-	@Bean
-	public MappedInterceptor studyDefinitionLoaderMappedInterceptor()
-	{
-		return new MappedInterceptor(new String[]
-		{ StudyDefinitionManagerController.URI + "/**" }, studyDefinitionLoaderHandlerInterceptor());
-	}
-
-	@Bean
-	public SecurityHandlerInterceptor studyDefinitionLoaderHandlerInterceptor()
-	{
-		return new SecurityHandlerInterceptor(StudyDefinitionLoaderPluginPlugin.class);
 	}
 
 	@Bean

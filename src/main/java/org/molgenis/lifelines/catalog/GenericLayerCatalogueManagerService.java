@@ -15,6 +15,10 @@ import nl.umcg.hl7.GetCatalogResponse.GetCatalogResult;
 import nl.umcg.hl7.GetValuesetsResponse.GetValuesetsResult;
 
 import org.apache.log4j.Logger;
+import org.molgenis.catalog.Catalog;
+import org.molgenis.catalog.CatalogMeta;
+import org.molgenis.catalog.UnknownCatalogException;
+import org.molgenis.catalogmanager.CatalogManagerService;
 import org.molgenis.framework.db.Database;
 import org.molgenis.framework.db.DatabaseException;
 import org.molgenis.hl7.ANY;
@@ -31,27 +35,21 @@ import org.molgenis.hl7.ValueSets.ValueSet.Code;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
 import org.molgenis.lifelines.utils.HL7DataTypeMapper;
 import org.molgenis.lifelines.utils.OmxIdentifierGenerator;
-import org.molgenis.omx.catalog.CatalogInfo;
-import org.molgenis.omx.catalog.CatalogLoaderService;
-import org.molgenis.omx.catalog.CatalogPreview;
-import org.molgenis.omx.catalog.CatalogPreview.CatalogPreviewNode;
-import org.molgenis.omx.catalog.UnknownCatalogException;
+import org.molgenis.omx.catalogmanager.OmxCatalog;
 import org.molgenis.omx.observ.Category;
 import org.molgenis.omx.observ.DataSet;
 import org.molgenis.omx.observ.ObservableFeature;
 import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.observ.target.Ontology;
 import org.molgenis.omx.observ.target.OntologyTerm;
-import org.molgenis.omx.study.StudyDefinitionInfo;
 import org.molgenis.omx.utils.ProtocolUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.molgenis.study.StudyDefinitionMeta;
+import org.molgenis.study.UnknownStudyDefinitionException;
 import org.w3c.dom.Node;
 
-@Service
-public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
+public class GenericLayerCatalogueManagerService implements CatalogManagerService
 {
-	private static final Logger logger = Logger.getLogger(GenericLayerCatalogueLoaderService.class);
+	private static final Logger logger = Logger.getLogger(GenericLayerCatalogueManagerService.class);
 
 	private static final JAXBContext JAXB_CONTEXT_VALUESETS;
 	private static final JAXBContext JAXB_CONTEXT_ORGANIZER;
@@ -73,8 +71,8 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 	private final GenericLayerCatalogService genericLayerCatalogService;
 	private final GenericLayerResourceManagerService resourceManagerService;
 
-	@Autowired
-	public GenericLayerCatalogueLoaderService(Database database, GenericLayerCatalogService genericLayerCatalogService,
+	public GenericLayerCatalogueManagerService(Database database,
+			GenericLayerCatalogService genericLayerCatalogService,
 			GenericLayerResourceManagerService resourceManagerService)
 	{
 		if (database == null) throw new IllegalArgumentException("database is null");
@@ -86,94 +84,39 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 	}
 
 	@Override
-	public List<CatalogInfo> findCatalogs()
+	public List<CatalogMeta> findCatalogs()
 	{
 		return resourceManagerService.findCatalogs();
 	}
 
 	@Override
-	public CatalogPreview getCatalogPreview(String id) throws UnknownCatalogException
+	public Catalog getCatalog(String id) throws UnknownCatalogException
 	{
+		// retrieve catalog from database
+		String catalogId = CatalogIdConverter.catalogIdToOmxIdentifier(id);
+		DataSet dataSet;
+		try
+		{
+			dataSet = DataSet.findByIdentifier(database, catalogId);
+		}
+		catch (DatabaseException e)
+		{
+			throw new RuntimeException(e);
+		}
+		if (dataSet != null) return new OmxCatalog(dataSet);
 
-		// retrieve catalog data
+		// retrieve catalog from generic layer
+		CatalogMeta catalogMeta = resourceManagerService.findCatalog(id);
 		REPCMT000100UV01Organizer catalog = retrieveCatalog(id);
-		CatalogPreview catalogPreview = createCatalogPreview(catalog);
-
-		// retrieve catalog info
-		CatalogInfo catalogInfo = resourceManagerService.findCatalog(id);
-		catalogPreview.setDescription(catalogInfo.getDescription());
-		catalogPreview.setVersion(catalogInfo.getVersion());
-		catalogPreview.setAuthors(catalogInfo.getAuthors());
-
-		return catalogPreview;
+		return new OrganizerCatalog(catalog, catalogMeta);
 	}
 
 	@Override
-	public CatalogPreview getCatalogOfStudyDefinitionPreview(String id) throws UnknownCatalogException
+	public Catalog getCatalogOfStudyDefinition(String id) throws UnknownCatalogException
 	{
-		// retrieve catalog data
-		REPCMT000100UV01Organizer catalog = retrieveCatalogOfStudyDefinition(id);
-		CatalogPreview catalogPreview = createCatalogPreview(catalog);
-
-		// retrieve catalog info
-		StudyDefinitionInfo studyDefinitionInfo = resourceManagerService.findStudyDefinition(id);
-		catalogPreview.setDescription(studyDefinitionInfo.getDescription());
-		catalogPreview.setVersion(studyDefinitionInfo.getVersion());
-		catalogPreview.setAuthors(studyDefinitionInfo.getAuthors());
-
-		return catalogPreview;
-	}
-
-	private CatalogPreview createCatalogPreview(REPCMT000100UV01Organizer catalog)
-	{
-		CatalogPreview catalogPreview = new CatalogPreview();
-
-		CatalogPreviewNode root = new CatalogPreviewNode();
-		for (REPCMT000100UV01Component3 rootComponent : catalog.getComponent())
-			createCatalogPreviewNode(rootComponent, root);
-		catalogPreview.setRoot(root);
-
-		return catalogPreview;
-	}
-
-	private void createCatalogPreviewNode(REPCMT000100UV01Component3 component, CatalogPreviewNode node)
-	{
-		// parse feature
-		if (component.getObservation() != null)
-		{
-			REPCMT000100UV01Observation observation = component.getObservation().getValue();
-			CD observationCode = observation.getCode();
-
-			String observationName = observationCode.getDisplayName();
-			if (observationName == null)
-			{
-				logger.warn("observation does not have a display name '" + observationCode.getCode() + "'");
-				observationName = observationCode.getCode();
-			}
-			node.addItem(observationName);
-		}
-
-		// parse sub-protocol
-		if (component.getOrganizer() != null)
-		{
-			REPCMT000100UV01Organizer organizer = component.getOrganizer().getValue();
-			CD organizerCode = organizer.getCode();
-
-			String organizerName = organizerCode.getDisplayName();
-			if (organizerName == null)
-			{
-				logger.warn("organizer does not have a display name '" + organizerCode.getCode() + "'");
-				organizerName = organizerCode.getCode();
-			}
-
-			// recurse over nested protocols
-			CatalogPreviewNode childNode = new CatalogPreviewNode();
-			childNode.setName(organizerName);
-
-			for (REPCMT000100UV01Component3 subComponent : organizer.getComponent())
-				createCatalogPreviewNode(subComponent, childNode);
-			node.addChild(childNode);
-		}
+		StudyDefinitionMeta studyDefinitionMeta = resourceManagerService.findStudyDefinition(id);
+		REPCMT000100UV01Organizer catalog = retrieveCatalog(studyDefinitionMeta.getVersion());
+		return new OrganizerCatalog(catalog, studyDefinitionMeta);
 	}
 
 	@Override
@@ -218,6 +161,20 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 			{
 				throw new RuntimeException(e1);
 			}
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public boolean isCatalogLoaded(String id) throws UnknownCatalogException
+	{
+		String dataSetId = CatalogIdConverter.catalogIdToOmxIdentifier(id);
+		try
+		{
+			return DataSet.findByIdentifier(database, dataSetId) != null;
+		}
+		catch (DatabaseException e)
+		{
 			throw new RuntimeException(e);
 		}
 	}
@@ -275,6 +232,14 @@ public class GenericLayerCatalogueLoaderService implements CatalogLoaderService
 			}
 			throw new RuntimeException(e);
 		}
+	}
+
+	@Override
+	public boolean isCatalogOfStudyDefinitionLoaded(String id) throws UnknownCatalogException,
+			UnknownStudyDefinitionException
+	{
+		// FIXME implement
+		throw new UnsupportedOperationException();
 	}
 
 	private void deleteDataSetAndProtocols(String dataSetIdentifier) throws UnknownCatalogException

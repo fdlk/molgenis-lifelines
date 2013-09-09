@@ -1,9 +1,14 @@
-package org.molgenis.lifelines.studydefinition;
+package org.molgenis.lifelines.studymanager;
 
 import java.math.BigInteger;
 import java.util.List;
 
+import javax.xml.bind.JAXBException;
+
 import org.apache.commons.lang3.StringUtils;
+import org.molgenis.catalog.CatalogItem;
+import org.molgenis.catalog.UnknownCatalogException;
+import org.molgenis.catalogmanager.CatalogManagerService;
 import org.molgenis.hl7.ActClass;
 import org.molgenis.hl7.ActMood;
 import org.molgenis.hl7.CD;
@@ -38,26 +43,28 @@ import org.molgenis.hl7.StrucDocItem;
 import org.molgenis.hl7.StrucDocList;
 import org.molgenis.hl7.StrucDocText;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
-import org.molgenis.omx.catalog.CatalogLoaderService;
-import org.molgenis.omx.catalog.UnknownCatalogException;
-import org.molgenis.omx.study.StudyDefinition;
-import org.molgenis.omx.study.StudyDefinitionInfo;
-import org.molgenis.omx.study.StudyDefinitionItem;
-import org.molgenis.omx.study.StudyDefinitionService;
-import org.molgenis.omx.study.UnknownStudyDefinitionException;
 import org.molgenis.omx.utils.I18nTools;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.molgenis.study.StudyDefinition;
+import org.molgenis.study.StudyDefinitionMeta;
+import org.molgenis.study.UnknownStudyDefinitionException;
+import org.molgenis.studymanager.StudyManagerService;
 
-@Service
-public class GenericLayerStudyDefinitionService implements StudyDefinitionService
+public class GenericLayerStudyManagerService implements StudyManagerService
 {
-	@Autowired
-	private GenericLayerResourceManagerService resourceManagerService;
-	@Autowired
-	private CatalogLoaderService catalogLoaderService;
-	@Autowired
-	private GenericLayerDataQueryService dataQueryService;
+	private final GenericLayerResourceManagerService resourceManagerService;
+	private final CatalogManagerService catalogLoaderService;
+	private final GenericLayerDataQueryService dataQueryService;
+
+	public GenericLayerStudyManagerService(GenericLayerResourceManagerService resourceManagerService,
+			CatalogManagerService catalogLoaderService, GenericLayerDataQueryService dataQueryService)
+	{
+		if (resourceManagerService == null) throw new IllegalArgumentException("Resource manager service is null");
+		if (catalogLoaderService == null) throw new IllegalArgumentException("Catalog manager service is null");
+		if (dataQueryService == null) throw new IllegalArgumentException("Data query service is null");
+		this.resourceManagerService = resourceManagerService;
+		this.catalogLoaderService = catalogLoaderService;
+		this.dataQueryService = dataQueryService;
+	}
 
 	/**
 	 * Find the study definition with the given id
@@ -77,7 +84,7 @@ public class GenericLayerStudyDefinitionService implements StudyDefinitionServic
 	 * @return List of StudyDefinitionInfo
 	 */
 	@Override
-	public List<StudyDefinitionInfo> findStudyDefinitions()
+	public List<StudyDefinitionMeta> getStudyDefinitions()
 	{
 		return resourceManagerService.findStudyDefinitions();
 	}
@@ -86,7 +93,7 @@ public class GenericLayerStudyDefinitionService implements StudyDefinitionServic
 	 * Get a specific studydefinition and save it in the database
 	 */
 	@Override
-	public void loadStudyDefinition(String id) throws UnknownStudyDefinitionException
+	public void loadStudyData(String id) throws UnknownStudyDefinitionException
 	{
 		try
 		{
@@ -101,12 +108,33 @@ public class GenericLayerStudyDefinitionService implements StudyDefinitionServic
 	}
 
 	@Override
+	public boolean isStudyDataLoaded(String id) throws UnknownStudyDefinitionException
+	{
+		return dataQueryService.isStudyDataLoaded(id);
+	}
+
+	@Override
 	public StudyDefinition persistStudyDefinition(StudyDefinition studyDefinition)
 	{
 		POQMMT000001UVQualityMeasureDocument eMeasure = createQualityMeasureDocument(studyDefinition);
 		String id = resourceManagerService.persistStudyDefinition(eMeasure);
 		studyDefinition.setId(StudyDefinitionIdConverter.studyDefinitionIdToOmxIdentifier(id));
 		return studyDefinition;
+	}
+
+	@Override
+	public void updateStudyDefinition(StudyDefinition studyDefinition) throws UnknownStudyDefinitionException
+	{
+		POQMMT000001UVQualityMeasureDocument eMeasure = createQualityMeasureDocument(studyDefinition);
+		eMeasure.getId().setExtension(studyDefinition.getId());
+		try
+		{
+			resourceManagerService.updateStudyDefinition(studyDefinition.getId(), eMeasure);
+		}
+		catch (JAXBException e)
+		{
+			throw new RuntimeException(e);
+		}
 	}
 
 	private POQMMT000001UVQualityMeasureDocument createQualityMeasureDocument(StudyDefinition studyDefinition)
@@ -209,7 +237,7 @@ public class GenericLayerStudyDefinitionService implements StudyDefinitionServic
 
 		StrucDocText sectionText = new StrucDocText();
 		StrucDocList strucDocList = new StrucDocList();
-		for (StudyDefinitionItem item : studyDefinition.getItems())
+		for (CatalogItem item : studyDefinition.getItems())
 		{
 			StrucDocItem strucDocItem = new StrucDocItem();
 			strucDocItem.getContent().add(item.getName());
@@ -218,7 +246,7 @@ public class GenericLayerStudyDefinitionService implements StudyDefinitionServic
 		sectionText.getContent().add(new ObjectFactory().createStrucDocTextList(strucDocList));
 		section.setText(sectionText);
 
-		for (StudyDefinitionItem item : studyDefinition.getItems())
+		for (CatalogItem item : studyDefinition.getItems())
 		{
 			POQMMT000001UVEntry entry = new POQMMT000001UVEntry();
 			entry.setTypeCode("DRIV");
