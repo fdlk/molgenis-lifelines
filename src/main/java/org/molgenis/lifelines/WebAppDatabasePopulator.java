@@ -1,7 +1,10 @@
 package org.molgenis.lifelines;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.molgenis.MolgenisDatabasePopulator;
@@ -31,22 +34,18 @@ import org.molgenis.omx.observ.ObservedValue;
 import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.observ.target.Ontology;
 import org.molgenis.omx.observ.target.OntologyTerm;
+import org.molgenis.omx.order.OrderStudyDataController;
 import org.molgenis.omx.protocolviewer.ProtocolViewerController;
 import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.search.SearchSecurityHandlerInterceptor;
-import org.molgenis.servlet.GuiService;
 import org.molgenis.studymanager.StudyManagerController;
-import org.molgenis.ui.CatalogManagerPluginPlugin;
-import org.molgenis.ui.DataExplorerPluginPlugin;
-import org.molgenis.ui.HomePluginPlugin;
 import org.molgenis.ui.MolgenisMenuController.VoidPluginController;
-import org.molgenis.ui.ProtocolViewerControllerPlugin;
-import org.molgenis.ui.StudyManagerPluginPlugin;
 import org.molgenis.util.Entity;
 import org.springframework.beans.factory.annotation.Value;
 
 public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 {
+	static final String KEY_APP_NAME = "app.name";
 	static final String KEY_APP_HREF_LOGO = "app.href.logo";
 	static final String KEY_APP_HREF_CSS = "app.href.css";
 
@@ -76,39 +75,6 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 			message.append("in your molgenis-server.properties.");
 			throw new RuntimeException(message.toString());
 		}
-		LifeLinesAppProfile appProfile = LifeLinesAppProfile.valueOf(appProfileStr.toUpperCase());
-
-		Login login = database.getLogin();
-		database.setLogin(null);
-		login.login(database, Login.USER_ADMIN_NAME, adminPassword);
-
-		MolgenisPermissionService permissionService = new OmxPermissionService(database, login);
-
-		// set app name
-		RuntimeProperty appNameProperty = new RuntimeProperty();
-		appNameProperty.setIdentifier(RuntimeProperty.class.getSimpleName() + '_' + GuiService.KEY_APP_NAME);
-		appNameProperty.setName(GuiService.KEY_APP_NAME);
-		appNameProperty.setValue("LifeLines");
-		database.add(appNameProperty);
-
-		RuntimeProperty appHrefLogoProperty = new RuntimeProperty();
-		appHrefLogoProperty.setIdentifier(RuntimeProperty.class.getSimpleName() + '_' + KEY_APP_HREF_LOGO);
-		appHrefLogoProperty.setName(KEY_APP_HREF_LOGO);
-		appHrefLogoProperty.setValue("/img/lifelines_letterbox_270x100.png");
-		database.add(appHrefLogoProperty);
-
-		RuntimeProperty appHrefCssProperty = new RuntimeProperty();
-		appHrefCssProperty.setIdentifier(RuntimeProperty.class.getSimpleName() + '_' + KEY_APP_HREF_CSS);
-		appHrefCssProperty.setName(KEY_APP_HREF_CSS);
-		appHrefCssProperty.setValue("lifelines.css");
-		database.add(appHrefCssProperty);
-
-		RuntimeProperty runtimePropertyAuthentication = new RuntimeProperty();
-		runtimePropertyAuthentication.setIdentifier(RuntimeProperty.class.getSimpleName() + '_'
-				+ AccountService.KEY_PLUGIN_AUTH_ACTIVATIONMODE);
-		runtimePropertyAuthentication.setName(AccountService.KEY_PLUGIN_AUTH_ACTIVATIONMODE);
-		runtimePropertyAuthentication.setValue("user");
-		database.add(runtimePropertyAuthentication);
 
 		String homeHtml = "<div class=\"container-fluid\">"
 				+ "<div class=\"row-fluid\">"
@@ -121,6 +87,31 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 				+ "<p>The catalogue is working in the newest browsers. <u>If you are experiencing any problems  please switch to a modern browser (IE9+, Chrome, Firefox, Safari).</u></p>"
 				+ "</div>" + "<div class=\"span6\">"
 				+ "<img src=\"/img/lifelines_family.png\" alt=\"LifeLines family\">" + "</div>" + "</div>" + "</div>";
+
+		Map<String, String> runtimePropertyMap = new HashMap<String, String>();
+		runtimePropertyMap.put(KEY_APP_NAME, "LifeLines");
+		runtimePropertyMap.put(KEY_APP_HREF_LOGO, "/img/lifelines_letterbox_270x100.png");
+		runtimePropertyMap.put(KEY_APP_HREF_LOGO, "lifelines.css");
+		runtimePropertyMap.put(AccountService.KEY_PLUGIN_AUTH_ACTIVATIONMODE, "user");
+		runtimePropertyMap.put(HomeController.KEY_APP_HOME_HTML, homeHtml);
+
+		LifeLinesAppProfile appProfile = LifeLinesAppProfile.valueOf(appProfileStr.toUpperCase());
+
+		Login login = database.getLogin();
+		database.setLogin(null);
+		login.login(database, Login.USER_ADMIN_NAME, adminPassword);
+
+		MolgenisPermissionService permissionService = new OmxPermissionService(database, login);
+
+		for (Entry<String, String> entry : runtimePropertyMap.entrySet())
+		{
+			RuntimeProperty runtimeProperty = new RuntimeProperty();
+			String propertyKey = entry.getKey();
+			runtimeProperty.setIdentifier(RuntimeProperty.class.getSimpleName() + '_' + propertyKey);
+			runtimeProperty.setName(propertyKey);
+			runtimeProperty.setValue(entry.getValue());
+			database.add(runtimeProperty);
+		}
 
 		RuntimeProperty runtimePropertyHomeHtml = new RuntimeProperty();
 		runtimePropertyHomeHtml.setIdentifier(RuntimeProperty.class.getSimpleName() + '_'
@@ -209,29 +200,20 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 		permissionService.setPermissionOnPlugin(HomeController.class, allUsersGroup.getId(), Permission.READ);
 		permissionService.setPermissionOnPlugin(HomeController.class, groupResearchers.getId(), Permission.READ);
 		permissionService.setPermissionOnPlugin(HomeController.class, anonymousUser.getId(), Permission.READ);
-		permissionService.setPermissionOnPlugin(HomePluginPlugin.class.getSimpleName(), allUsersGroup.getId(),
-				Permission.READ);
-		permissionService.setPermissionOnPlugin(HomePluginPlugin.class.getSimpleName(), groupResearchers.getId(),
-				Permission.READ);
-		permissionService.setPermissionOnPlugin(HomePluginPlugin.class.getSimpleName(), anonymousUser.getId(),
-				Permission.READ);
 		permissionService.setPermissionOnPlugin(ProtocolViewerController.class, allUsersGroup.getId(), Permission.READ);
 		permissionService.setPermissionOnPlugin(ProtocolViewerController.class, groupResearchers.getId(),
 				Permission.READ);
 		permissionService.setPermissionOnPlugin(ProtocolViewerController.class, anonymousUser.getId(), Permission.READ);
-		permissionService.setPermissionOnPlugin(ProtocolViewerControllerPlugin.class.getSimpleName(),
-				allUsersGroup.getId(), Permission.READ);
-		permissionService.setPermissionOnPlugin(ProtocolViewerControllerPlugin.class.getSimpleName(),
-				groupResearchers.getId(), Permission.READ);
-		permissionService.setPermissionOnPlugin(ProtocolViewerControllerPlugin.class.getSimpleName(),
-				anonymousUser.getId(), Permission.READ);
 
 		if (appProfile == LifeLinesAppProfile.WEBSITE)
 		{
-			permissionService.setPermissionOnPlugin(CatalogManagerPluginPlugin.class.getSimpleName(),
-					userDataManager.getId(), Permission.READ);
 			permissionService.setPermissionOnPlugin(CatalogManagerController.class.getSimpleName(),
 					userDataManager.getId(), Permission.READ);
+
+			permissionService.setPermissionOnPlugin(OrderStudyDataController.class, allUsersGroup.getId(),
+					Permission.WRITE);
+			permissionService.setPermissionOnPlugin(OrderStudyDataController.class, groupResearchers.getId(),
+					Permission.WRITE);
 
 			RuntimeProperty runtimePropertyAllowAnonymousSearch = new RuntimeProperty();
 			runtimePropertyAllowAnonymousSearch.setIdentifier(RuntimeProperty.class.getSimpleName() + '_'
@@ -243,16 +225,10 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 		}
 		else if (appProfile == LifeLinesAppProfile.WORKSPACE)
 		{
-			permissionService.setPermissionOnPlugin(DataExplorerPluginPlugin.class.getSimpleName(),
-					groupDataManagers.getId(), Permission.READ);
-			permissionService.setPermissionOnPlugin(DataExplorerPluginPlugin.class.getSimpleName(),
-					groupResearchers.getId(), Permission.READ);
 			permissionService.setPermissionOnPlugin(DataExplorerController.class.getSimpleName(),
 					groupDataManagers.getId(), Permission.READ);
 			permissionService.setPermissionOnPlugin(DataExplorerController.class.getSimpleName(),
 					groupResearchers.getId(), Permission.READ);
-			permissionService.setPermissionOnPlugin(StudyManagerPluginPlugin.class.getSimpleName(),
-					groupDataManagers.getId(), Permission.READ);
 			permissionService.setPermissionOnPlugin(StudyManagerController.class.getSimpleName(),
 					groupDataManagers.getId(), Permission.READ);
 		}
