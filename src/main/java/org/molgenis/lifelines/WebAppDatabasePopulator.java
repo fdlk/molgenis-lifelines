@@ -31,6 +31,7 @@ import org.molgenis.omx.observ.ObservedValue;
 import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.observ.target.Ontology;
 import org.molgenis.omx.observ.target.OntologyTerm;
+import org.molgenis.omx.order.OrderStudyDataController;
 import org.molgenis.omx.protocolviewer.ProtocolViewerController;
 import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.search.SearchSecurityHandlerInterceptor;
@@ -232,6 +233,11 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 					userDataManager.getId(), Permission.READ);
 			permissionService.setPermissionOnPlugin(CatalogManagerController.class.getSimpleName(),
 					userDataManager.getId(), Permission.READ);
+
+			permissionService.setPermissionOnPlugin(OrderStudyDataController.class, allUsersGroup.getId(),
+					Permission.WRITE);
+			permissionService.setPermissionOnPlugin(OrderStudyDataController.class, groupResearchers.getId(),
+					Permission.WRITE);
 
 			RuntimeProperty runtimePropertyAllowAnonymousSearch = new RuntimeProperty();
 			runtimePropertyAllowAnonymousSearch.setIdentifier(RuntimeProperty.class.getSimpleName() + '_'
