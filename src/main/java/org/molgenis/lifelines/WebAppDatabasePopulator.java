@@ -91,7 +91,7 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 		Map<String, String> runtimePropertyMap = new HashMap<String, String>();
 		runtimePropertyMap.put(KEY_APP_NAME, "LifeLines");
 		runtimePropertyMap.put(KEY_APP_HREF_LOGO, "/img/lifelines_letterbox_270x100.png");
-		runtimePropertyMap.put(KEY_APP_HREF_LOGO, "lifelines.css");
+		runtimePropertyMap.put(KEY_APP_HREF_CSS, "lifelines.css");
 		runtimePropertyMap.put(AccountService.KEY_PLUGIN_AUTH_ACTIVATIONMODE, "user");
 		runtimePropertyMap.put(HomeController.KEY_APP_HOME_HTML, homeHtml);
 
