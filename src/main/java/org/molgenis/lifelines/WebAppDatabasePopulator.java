@@ -113,13 +113,6 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 			database.add(runtimeProperty);
 		}
 
-		RuntimeProperty runtimePropertyHomeHtml = new RuntimeProperty();
-		runtimePropertyHomeHtml.setIdentifier(RuntimeProperty.class.getSimpleName() + '_'
-				+ HomeController.KEY_APP_HOME_HTML);
-		runtimePropertyHomeHtml.setName(HomeController.KEY_APP_HOME_HTML);
-		runtimePropertyHomeHtml.setValue(homeHtml);
-		database.add(runtimePropertyHomeHtml);
-
 		MolgenisUser userResearcher = createUser(database, "researcher", "researcher", "researcher", researcherEmail,
 				researcherPassword, false);
 		MolgenisUser userDataManager = createUser(database, "datamanager", "datamanager", "datamanager",
