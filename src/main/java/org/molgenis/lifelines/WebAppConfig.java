@@ -29,11 +29,13 @@ import org.molgenis.lifelines.catalog.LifeLinesCatalogManagerService;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
 import org.molgenis.lifelines.studymanager.GenericLayerDataQueryService;
 import org.molgenis.lifelines.studymanager.GenericLayerStudyManagerService;
+import org.molgenis.lifelines.studymanager.LifeLinesStudyManagerService;
 import org.molgenis.lifelines.utils.GenericLayerDataBinder;
 import org.molgenis.omx.OmxConfig;
 import org.molgenis.omx.auth.OmxPermissionService;
 import org.molgenis.omx.catalogmanager.OmxCatalogManagerService;
 import org.molgenis.omx.config.DataExplorerConfig;
+import org.molgenis.omx.studymanager.OmxStudyManagerService;
 import org.molgenis.search.SearchSecurityConfig;
 import org.molgenis.studymanager.StudyManagerService;
 import org.molgenis.ui.MolgenisPluginInterceptor;
@@ -282,8 +284,17 @@ public class WebAppConfig extends WebMvcConfigurerAdapter
 	@Bean
 	public StudyManagerService studyDefinitionManagerService()
 	{
-		return new GenericLayerStudyManagerService(genericLayerResourceManagerService(), catalogManagerService(),
-				genericLayerDataQueryService());
+		GenericLayerStudyManagerService genericLayerStudyManagerService = new GenericLayerStudyManagerService(
+				genericLayerResourceManagerService(), catalogManagerService(), genericLayerDataQueryService());
+		if (appProfile == null || LifeLinesAppProfile.valueOf(appProfile.toUpperCase()) == LifeLinesAppProfile.WEBSITE)
+		{
+			return new LifeLinesStudyManagerService(genericLayerStudyManagerService, new OmxStudyManagerService(
+					database));
+		}
+		else
+		{
+			return genericLayerStudyManagerService;
+		}
 	}
 
 	@Bean
