@@ -23,6 +23,8 @@ import org.molgenis.omx.auth.MolgenisRole;
 import org.molgenis.omx.auth.MolgenisRoleGroupLink;
 import org.molgenis.omx.auth.MolgenisUser;
 import org.molgenis.omx.auth.OmxPermissionService;
+import org.molgenis.omx.auth.controller.AccountController;
+import org.molgenis.omx.auth.controller.UserAccountController;
 import org.molgenis.omx.auth.service.AccountService;
 import org.molgenis.omx.core.RuntimeProperty;
 import org.molgenis.omx.observ.Category;
@@ -197,7 +199,11 @@ public class WebAppDatabasePopulator extends MolgenisDatabasePopulator
 		permissionService.setPermissionOnPlugin(ProtocolViewerController.class, groupResearchers.getId(),
 				Permission.READ);
 		permissionService.setPermissionOnPlugin(ProtocolViewerController.class, anonymousUser.getId(), Permission.READ);
-
+		permissionService.setPermissionOnPlugin(UserAccountController.class, allUsersGroup.getId(), Permission.READ);
+		permissionService.setPermissionOnPlugin(UserAccountController.class, groupResearchers.getId(), Permission.READ);
+		
+		
+		
 		if (appProfile == LifeLinesAppProfile.WEBSITE)
 		{
 			permissionService.setPermissionOnPlugin(CatalogManagerController.class.getSimpleName(),
