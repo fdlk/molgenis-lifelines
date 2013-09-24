@@ -45,6 +45,7 @@ import org.molgenis.omx.observ.target.OntologyTerm;
 import org.molgenis.omx.utils.ProtocolUtils;
 import org.molgenis.study.StudyDefinitionMeta;
 import org.molgenis.study.UnknownStudyDefinitionException;
+import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Node;
 
 public class GenericLayerCatalogueManagerService implements CatalogManagerService
@@ -119,13 +120,12 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 		return new OrganizerCatalog(catalog, studyDefinitionMeta);
 	}
 
+	@Transactional
 	@Override
-	public void loadCatalog(String id) throws UnknownCatalogException
+	public void loadCatalog(String id)
 	{
 		try
 		{
-			database.beginTx();
-
 			// retrieve catalog data from LifeLines Generic Layer catalog service
 			REPCMT000100UV01Organizer catalog = retrieveCatalog(id);
 
@@ -148,19 +148,9 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 			// retrieve catalog data from LifeLines Generic Layer catalog service
 			GetValuesetsResult valueSetsResult = genericLayerCatalogService.getValuesets(id, null);
 			loadValueSets(valueSetsResult, valueSetMap);
-
-			database.commitTx();
 		}
 		catch (DatabaseException e)
 		{
-			try
-			{
-				database.rollbackTx();
-			}
-			catch (DatabaseException e1)
-			{
-				throw new RuntimeException(e1);
-			}
 			throw new RuntimeException(e);
 		}
 	}
@@ -179,6 +169,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 		}
 	}
 
+	@Transactional
 	@Override
 	public void unloadCatalog(String id) throws UnknownCatalogException
 	{
@@ -186,13 +177,12 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 		deleteDataSetAndProtocols(dataSetId);
 	}
 
+	@Transactional
 	@Override
 	public void loadCatalogOfStudyDefinition(String id) throws UnknownCatalogException
 	{
 		try
 		{
-			database.beginTx();
-
 			// retrieve catalog data from LifeLines Generic Layer catalog service
 			REPCMT000100UV01Organizer catalog = retrieveCatalogOfStudyDefinition(id);
 
@@ -217,19 +207,9 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 			// retrieve catalog data from LifeLines Generic Layer catalog service
 			GetValuesetsResult valueSetsResult = genericLayerCatalogService.getValuesets(null, id);
 			loadValueSets(valueSetsResult, valueSetMap);
-
-			database.commitTx();
 		}
 		catch (DatabaseException e)
 		{
-			try
-			{
-				database.rollbackTx();
-			}
-			catch (DatabaseException e1)
-			{
-				throw new RuntimeException(e1);
-			}
 			throw new RuntimeException(e);
 		}
 	}
@@ -246,8 +226,6 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	{
 		try
 		{
-			database.beginTx();
-
 			DataSet dataSet = DataSet.findByIdentifier(database, dataSetIdentifier);
 			if (dataSet == null)
 			{
@@ -257,23 +235,14 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 
 			database.remove(dataSet);
 			database.remove(protocols);
-
-			database.commitTx();
 		}
 		catch (DatabaseException e)
 		{
-			try
-			{
-				database.rollbackTx();
-			}
-			catch (DatabaseException e1)
-			{
-				throw new RuntimeException(e1);
-			}
 			throw new RuntimeException(e);
 		}
 	}
 
+	@Transactional
 	@Override
 	public void unloadCatalogOfStudyDefinition(String id) throws UnknownCatalogException
 	{

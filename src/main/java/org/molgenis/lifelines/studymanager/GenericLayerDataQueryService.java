@@ -44,7 +44,12 @@ import org.molgenis.omx.observ.value.BoolValue;
 import org.molgenis.omx.observ.value.CategoricalValue;
 import org.molgenis.omx.observ.value.LongValue;
 import org.molgenis.omx.observ.value.StringValue;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+@Service
 public class GenericLayerDataQueryService
 {
 	private static final Logger logger = Logger.getLogger(GenericLayerResourceManagerService.class);
@@ -63,30 +68,20 @@ public class GenericLayerDataQueryService
 		}
 	}
 
-	private final HttpClient httpClient;
-	private final Database database;
-	private final String dataQueryServiceUrl;
-	private final GenericLayerDataBinder genericLayerDataBinder;
+	@Autowired
+	private HttpClient httpClient;
+	@Value("${lifelines.data.query.service.url}")
+	private String dataQueryServiceUrl; // Specify in molgenis-server.properties
+	@Autowired
+	private GenericLayerDataBinder genericLayerDataBinder;
+	@Autowired
+	private Database database;
 
-	public GenericLayerDataQueryService(HttpClient httpClient, String dataQueryServiceUrl,
-			GenericLayerDataBinder genericLayerDataBinder, Database database)
-	{
-		if (httpClient == null) throw new IllegalArgumentException("Http client is null");
-		if (dataQueryServiceUrl == null) throw new IllegalArgumentException("Data query service URL is null");
-		if (genericLayerDataBinder == null) throw new IllegalArgumentException("Generic layer data binder is null");
-		if (database == null) throw new IllegalArgumentException("Database is null");
-		this.httpClient = httpClient;
-		this.dataQueryServiceUrl = dataQueryServiceUrl;
-		this.genericLayerDataBinder = genericLayerDataBinder;
-		this.database = database;
-	}
-
+	@Transactional
 	public void loadStudyDefinitionData(final POQMMT000001UVQualityMeasureDocument studyDefinition)
 	{
 		try
 		{
-			database.beginTx();
-
 			// send eMeasure request to GL
 			HttpPost httpPost = new HttpPost(dataQueryServiceUrl + "/data");
 			httpPost.setHeader("Content-Type", "application/xml");
@@ -175,53 +170,24 @@ public class GenericLayerDataQueryService
 				}
 				database.add(observationSet);
 			}
-			database.commitTx();
 		}
 		catch (DatabaseException e)
 		{
-			try
-			{
-				database.rollbackTx();
-			}
-			catch (DatabaseException e1)
-			{
-			}
 			logger.error(e);
 			throw new RuntimeException(e);
 		}
 		catch (IOException e)
 		{
-			try
-			{
-				database.rollbackTx();
-			}
-			catch (DatabaseException e1)
-			{
-			}
 			logger.error(e);
 			throw new RuntimeException(e);
 		}
 		catch (JAXBException e)
 		{
-			try
-			{
-				database.rollbackTx();
-			}
-			catch (DatabaseException e1)
-			{
-			}
 			logger.error(e);
 			throw new RuntimeException(e);
 		}
 		catch (RuntimeException e)
 		{
-			try
-			{
-				database.rollbackTx();
-			}
-			catch (DatabaseException e1)
-			{
-			}
 			logger.error(e);
 			throw new RuntimeException(e);
 		}
