@@ -1,32 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <molgenis name="lifelines" label="LifeLines">
 	<menu label="Home" name="main">
-		<plugin id="home" label="Home" name="HomeController" type="org.molgenis.lifelines.plugins.HomePlugin"/>
-		<plugin id="protocolviewer" label="Catalogue" name="ProtocolViewerController" type="org.molgenis.omx.protocolviewer.ProtocolViewerPlugin"/>
-		<plugin id="dataexplorer" label="Research Data" name="DataExplorerController" type="org.molgenis.dataexplorer.plugin.DataExplorerPlugin"/>
-		<plugin id="importwizard" label="Upload" name="ImportWizardController" type="org.molgenis.omx.importer.ImportWizardPlugin"/>
-        <menu label="Admin" name="admin">
-        	<plugin id="catalogmanager" label="Catalog Manager" name="CatalogManagerController" type="org.molgenis.catalogmanager.CatalogManagerPlugin"/>
-			<plugin id="studymanager" label="Study Manager" name="StudyManagerController" type="org.molgenis.studymanager.StudyManagerPlugin"/>       
-	        <menu label="Entities" name ="entities">
-	        	<plugin id="form.DataSet" label="DataSet" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-	        	<plugin id="form.Protocol" label="Protocol" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-	        	<plugin id="form.ObservableFeature" label="Feature" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-	        	<plugin id="form.Category" label="Category" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-	        	<plugin id="form.Ontology" label="Ontology" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-	        	<plugin id="form.OntologyTerm" label="OntologyTerm" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-	        	<plugin id="form.StudyDataRequest" label="StudyDataRequest" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-	        	<plugin id="form.RuntimeProperty" label="RuntimeProperty" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-		        <menu label="Users and permissions" name="security">
-		        	<plugin id="form.MolgenisUser" label="MolgenisUser" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-		        	<plugin id="form.MolgenisGroup" label="MolgenisGroup" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-		        	<plugin id="form.MolgenisRoleGroupLink" label="MolgenisRoleGroupLink" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-		        	<plugin id="form.MolgenisEntity" label="MolgenisEntity" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-		        	<plugin id="form.MolgenisPermission" label="MolgenisPermission" name="MolgenisEntityFormPluginController" type="org.molgenis.ui.form.MolgenisEntityFormPlugin"/>
-				</menu>
-	       	</menu>
-			<plugin id="dataindexer" label="Index datasets" name="DataSetsIndexerController" type="org.molgenis.omx.plugin.DataSetsIndexerPlugin"/>
+		<plugin id="home" name="Home" url="home"/>
+		<plugin id="protocolviewer" name="Catalog" url="protocolviewer"/>
+		<plugin id="dataexplorer" name="Data Explorer" url="dataexplorer"/>
+		<plugin id="importwizard" name="Upload" url="importwizard"/>
+		<menu label="Admin" name="admin">
+			<plugin id="catalogmanager" name="Catalog Manager" url="catalogmanager"/>
+			<plugin id="studymanager" name="Study Manager" url="studymanager"/>
+			<plugin id="permissionmanager" name="Permission Manager" url="permissionmanager"/>
+			<plugin id="datasetindexer" name="Data Set Indexer" url="dataindexer"/>
+			<menu label="Entities" name ="entities">
+				<plugin id="form.DataSet" name="DataSet" url="form.DataSet"/>
+        		<plugin id="form.Protocol" name="Protocol" url="form.Protocol?subForms=DataSet.ProtocolUsed"/>
+        		<plugin id="form.ObservableFeature" name="ObservableFeature" url="form.ObservableFeature?subForms=Category.observableFeature"/>
+        		<plugin id="form.Ontology" name="Ontology" url="form.Ontology?subForms=OntologyTerm.ontology"/>
+        		<plugin id="form.StudyDataRequest" name="StudyDataRequest" url="form.StudyDataRequest"/>
+        		<plugin id="form.RuntimeProperty" name="RuntimeProperty" url="form.RuntimeProperty"/>
+			</menu>
 		</menu>
-		<plugin id="useraccount" label="Account" name="UserAccountController" type="org.molgenis.omx.auth.ui.UserAccountPlugin"/>
+		<plugin id="useraccount" name="Account" url="useraccount"/>
 	</menu>
 </molgenis>

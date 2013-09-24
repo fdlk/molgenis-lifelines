@@ -124,7 +124,7 @@ public class GenericLayerResourceManagerService
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode < 200 || statusCode >= 400)
 			{
-				throw new IOException("Error retrieving study definition " + id + " (statuscode " + statusCode + ")");
+				throw new IOException("Error retrieving study definition " + id + " (statuscode: " + statusCode + ")");
 			}
 			xmlStream = response.getEntity().getContent();
 			return genericLayerDataBinder.createQualityMeasureDocumentUnmarshaller()
@@ -184,7 +184,7 @@ public class GenericLayerResourceManagerService
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode < 200 || statusCode >= 400)
 			{
-				throw new IOException("Error persisting study definition (statuscode " + statusCode + ")");
+				throw new IOException("Error persisting study definition (statuscode: " + statusCode + ")");
 			}
 
 			xmlStream = response.getEntity().getContent();
@@ -243,7 +243,7 @@ public class GenericLayerResourceManagerService
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode < 200 || statusCode >= 400)
 			{
-				throw new IOException("Error updating study definition (statuscode " + statusCode + ")");
+				throw new IOException("Error updating study definition (statuscode: " + statusCode + ")");
 			}
 		}
 		catch (RuntimeException e)
@@ -305,7 +305,7 @@ public class GenericLayerResourceManagerService
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode < 200 || statusCode >= 400)
 			{
-				throw new IOException("Error retrieving catalog (statuscode " + statusCode + ")");
+				throw new IOException("Error retrieving catalog (statuscode: " + statusCode + ")");
 			}
 			xmlStream = response.getEntity().getContent();
 			POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = genericLayerDataBinder
@@ -433,7 +433,7 @@ public class GenericLayerResourceManagerService
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode < 200 || statusCode >= 400)
 			{
-				throw new IOException("Error retrieving catalogs (statuscode " + statusCode + ")");
+				throw new IOException("Error retrieving catalogs or study definitions (statuscode: " + statusCode + ")");
 			}
 			xmlStream = response.getEntity().getContent();
 			return jaxbUnmarshaller.unmarshal(new StreamSource(xmlStream), FeedType.class).getValue();
