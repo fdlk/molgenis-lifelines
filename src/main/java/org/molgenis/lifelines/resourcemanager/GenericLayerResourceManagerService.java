@@ -121,6 +121,11 @@ public class GenericLayerResourceManagerService
 		try
 		{
 			HttpResponse response = httpClient.execute(httpGet);
+			int statusCode = response.getStatusLine().getStatusCode();
+			if (statusCode < 200 || statusCode >= 400)
+			{
+				throw new IOException("Error retrieving study definition " + id + " (statuscode " + statusCode + ")");
+			}
 			xmlStream = response.getEntity().getContent();
 			return genericLayerDataBinder.createQualityMeasureDocumentUnmarshaller()
 					.unmarshal(new StreamSource(xmlStream), POQMMT000001UVQualityMeasureDocument.class).getValue();
@@ -177,8 +182,10 @@ public class GenericLayerResourceManagerService
 		{
 			HttpResponse response = httpClient.execute(httpPost);
 			int statusCode = response.getStatusLine().getStatusCode();
-			if (statusCode < 200 || statusCode > 299) throw new IOException(
-					"Error persisting study definition (statuscode " + statusCode + ")");
+			if (statusCode < 200 || statusCode >= 400)
+			{
+				throw new IOException("Error persisting study definition (statuscode " + statusCode + ")");
+			}
 
 			xmlStream = response.getEntity().getContent();
 			POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = genericLayerDataBinder
@@ -234,8 +241,10 @@ public class GenericLayerResourceManagerService
 		{
 			HttpResponse response = httpClient.execute(httpPut);
 			int statusCode = response.getStatusLine().getStatusCode();
-			if (statusCode < 200 || statusCode > 299) throw new IOException(
-					"Error updating study definition (statuscode " + statusCode + ")");
+			if (statusCode < 200 || statusCode >= 400)
+			{
+				throw new IOException("Error updating study definition (statuscode " + statusCode + ")");
+			}
 		}
 		catch (RuntimeException e)
 		{
@@ -293,6 +302,11 @@ public class GenericLayerResourceManagerService
 		try
 		{
 			HttpResponse response = httpClient.execute(httpGet);
+			int statusCode = response.getStatusLine().getStatusCode();
+			if (statusCode < 200 || statusCode >= 400)
+			{
+				throw new IOException("Error retrieving catalog (statuscode " + statusCode + ")");
+			}
 			xmlStream = response.getEntity().getContent();
 			POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = genericLayerDataBinder
 					.createQualityMeasureDocumentUnmarshaller()
@@ -416,6 +430,11 @@ public class GenericLayerResourceManagerService
 		try
 		{
 			HttpResponse response = httpClient.execute(httpGet);
+			int statusCode = response.getStatusLine().getStatusCode();
+			if (statusCode < 200 || statusCode >= 400)
+			{
+				throw new IOException("Error retrieving catalogs (statuscode " + statusCode + ")");
+			}
 			xmlStream = response.getEntity().getContent();
 			return jaxbUnmarshaller.unmarshal(new StreamSource(xmlStream), FeedType.class).getValue();
 		}
