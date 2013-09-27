@@ -2,6 +2,7 @@ package org.molgenis.lifelines.studymanager;
 
 import java.util.List;
 
+import org.molgenis.lifelines.LifeLinesAppProfile;
 import org.molgenis.omx.studymanager.OmxStudyManagerService;
 import org.molgenis.study.StudyDefinition;
 import org.molgenis.study.StudyDefinitionMeta;
@@ -12,15 +13,17 @@ public class LifeLinesStudyManagerService implements StudyManagerService
 {
 	private final GenericLayerStudyManagerService genericLayerStudyManagerService;
 	private final OmxStudyManagerService omxStudyManagerService;
+	private final LifeLinesAppProfile lifeLinesAppProfile;
 
 	public LifeLinesStudyManagerService(GenericLayerStudyManagerService genericLayerStudyManagerService,
-			OmxStudyManagerService omxCatalogManagerService)
+			OmxStudyManagerService omxCatalogManagerService, LifeLinesAppProfile lifeLinesAppProfile)
 	{
 		if (genericLayerStudyManagerService == null) throw new IllegalArgumentException(
 				"genericLayerStudyManagerService is null");
 		if (omxCatalogManagerService == null) throw new IllegalArgumentException("omxCatalogManagerService is null");
 		this.genericLayerStudyManagerService = genericLayerStudyManagerService;
 		this.omxStudyManagerService = omxCatalogManagerService;
+		this.lifeLinesAppProfile = lifeLinesAppProfile;
 	}
 
 	@Override
@@ -33,6 +36,21 @@ public class LifeLinesStudyManagerService implements StudyManagerService
 	public StudyDefinition getStudyDefinition(String id) throws UnknownStudyDefinitionException
 	{
 		return genericLayerStudyManagerService.getStudyDefinition(id);
+	}
+
+	@Override
+	public boolean canLoadStudyData()
+	{
+		switch (lifeLinesAppProfile)
+		{
+			case WEBSITE:
+				return false;
+			case WORKSPACE:
+				return genericLayerStudyManagerService.canLoadStudyData();
+			default:
+				throw new RuntimeException("Unknown " + LifeLinesAppProfile.class.getSimpleName() + ": "
+						+ lifeLinesAppProfile);
+		}
 	}
 
 	@Override

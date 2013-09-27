@@ -308,7 +308,7 @@ public class WebAppConfig extends WebMvcConfigurerAdapter
 		if (appProfile == null || LifeLinesAppProfile.valueOf(appProfile.toUpperCase()) == LifeLinesAppProfile.WEBSITE)
 		{
 			return new LifeLinesStudyManagerService(genericLayerStudyManagerService, new OmxStudyManagerService(
-					database));
+					database), LifeLinesAppProfile.valueOf(appProfile.toUpperCase()));
 		}
 		else
 		{

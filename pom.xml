@@ -92,6 +92,7 @@
               				<directory>target/generated-sources/molgenis/doc</directory>
             			</resource>
           			</webResources>
+					<webXml>src\main\webapp\WEB-INF\web.xml</webXml>
 				</configuration>
 			</plugin>
 			<!-- web server -->
