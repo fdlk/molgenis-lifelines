@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -48,6 +49,8 @@ public class GenericLayerResourceManagerServiceTest
 				.getMock();
 		HttpResponse catalogReleaseResponse = when(mock(HttpResponse.class).getEntity()).thenReturn(
 				catalogReleaseEntity).getMock();
+		StatusLine statusLine = when(mock(StatusLine.class).getStatusCode()).thenReturn(200).getMock();
+		when(catalogReleaseResponse.getStatusLine()).thenReturn(statusLine);
 
 		when(httpClient.execute(argThat(new BaseMatcher<HttpGet>()
 		{
@@ -81,6 +84,9 @@ public class GenericLayerResourceManagerServiceTest
 				.getMock();
 		HttpResponse studyDefinitionResponse = when(mock(HttpResponse.class).getEntity()).thenReturn(
 				studyDefinitionEntity).getMock();
+		StatusLine statusLine = when(mock(StatusLine.class).getStatusCode()).thenReturn(200).getMock();
+		when(studyDefinitionResponse.getStatusLine()).thenReturn(statusLine);
+
 		when(httpClient.execute(argThat(new BaseMatcher<HttpGet>()
 		{
 			@Override
@@ -110,6 +116,9 @@ public class GenericLayerResourceManagerServiceTest
 				.thenReturn(studyDefinitionsStream).getMock();
 		HttpResponse studyDefinitionsResponse = when(mock(HttpResponse.class).getEntity()).thenReturn(
 				studyDefinitionsEntity).getMock();
+		StatusLine statusLine = when(mock(StatusLine.class).getStatusCode()).thenReturn(200).getMock();
+		when(studyDefinitionsResponse.getStatusLine()).thenReturn(statusLine);
+
 		when(httpClient.execute(argThat(new BaseMatcher<HttpGet>()
 		{
 			@Override

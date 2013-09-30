@@ -89,6 +89,12 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		return resourceManagerService.findStudyDefinitions();
 	}
 
+	@Override
+	public boolean canLoadStudyData()
+	{
+		return true;
+	}
+
 	/**
 	 * Get a specific studydefinition and save it in the database
 	 */

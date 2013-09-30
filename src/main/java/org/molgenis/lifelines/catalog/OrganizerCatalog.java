@@ -1,6 +1,6 @@
 package org.molgenis.lifelines.catalog;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.molgenis.catalog.Catalog;
@@ -60,7 +60,10 @@ public class OrganizerCatalog implements Catalog
 	@Override
 	public List<CatalogItem> getItems()
 	{
-		return Collections.emptyList();
+		List<CatalogItem> items = new ArrayList<CatalogItem>();
+		for (CatalogFolder child : getChildren())
+			items.addAll(child.getItems());
+		return items;
 	}
 
 	@Override
@@ -84,7 +87,10 @@ public class OrganizerCatalog implements Catalog
 	@Override
 	public CatalogItem findItem(String catalogItemId)
 	{
-		// FIXME implement
-		throw new UnsupportedOperationException();
+		for (CatalogItem item : getItems())
+		{
+			if (item.getId().equals(catalogItemId)) return item;
+		}
+		return null;
 	}
 }
