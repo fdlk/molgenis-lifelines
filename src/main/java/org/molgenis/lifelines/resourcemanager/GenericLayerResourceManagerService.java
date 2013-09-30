@@ -124,7 +124,8 @@ public class GenericLayerResourceManagerService
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode < 200 || statusCode >= 400)
 			{
-				throw new IOException("Error retrieving study definition " + id + " (statuscode: " + statusCode + ")");
+				LOG.error("Error retrieving study definition " + id + " (statuscode: " + statusCode + ")");
+				throw new IOException("Error retrieving study definition (statuscode: " + statusCode + ")");
 			}
 			xmlStream = response.getEntity().getContent();
 			return genericLayerDataBinder.createQualityMeasureDocumentUnmarshaller()
@@ -184,6 +185,7 @@ public class GenericLayerResourceManagerService
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode < 200 || statusCode >= 400)
 			{
+				LOG.error("Error persisting study definition (statuscode: " + statusCode + ")");
 				throw new IOException("Error persisting study definition (statuscode: " + statusCode + ")");
 			}
 
@@ -243,6 +245,7 @@ public class GenericLayerResourceManagerService
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode < 200 || statusCode >= 400)
 			{
+				LOG.error("Error updating study definition " + studyDefinitionId + " (statuscode: " + statusCode + ")");
 				throw new IOException("Error updating study definition (statuscode: " + statusCode + ")");
 			}
 		}
@@ -305,6 +308,7 @@ public class GenericLayerResourceManagerService
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode < 200 || statusCode >= 400)
 			{
+				LOG.error("Error retrieving catalog " + uri + " (statuscode: " + statusCode + ")");
 				throw new IOException("Error retrieving catalog (statuscode: " + statusCode + ")");
 			}
 			xmlStream = response.getEntity().getContent();
@@ -433,6 +437,7 @@ public class GenericLayerResourceManagerService
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode < 200 || statusCode >= 400)
 			{
+				LOG.error("Error retrieving catalogs or study definitions " + uri + " (statuscode: " + statusCode + ")");
 				throw new IOException("Error retrieving catalogs or study definitions (statuscode: " + statusCode + ")");
 			}
 			xmlStream = response.getEntity().getContent();
