@@ -138,10 +138,12 @@ public class GenericLayerResourceManagerService
 		}
 		catch (IOException e)
 		{
+			httpGet.abort();
 			throw new RuntimeException(e);
 		}
 		catch (JAXBException e)
 		{
+			httpGet.abort();
 			throw new RuntimeException(e);
 		}
 		finally
@@ -174,7 +176,10 @@ public class GenericLayerResourceManagerService
 				{
 					throw new RuntimeException(e);
 				}
-				outstream.close();
+				finally
+				{
+					outstream.close();
+				}
 			}
 		});
 
@@ -203,10 +208,12 @@ public class GenericLayerResourceManagerService
 		}
 		catch (IOException e)
 		{
+			httpPost.abort();
 			throw new RuntimeException(e);
 		}
 		catch (JAXBException e)
 		{
+			httpPost.abort();
 			throw new RuntimeException(e);
 		}
 		finally
@@ -234,7 +241,10 @@ public class GenericLayerResourceManagerService
 				{
 					throw new RuntimeException(e);
 				}
-				outstream.close();
+				finally
+				{
+					outstream.close();
+				}
 			}
 		});
 
@@ -256,6 +266,7 @@ public class GenericLayerResourceManagerService
 		}
 		catch (IOException e)
 		{
+			httpPut.abort();
 			throw new RuntimeException(e);
 		}
 		finally
@@ -324,10 +335,12 @@ public class GenericLayerResourceManagerService
 		}
 		catch (IOException e)
 		{
+			httpGet.abort();
 			throw new RuntimeException(e);
 		}
 		catch (JAXBException e)
 		{
+			httpGet.abort();
 			throw new RuntimeException(e);
 		}
 		finally
@@ -450,10 +463,12 @@ public class GenericLayerResourceManagerService
 		}
 		catch (IOException e)
 		{
+			httpGet.abort();
 			throw new RuntimeException(e);
 		}
 		catch (JAXBException e)
 		{
+			httpGet.abort();
 			throw new RuntimeException(e);
 		}
 		finally
