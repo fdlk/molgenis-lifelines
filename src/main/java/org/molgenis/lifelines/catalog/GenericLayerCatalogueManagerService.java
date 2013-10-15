@@ -410,7 +410,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 				ED originalText = observationCode.getOriginalText();
 				if (originalText != null) observableFeature.setDescription(originalText.getContent().get(0).toString());
 				if (dataType != null) observableFeature.setDataType(dataType);
-				observableFeature.setDefinition(ontologyTerm);
+				observableFeature.setDefinitions(ontologyTerm);
 
 				// determine unit
 				if (anyValue instanceof PQ)
