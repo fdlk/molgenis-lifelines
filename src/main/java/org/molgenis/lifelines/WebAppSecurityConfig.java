@@ -21,9 +21,9 @@ public class WebAppSecurityConfig extends MolgenisWebAppSecurityConfig
 	{
 		euac.antMatchers("/").permitAll()
 
-		.antMatchers("/plugin/home/**").hasAnyAuthority(defaultPluginAuthorities("home"))
+		.antMatchers("/plugin/home/**").permitAll() // allow anonymous user to see home plugin
 
-		.antMatchers("/plugin/protocolviewer/**").hasAnyAuthority(defaultPluginAuthorities("protocolviewer"))
+		.antMatchers("/plugin/protocolviewer/**").permitAll() // allow anonymous user to see protocol viewer plugin
 
 		.antMatchers("/plugin/study/**").hasAnyAuthority(defaultPluginAuthorities("study"))
 
