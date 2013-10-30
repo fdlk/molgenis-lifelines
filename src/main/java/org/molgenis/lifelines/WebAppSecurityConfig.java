@@ -19,44 +19,81 @@ public class WebAppSecurityConfig extends MolgenisWebAppSecurityConfig
 	@Override
 	protected void configureUrlAuthorization(ExpressionUrlAuthorizationConfigurer<HttpSecurity> euac)
 	{
-		euac.antMatchers("/").permitAll()
+		euac.antMatchers("/")
+				.permitAll()
 
-		.antMatchers("/plugin/home/**").hasAnyAuthority(defaultPluginAuthorities("home"))
+				// main menu
+				.antMatchers("/menu/main")
+				.hasAnyAuthority(
+						defaultPluginAuthorities("home", "protocolviewer", "dataexplorer", "importwizard",
+								"useraccount"))
 
-		.antMatchers("/plugin/protocolviewer/**").hasAnyAuthority(defaultPluginAuthorities("protocolviewer"))
+				// main menu plugins
+				.antMatchers("/menu/main/home/**", "/plugin/home/**")
+				.hasAnyAuthority(defaultPluginAuthorities("home"))
 
-		.antMatchers("/plugin/study/**").hasAnyAuthority(defaultPluginAuthorities("study"))
+				.antMatchers("/menu/main/protocolviewer/**", "/plugin/protocolviewer/**")
+				.hasAnyAuthority(defaultPluginAuthorities("protocolviewer"))
 
-		.antMatchers("/plugin/dataexplorer/**").hasAnyAuthority(defaultPluginAuthorities("dataexplorer"))
+				.antMatchers("/menu/main/dataexplorer/**", "/plugin/dataexplorer/**")
+				.hasAnyAuthority(defaultPluginAuthorities("dataexplorer"))
 
-		.antMatchers("/plugin/importwizard/**").hasAnyAuthority(defaultPluginAuthorities("importwizard"))
+				.antMatchers("/menu/main/importwizard/**", "/plugin/importwizard/**")
+				.hasAnyAuthority(defaultPluginAuthorities("importwizard"))
 
-		.antMatchers("/plugin/catalogmanager/**").hasAnyAuthority(defaultPluginAuthorities("catalogmanager"))
+				.antMatchers("/menu/main/useraccount/**", "/plugin/useraccount/**")
+				.hasAnyAuthority(defaultPluginAuthorities("useraccount"))
 
-		.antMatchers("/plugin/studymanager/**").hasAnyAuthority(defaultPluginAuthorities("studymanager"))
+				// entities menu
+				.antMatchers("/menu/entities")
+				.hasAnyAuthority(
+						defaultPluginAuthorities("formdataSet", "formprotocol", "formobservablefeature",
+								"formontologyterm", "formstudydatarequest", "formruntimeproperty"))
 
-		.antMatchers("/plugin/permissionmanager/**").hasAnyAuthority(defaultPluginAuthorities("permissionmanager"))
+				// entities menu plugins
+				.antMatchers("/menu/entities/form.DataSet", "/plugin/form.DataSet")
+				.hasAnyAuthority(defaultPluginAuthorities("formdataSet"))
 
-		.antMatchers("/plugin/dataindexer/**").hasAnyAuthority(defaultPluginAuthorities("dataindexer"))
-
-		.antMatchers("/plugin/form.DataSet").hasAnyAuthority(defaultPluginAuthorities("formdataSet"))
-
-		.antMatchers("/plugin/form.Protocol?subForms=DataSet.ProtocolUsed")
+				.antMatchers("/menu/entities/form.Protocol?subForms=DataSet.ProtocolUsed",
+						"/plugin/form.Protocol?subForms=DataSet.ProtocolUsed")
 				.hasAnyAuthority(defaultPluginAuthorities("formprotocol"))
 
-				.antMatchers("/plugin/form.ObservableFeature?subForms=Category.observableFeature")
+				.antMatchers("/menu/entities/form.ObservableFeature?subForms=Category.observableFeature",
+						"/plugin/form.ObservableFeature?subForms=Category.observableFeature")
 				.hasAnyAuthority(defaultPluginAuthorities("formobservablefeature"))
 
-				.antMatchers("/plugin/form.OntologyTerm?subForms=OntologyTerm.ontology")
+				.antMatchers("/menu/entities/form.OntologyTerm?subForms=OntologyTerm.ontology",
+						"/plugin/form.OntologyTerm?subForms=OntologyTerm.ontology")
 				.hasAnyAuthority(defaultPluginAuthorities("formontologyterm"))
 
-				.antMatchers("/plugin/form.StudyDataRequest")
+				.antMatchers("/menu/entities/form.StudyDataRequest", "/plugin/form.StudyDataRequest")
 				.hasAnyAuthority(defaultPluginAuthorities("formstudydatarequest"))
 
-				.antMatchers("/plugin/form.RuntimeProperty")
+				.antMatchers("/menu/entities/form.RuntimeProperty", "/plugin/form.RuntimeProperty")
 				.hasAnyAuthority(defaultPluginAuthorities("formruntimeproperty"))
 
-				.antMatchers("/plugin/useraccount/**").hasAnyAuthority(defaultPluginAuthorities("useraccount"));
+				// admin menu
+				.antMatchers("/menu/admin")
+				.hasAnyAuthority(
+						defaultPluginAuthorities("permissionmanager", "catalogmanager", "studymanager", "dataindexer"))
+
+				// admin menu plugins
+				.antMatchers("/menu/admin/permissionmanager/**", "/plugin/permissionmanager/**")
+				.hasAnyAuthority(defaultPluginAuthorities("permissionmanager"))
+
+				.antMatchers("/menu/admin/catalogmanager/**", "/plugin/catalogmanager/**")
+				.hasAnyAuthority(defaultPluginAuthorities("catalogmanager"))
+
+				.antMatchers("/menu/admin/studymanager/**", "/plugin/studymanager/**")
+				.hasAnyAuthority(defaultPluginAuthorities("studymanager"))
+
+				.antMatchers("/menu/admin/dataindexer/**", "/plugin/dataindexer/**")
+				.hasAnyAuthority(defaultPluginAuthorities("dataindexer"))
+
+				// protocol viewer plugin dependencies
+				.antMatchers("/plugin/study/**").hasAnyAuthority(defaultPluginAuthorities("protocolviewer"))
+
+				.antMatchers("/cart/**").hasAnyAuthority(defaultPluginAuthorities("protocolviewer"));
 	}
 
 	@Override
