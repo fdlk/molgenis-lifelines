@@ -89,7 +89,7 @@ public class GenericLayerResourceManagerService
 		CatalogSearchResult catalogSearchResult = findCatalogRelease("/studydefinition/" + id);
 
 		StudyDefinitionMeta studyDefinitionInfo = new StudyDefinitionMeta(catalogSearchResult.getId(),
-				catalogSearchResult.getName());
+				catalogSearchResult.getName(), null, null);
 		studyDefinitionInfo.setDescription(catalogSearchResult.getDescription());
 		studyDefinitionInfo.setVersion(catalogSearchResult.getVersion());
 		studyDefinitionInfo.setAuthors(catalogSearchResult.getAuthors());
@@ -109,7 +109,7 @@ public class GenericLayerResourceManagerService
 			@Override
 			public StudyDefinitionMeta apply(CatalogSearchResult input)
 			{
-				return new StudyDefinitionMeta(input.getId(), input.getName());
+				return new StudyDefinitionMeta(input.getId(), input.getName(), null, null);
 			}
 		});
 	}
