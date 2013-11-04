@@ -2,8 +2,10 @@ package org.molgenis.lifelines;
 
 import javax.xml.validation.Schema;
 
-import nl.umcg.hl7.CatalogService;
-import nl.umcg.hl7.GenericLayerCatalogService;
+import nl.umcg.hl7.service.catalog.CatalogService;
+import nl.umcg.hl7.service.catalog.GenericLayerCatalogService;
+import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionService;
+import nl.umcg.hl7.service.studydefinition.StudyDefinitionService;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ClientConnectionManager;
@@ -105,8 +107,11 @@ public class WebAppConfig extends MolgenisWebAppConfig
 	@Bean
 	public StudyManagerService studyDefinitionManagerService()
 	{
+		GenericLayerStudyDefinitionService genericLayerStudyDefinitionService = new StudyDefinitionService()
+				.getBasicHttpBindingGenericLayerStudyDefinitionService();
+
 		GenericLayerStudyManagerService genericLayerStudyManagerService = new GenericLayerStudyManagerService(
-				genericLayerResourceManagerService(), catalogManagerService(), genericLayerDataQueryService);
+				genericLayerStudyDefinitionService, catalogManagerService(), genericLayerDataQueryService);
 		if (appProfile == null || LifeLinesAppProfile.valueOf(appProfile.toUpperCase()) == LifeLinesAppProfile.WEBSITE)
 		{
 			return new LifeLinesStudyManagerService(genericLayerStudyManagerService, new OmxStudyManagerService(

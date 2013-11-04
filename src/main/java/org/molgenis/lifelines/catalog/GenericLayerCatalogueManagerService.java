@@ -9,10 +9,10 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
-import nl.umcg.hl7.CatalogService;
-import nl.umcg.hl7.GenericLayerCatalogService;
-import nl.umcg.hl7.GetCatalogResponse.GetCatalogResult;
-import nl.umcg.hl7.GetValuesetsResponse.GetValuesetsResult;
+import nl.umcg.hl7.service.catalog.CatalogService;
+import nl.umcg.hl7.service.catalog.GenericLayerCatalogService;
+import nl.umcg.hl7.service.catalog.GetCatalogResponse.GetCatalogResult;
+import nl.umcg.hl7.service.catalog.GetValuesetsResponse.GetValuesetsResult;
 
 import org.apache.log4j.Logger;
 import org.molgenis.catalog.Catalog;
@@ -43,7 +43,6 @@ import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.observ.target.Ontology;
 import org.molgenis.omx.observ.target.OntologyTerm;
 import org.molgenis.omx.utils.ProtocolUtils;
-import org.molgenis.study.StudyDefinitionMeta;
 import org.molgenis.study.UnknownStudyDefinitionException;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Node;
@@ -110,14 +109,6 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 		CatalogMeta catalogMeta = resourceManagerService.findCatalog(id);
 		REPCMT000100UV01Organizer catalog = retrieveCatalog(id);
 		return new OrganizerCatalog(catalog, catalogMeta);
-	}
-
-	@Override
-	public Catalog getCatalogOfStudyDefinition(String id) throws UnknownCatalogException
-	{
-		StudyDefinitionMeta studyDefinitionMeta = resourceManagerService.findStudyDefinition(id);
-		REPCMT000100UV01Organizer catalog = retrieveCatalog(studyDefinitionMeta.getVersion());
-		return new OrganizerCatalog(catalog, studyDefinitionMeta);
 	}
 
 	@Transactional

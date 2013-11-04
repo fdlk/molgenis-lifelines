@@ -5,19 +5,19 @@ import java.util.List;
 
 import javax.xml.bind.JAXBElement;
 
+import nl.umcg.hl7.service.studydefinition.COCTMT090107UVAssignedPerson;
+import nl.umcg.hl7.service.studydefinition.COCTMT090107UVPerson;
+import nl.umcg.hl7.service.studydefinition.COCTMT150007UVOrganization;
+import nl.umcg.hl7.service.studydefinition.ED;
+import nl.umcg.hl7.service.studydefinition.INT;
+import nl.umcg.hl7.service.studydefinition.ON;
+import nl.umcg.hl7.service.studydefinition.PN;
+import nl.umcg.hl7.service.studydefinition.POQMMT000001UVAuthor;
+import nl.umcg.hl7.service.studydefinition.POQMMT000001UVComponent2;
+import nl.umcg.hl7.service.studydefinition.POQMMT000001UVEntry;
+import nl.umcg.hl7.service.studydefinition.POQMMT000001UVQualityMeasureDocument;
+
 import org.molgenis.catalog.CatalogItem;
-import org.molgenis.hl7.COCTMT090107UVAssignedPerson;
-import org.molgenis.hl7.COCTMT090107UVPerson;
-import org.molgenis.hl7.COCTMT150007UVOrganization;
-import org.molgenis.hl7.ED;
-import org.molgenis.hl7.INT;
-import org.molgenis.hl7.ON;
-import org.molgenis.hl7.PN;
-import org.molgenis.hl7.POQMMT000001UVAuthor;
-import org.molgenis.hl7.POQMMT000001UVComponent2;
-import org.molgenis.hl7.POQMMT000001UVEntry;
-import org.molgenis.hl7.POQMMT000001UVQualityMeasureDocument;
-import org.molgenis.lifelines.catalog.PoqmObservationCatalogItem;
 import org.molgenis.study.StudyDefinition;
 
 import com.google.common.base.Function;
@@ -78,7 +78,8 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 			@Override
 			public CatalogItem apply(POQMMT000001UVEntry input)
 			{
-				return new PoqmObservationCatalogItem(input.getObservation());
+				return null; // FIXME
+				// return new PoqmObservationCatalogItem(input.getObservation());
 			}
 		});
 	}

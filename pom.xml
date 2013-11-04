@@ -131,14 +131,41 @@
 				<artifactId>jaxws-maven-plugin</artifactId>
 				<executions>
 					<execution>
+						<id>wsimport-catalog</id>
 						<goals>
 							<goal>wsimport</goal>
 						</goals>
 						<configuration>
+							<verbose>true</verbose>
+							<extension>true</extension>
+							<bindingDirectory>src/main/resources/xjb</bindingDirectory>
+							<bindingFiles>
+								<bindingFile>bindings-hl7.xjb</bindingFile>
+							</bindingFiles>
 							<wsdlUrls>
 								<wsdlUrl>${lifelines.catalog.service.wsdl.url}</wsdlUrl>
+							</wsdlUrls>
+							<packageName>nl.umcg.hl7.service.catalog</packageName>
+							<!-- for JDK 6 compilation compatibility -->
+							<xnocompile>false</xnocompile>
+						</configuration>
+					</execution>
+					<execution>
+						<id>wsimport-study_definition</id>
+						<goals>
+							<goal>wsimport</goal>
+						</goals>
+						<configuration>
+							<verbose>true</verbose>
+							<extension>true</extension>
+							<bindingDirectory>src/main/resources/xjb</bindingDirectory>
+							<bindingFiles>
+								<bindingFile>bindings-hl7.xjb</bindingFile>
+							</bindingFiles>
+							<wsdlUrls>
 								<wsdlUrl>${lifelines.study.definition.service.wsdl.url}</wsdlUrl>
 							</wsdlUrls>
+							<packageName>nl.umcg.hl7.service.studydefinition</packageName>
 							<!-- for JDK 6 compilation compatibility -->
 							<xnocompile>false</xnocompile>
 						</configuration>
