@@ -1,6 +1,9 @@
 package org.molgenis.lifelines;
 
 import static org.molgenis.security.SecurityUtils.defaultPluginAuthorities;
+import static org.molgenis.security.SecurityUtils.getPluginReadAuthority;
+
+import java.util.List;
 
 import org.molgenis.security.MolgenisWebAppSecurityConfig;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +13,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
 
 @Configuration
 @EnableWebSecurity
@@ -17,9 +22,11 @@ import org.springframework.security.config.annotation.web.configurers.Expression
 public class WebAppSecurityConfig extends MolgenisWebAppSecurityConfig
 {
 	@Override
-	protected void configureUrlAuthorization(ExpressionUrlAuthorizationConfigurer<HttpSecurity> euac)
+	protected void configureUrlAuthorization(
+			ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry expressionInterceptUrlRegistry)
 	{
-		euac.antMatchers("/")
+		expressionInterceptUrlRegistry
+				.antMatchers("/")
 				.permitAll()
 
 				// main menu
@@ -94,6 +101,13 @@ public class WebAppSecurityConfig extends MolgenisWebAppSecurityConfig
 				.antMatchers("/plugin/study/**").hasAnyAuthority(defaultPluginAuthorities("protocolviewer"))
 
 				.antMatchers("/cart/**").hasAnyAuthority(defaultPluginAuthorities("protocolviewer"));
+	}
+
+	@Override
+	protected List<GrantedAuthority> createAnonymousUserAuthorities()
+	{
+		return AuthorityUtils.createAuthorityList(getPluginReadAuthority("home"),
+				getPluginReadAuthority("protocolviewer"));
 	}
 
 	@Override
