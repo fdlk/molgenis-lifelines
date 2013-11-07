@@ -126,9 +126,13 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				{
 					POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = hl7Container
 							.getQualityMeasureDocument();
+
 					String id = qualityMeasureDocument.getId().getExtension();
+					String version = qualityMeasureDocument.getVersionNumber().getValue().toString();
 					ST title = qualityMeasureDocument.getTitle();
 					String name = title != null ? title.getContent().toString() : null;
+					ED text = qualityMeasureDocument.getText();
+					String description = text != null ? text.getContent().toString() : null;
 
 					// An eMeasure SHALL contain exactly 1 author that is the primary applicant.
 					List<POQMMT000001UVAuthor> authors = qualityMeasureDocument.getAuthor();
@@ -169,7 +173,10 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 
 					// TODO add date
 					Date date = null;
-					studyDefinitionsMeta.add(new StudyDefinitionMeta(id, name, email, date));
+					StudyDefinitionMeta studyDefinitionMeta = new StudyDefinitionMeta(id, name, email, date);
+					studyDefinitionMeta.setVersion(version);
+					studyDefinitionMeta.setDescription(description);
+					studyDefinitionsMeta.add(studyDefinitionMeta);
 				}
 			}
 		}
