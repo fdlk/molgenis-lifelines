@@ -59,7 +59,7 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 	}
 
 	@Override
-	public String getCatalogVersion()
+	public String getVersion()
 	{
 		INT versionNumber = qualityMeasureDocument.getVersionNumber();
 		return versionNumber != null ? versionNumber.getValue().toString() : null;
