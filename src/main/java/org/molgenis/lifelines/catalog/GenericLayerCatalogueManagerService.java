@@ -93,11 +93,25 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	public Catalog getCatalog(String id) throws UnknownCatalogException
 	{
 		// retrieve catalog from database
-		String catalogId = CatalogIdConverter.catalogIdToOmxIdentifier(id);
+		String omxIdentifier = CatalogIdConverter.catalogIdToOmxIdentifier(id);
+		return getCatalog(id, omxIdentifier);
+	}
+
+	@Override
+	public Catalog getCatalogOfStudyDefinition(String id) throws UnknownCatalogException,
+			UnknownStudyDefinitionException
+	{
+		String omxIdentifier = CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id);
+		return getCatalog(id, omxIdentifier);
+	}
+
+	private Catalog getCatalog(String id, String omxIdentifier)
+	{
+		// retrieve catalog from database
 		DataSet dataSet;
 		try
 		{
-			dataSet = DataSet.findByIdentifier(database, catalogId);
+			dataSet = DataSet.findByIdentifier(database, omxIdentifier);
 		}
 		catch (DatabaseException e)
 		{

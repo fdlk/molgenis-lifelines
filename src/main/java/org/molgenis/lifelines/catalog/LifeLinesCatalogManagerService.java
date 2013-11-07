@@ -33,6 +33,13 @@ public class LifeLinesCatalogManagerService implements CatalogManagerService
 	}
 
 	@Override
+	public Catalog getCatalogOfStudyDefinition(String id) throws UnknownCatalogException,
+			UnknownStudyDefinitionException
+	{
+		return omxCatalogManagerService.getCatalogOfStudyDefinition(id);
+	}
+
+	@Override
 	public void loadCatalog(String id) throws UnknownCatalogException
 	{
 		omxCatalogManagerService.loadCatalog(id);
