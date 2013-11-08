@@ -58,25 +58,22 @@ public class WebAppSecurityConfig extends MolgenisWebAppSecurityConfig
 								"formontologyterm", "formstudydatarequest", "formruntimeproperty"))
 
 				// entities menu plugins
-				.antMatchers("/menu/entities/form.DataSet", "/plugin/form.DataSet")
+				.antMatchers("/menu/entities/form.DataSet/**", "/plugin/form.DataSet")
 				.hasAnyAuthority(defaultPluginAuthorities("formdataSet"))
 
-				.antMatchers("/menu/entities/form.Protocol?subForms=DataSet.ProtocolUsed",
-						"/plugin/form.Protocol?subForms=DataSet.ProtocolUsed")
+				.antMatchers("/menu/entities/form.Protocol/**", "/plugin/form.Protocol/**")
 				.hasAnyAuthority(defaultPluginAuthorities("formprotocol"))
 
-				.antMatchers("/menu/entities/form.ObservableFeature?subForms=Category.observableFeature",
-						"/plugin/form.ObservableFeature?subForms=Category.observableFeature")
+				.antMatchers("/menu/entities/form.ObservableFeature/**", "/plugin/form.ObservableFeature/**")
 				.hasAnyAuthority(defaultPluginAuthorities("formobservablefeature"))
 
-				.antMatchers("/menu/entities/form.OntologyTerm?subForms=OntologyTerm.ontology",
-						"/plugin/form.OntologyTerm?subForms=OntologyTerm.ontology")
+				.antMatchers("/menu/entities/form.OntologyTerm/**", "/plugin/form.OntologyTerm/**")
 				.hasAnyAuthority(defaultPluginAuthorities("formontologyterm"))
 
-				.antMatchers("/menu/entities/form.StudyDataRequest", "/plugin/form.StudyDataRequest")
+				.antMatchers("/menu/entities/form.StudyDataRequest/**", "/plugin/form.StudyDataRequest/**")
 				.hasAnyAuthority(defaultPluginAuthorities("formstudydatarequest"))
 
-				.antMatchers("/menu/entities/form.RuntimeProperty", "/plugin/form.RuntimeProperty")
+				.antMatchers("/menu/entities/form.RuntimeProperty/**", "/plugin/form.RuntimeProperty/**")
 				.hasAnyAuthority(defaultPluginAuthorities("formruntimeproperty"))
 
 				// admin menu
