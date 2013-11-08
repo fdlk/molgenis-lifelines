@@ -11,6 +11,8 @@ import javax.xml.bind.Unmarshaller;
 
 import nl.umcg.hl7.service.catalog.CatalogService;
 import nl.umcg.hl7.service.catalog.GenericLayerCatalogService;
+import nl.umcg.hl7.service.catalog.GenericLayerCatalogServiceGetCatalogFAULTFaultMessage;
+import nl.umcg.hl7.service.catalog.GenericLayerCatalogServiceGetValuesetsFAULTFaultMessage;
 import nl.umcg.hl7.service.catalog.GetCatalogResponse.GetCatalogResult;
 import nl.umcg.hl7.service.catalog.GetValuesetsResponse.GetValuesetsResult;
 
@@ -151,7 +153,15 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 			database.add(dataSet);
 
 			// retrieve catalog data from LifeLines Generic Layer catalog service
-			GetValuesetsResult valueSetsResult = genericLayerCatalogService.getValuesets(id, null);
+			GetValuesetsResult valueSetsResult;
+			try
+			{
+				valueSetsResult = genericLayerCatalogService.getValuesets(id, null);
+			}
+			catch (GenericLayerCatalogServiceGetValuesetsFAULTFaultMessage e)
+			{
+				throw new RuntimeException(e);
+			}
 			loadValueSets(valueSetsResult, valueSetMap);
 		}
 		catch (DatabaseException e)
@@ -210,7 +220,15 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 			database.add(dataSet);
 
 			// retrieve catalog data from LifeLines Generic Layer catalog service
-			GetValuesetsResult valueSetsResult = genericLayerCatalogService.getValuesets(null, id);
+			GetValuesetsResult valueSetsResult;
+			try
+			{
+				valueSetsResult = genericLayerCatalogService.getValuesets(null, id);
+			}
+			catch (GenericLayerCatalogServiceGetValuesetsFAULTFaultMessage e)
+			{
+				throw new RuntimeException(e);
+			}
 			loadValueSets(valueSetsResult, valueSetMap);
 		}
 		catch (DatabaseException e)
@@ -313,7 +331,15 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	private REPCMT000100UV01Organizer retrieveCatalog(String id)
 	{
 		// retrieve catalog data from LifeLines Generic Layer catalog service
-		GetCatalogResult catalogResult = genericLayerCatalogService.getCatalog(id, null);
+		GetCatalogResult catalogResult;
+		try
+		{
+			catalogResult = genericLayerCatalogService.getCatalog(id, null, null);
+		}
+		catch (GenericLayerCatalogServiceGetCatalogFAULTFaultMessage e)
+		{
+			throw new RuntimeException(e);
+		}
 
 		// convert to HL7 organizer
 		REPCMT000100UV01Organizer catalog;
@@ -333,7 +359,15 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	private REPCMT000100UV01Organizer retrieveCatalogOfStudyDefinition(String id)
 	{
 		// retrieve catalog data from LifeLines Generic Layer catalog service
-		GetCatalogResult catalogResult = genericLayerCatalogService.getCatalog(null, id);
+		GetCatalogResult catalogResult;
+		try
+		{
+			catalogResult = genericLayerCatalogService.getCatalog(null, id, null);
+		}
+		catch (GenericLayerCatalogServiceGetCatalogFAULTFaultMessage e)
+		{
+			throw new RuntimeException(e);
+		}
 
 		// convert to HL7 organizer
 		REPCMT000100UV01Organizer catalog;
