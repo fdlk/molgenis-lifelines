@@ -73,14 +73,15 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 				"expected exactly one component");
 		POQMMT000001UVComponent2 component = components.iterator().next();
 
-		return Lists.transform(component.getSection().getEntry(), new Function<POQMMT000001UVEntry, CatalogItem>()
-		{
-			@Override
-			public CatalogItem apply(POQMMT000001UVEntry input)
-			{
-				return new PoqmObservationCatalogItem(input.getObservation());
-			}
-		});
+		return Lists.newArrayList(Lists.transform(component.getSection().getEntry(),
+				new Function<POQMMT000001UVEntry, CatalogItem>()
+				{
+					@Override
+					public CatalogItem apply(POQMMT000001UVEntry input)
+					{
+						return new PoqmObservationCatalogItem(input.getObservation());
+					}
+				}));
 	}
 
 	@Override
