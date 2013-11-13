@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Vector;
 
+import org.molgenis.catalogmanager.CatalogManagerController;
+import org.molgenis.dataexplorer.controller.DataExplorerController;
 import org.molgenis.framework.db.Database;
 import org.molgenis.framework.db.DatabaseException;
 import org.molgenis.framework.db.WebAppDatabasePopulatorService;
@@ -16,8 +18,12 @@ import org.molgenis.omx.auth.MolgenisGroupMember;
 import org.molgenis.omx.auth.MolgenisUser;
 import org.molgenis.omx.auth.UserAuthority;
 import org.molgenis.omx.core.RuntimeProperty;
+import org.molgenis.omx.protocolviewer.ProtocolViewerController;
+import org.molgenis.search.SearchSecurityHandlerInterceptor;
 import org.molgenis.security.SecurityUtils;
 import org.molgenis.security.account.AccountService;
+import org.molgenis.security.user.UserAccountController;
+import org.molgenis.studymanager.StudyManagerController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -108,7 +114,7 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		unsecuredDatabase.add(userUser);
 
 		MolgenisGroup allUsersGroup = new MolgenisGroup();
-		allUsersGroup.setName("All Users");
+		allUsersGroup.setName(AccountService.ALL_USER_GROUP);
 		unsecuredDatabase.add(allUsersGroup);
 
 		MolgenisGroupMember userAllUsersMember = new MolgenisGroupMember();
@@ -133,6 +139,10 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		runtimePropertyMap.put(KEY_APP_HREF_LOGO, "/img/lifelines_letterbox_270x100.png");
 		runtimePropertyMap.put(KEY_APP_HREF_CSS, "lifelines.css");
 		runtimePropertyMap.put(AccountService.KEY_PLUGIN_AUTH_ACTIVATIONMODE, "user");
+		if (appProfile == LifeLinesAppProfile.WEBSITE)
+		{
+			runtimePropertyMap.put(SearchSecurityHandlerInterceptor.KEY_ACTION_ALLOW_ANONYMOUS_SEARCH, "true");
+		}
 		runtimePropertyMap
 				.put(HomeController.KEY_APP_HOME_HTML,
 						"<div class=\"container-fluid\">"
@@ -183,22 +193,31 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 
 		GroupAuthority allUsersHomeAuthority = new GroupAuthority();
 		allUsersHomeAuthority.setMolgenisGroup(allUsersGroup);
-		allUsersHomeAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX + "HOME");
+		allUsersHomeAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX + HomeController.ID.toUpperCase());
 		unsecuredDatabase.add(allUsersHomeAuthority);
 
 		GroupAuthority allUsersProtocolViewerAuthority = new GroupAuthority();
 		allUsersProtocolViewerAuthority.setMolgenisGroup(allUsersGroup);
-		allUsersProtocolViewerAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX + "PROTOCOLVIEWER");
+		allUsersProtocolViewerAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX
+				+ ProtocolViewerController.ID.toUpperCase());
 		unsecuredDatabase.add(allUsersProtocolViewerAuthority);
+
+		GroupAuthority allUsersAccountAuthority = new GroupAuthority();
+		allUsersAccountAuthority.setMolgenisGroup(allUsersGroup);
+		allUsersAccountAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX
+				+ UserAccountController.ID.toUpperCase());
+		unsecuredDatabase.add(allUsersAccountAuthority);
 
 		GroupAuthority datamanagerStudyManagerAuthority = new GroupAuthority();
 		datamanagerStudyManagerAuthority.setMolgenisGroup(allUsersGroup);
-		datamanagerStudyManagerAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX + "STUDYMANAGER");
+		datamanagerStudyManagerAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX
+				+ StudyManagerController.ID.toUpperCase());
 		unsecuredDatabase.add(datamanagerStudyManagerAuthority);
 
 		GroupAuthority datamanagerCatalogManagerAuthority = new GroupAuthority();
 		datamanagerCatalogManagerAuthority.setMolgenisGroup(allUsersGroup);
-		datamanagerCatalogManagerAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX + "CATALOGMANAGER");
+		datamanagerCatalogManagerAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX
+				+ CatalogManagerController.ID.toUpperCase());
 		unsecuredDatabase.add(datamanagerCatalogManagerAuthority);
 
 		if (appProfile == LifeLinesAppProfile.WORKSPACE)
@@ -227,7 +246,8 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 
 			GroupAuthority allUsersDataExplorerAuthority = new GroupAuthority();
 			allUsersDataExplorerAuthority.setMolgenisGroup(allUsersGroup);
-			allUsersDataExplorerAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX + "DATAEXPLORER");
+			allUsersDataExplorerAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX
+					+ DataExplorerController.ID.toUpperCase());
 			unsecuredDatabase.add(allUsersDataExplorerAuthority);
 		}
 	}

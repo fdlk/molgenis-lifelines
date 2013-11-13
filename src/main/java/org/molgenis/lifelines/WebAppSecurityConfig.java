@@ -55,38 +55,49 @@ public class WebAppSecurityConfig extends MolgenisWebAppSecurityConfig
 				.antMatchers("/menu/entities")
 				.hasAnyAuthority(
 						defaultPluginAuthorities("formdataSet", "formprotocol", "formobservablefeature",
-								"formontologyterm", "formstudydatarequest", "formruntimeproperty"))
+								"formontologyterm", "formstudydatarequest", "formruntimeproperty", "formmolgenisuser",
+								"formmolgenisgroup", "formmolgenisgroupmember"))
 
 				// entities menu plugins
-				.antMatchers("/menu/entities/form.DataSet", "/plugin/form.DataSet")
+				.antMatchers("/menu/entities/form.DataSet/**", "/plugin/form.DataSet")
 				.hasAnyAuthority(defaultPluginAuthorities("formdataSet"))
 
-				.antMatchers("/menu/entities/form.Protocol?subForms=DataSet.ProtocolUsed",
-						"/plugin/form.Protocol?subForms=DataSet.ProtocolUsed")
+				.antMatchers("/menu/entities/form.Protocol/**", "/plugin/form.Protocol/**")
 				.hasAnyAuthority(defaultPluginAuthorities("formprotocol"))
 
-				.antMatchers("/menu/entities/form.ObservableFeature?subForms=Category.observableFeature",
-						"/plugin/form.ObservableFeature?subForms=Category.observableFeature")
+				.antMatchers("/menu/entities/form.ObservableFeature/**", "/plugin/form.ObservableFeature/**")
 				.hasAnyAuthority(defaultPluginAuthorities("formobservablefeature"))
 
-				.antMatchers("/menu/entities/form.OntologyTerm?subForms=OntologyTerm.ontology",
-						"/plugin/form.OntologyTerm?subForms=OntologyTerm.ontology")
+				.antMatchers("/menu/entities/form.OntologyTerm/**", "/plugin/form.OntologyTerm/**")
 				.hasAnyAuthority(defaultPluginAuthorities("formontologyterm"))
 
-				.antMatchers("/menu/entities/form.StudyDataRequest", "/plugin/form.StudyDataRequest")
+				.antMatchers("/menu/entities/form.StudyDataRequest/**", "/plugin/form.StudyDataRequest/**")
 				.hasAnyAuthority(defaultPluginAuthorities("formstudydatarequest"))
 
-				.antMatchers("/menu/entities/form.RuntimeProperty", "/plugin/form.RuntimeProperty")
+				.antMatchers("/menu/entities/form.RuntimeProperty/**", "/plugin/form.RuntimeProperty/**")
 				.hasAnyAuthority(defaultPluginAuthorities("formruntimeproperty"))
+
+				.antMatchers("/menu/entities/form.MolgenisUser/**", "/plugin/form.MolgenisUser/**")
+				.hasAnyAuthority(defaultPluginAuthorities("formmolgenisuser"))
+
+				.antMatchers("/menu/entities/form.MolgenisGroup/**", "/plugin/form.MolgenisGroup/**")
+				.hasAnyAuthority(defaultPluginAuthorities("formmolgenisgroup"))
+
+				.antMatchers("/menu/entities/form.MolgenisGroupMember/**", "/plugin/form.MolgenisGroupMember/**")
+				.hasAnyAuthority(defaultPluginAuthorities("formmolgenisgroupmember"))
 
 				// admin menu
 				.antMatchers("/menu/admin")
 				.hasAnyAuthority(
-						defaultPluginAuthorities("permissionmanager", "catalogmanager", "studymanager", "dataindexer"))
+						defaultPluginAuthorities("permissionmanager", "usermanager", "catalogmanager", "studymanager",
+								"dataindexer"))
 
 				// admin menu plugins
 				.antMatchers("/menu/admin/permissionmanager/**", "/plugin/permissionmanager/**")
 				.hasAnyAuthority(defaultPluginAuthorities("permissionmanager"))
+
+				.antMatchers("/menu/admin/usermanager/**", "/plugin/usermanager/**")
+				.hasAnyAuthority(defaultPluginAuthorities("usermanager"))
 
 				.antMatchers("/menu/admin/catalogmanager/**", "/plugin/catalogmanager/**")
 				.hasAnyAuthority(defaultPluginAuthorities("catalogmanager"))
