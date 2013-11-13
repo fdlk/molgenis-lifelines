@@ -90,12 +90,17 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 			message.append("in your molgenis-server.properties.");
 			throw new RuntimeException(message.toString());
 		}
-
+		
+		String firstName = "John";
+		String lastName = "Doe";
+			
 		// FIXME create users and groups through service class
 		MolgenisUser userAdmin = new MolgenisUser();
 		userAdmin.setUsername(USERNAME_ADMIN);
 		userAdmin.setPassword(new BCryptPasswordEncoder().encode(adminPassword));
 		userAdmin.setEmail(adminEmail);
+		userAdmin.setFirstName(firstName);
+		userAdmin.setLastName(lastName);
 		userAdmin.setActive(true);
 		userAdmin.setSuperuser(true);
 		unsecuredDatabase.add(userAdmin);
@@ -109,6 +114,8 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		userUser.setUsername(USERNAME_USER);
 		userUser.setPassword(new BCryptPasswordEncoder().encode(userPassword));
 		userUser.setEmail(userEmail);
+		userUser.setFirstName(firstName);
+		userUser.setLastName(lastName);
 		userUser.setActive(true);
 		userUser.setSuperuser(false);
 		unsecuredDatabase.add(userUser);
@@ -173,6 +180,8 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		datamanagerUser.setUsername(USERNAME_DATAMANAGER);
 		datamanagerUser.setPassword(new BCryptPasswordEncoder().encode(dataManagerPassword));
 		datamanagerUser.setEmail(dataManagerEmail);
+		datamanagerUser.setFirstName(firstName);
+		datamanagerUser.setLastName(lastName);
 		datamanagerUser.setActive(true);
 		datamanagerUser.setSuperuser(false);
 		unsecuredDatabase.add(datamanagerUser);
@@ -227,6 +236,8 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 			researcherUser.setPassword(new BCryptPasswordEncoder().encode(researcherPassword));
 			researcherUser.setEmail(researcherEmail);
 			researcherUser.setActive(true);
+			researcherUser.setFirstName(firstName);
+			researcherUser.setLastName(lastName);
 			researcherUser.setSuperuser(false);
 			unsecuredDatabase.add(researcherUser);
 
