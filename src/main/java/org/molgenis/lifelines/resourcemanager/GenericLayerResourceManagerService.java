@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -13,9 +12,16 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.log4j.Logger;
 import org.molgenis.atom.ContentType;
 import org.molgenis.atom.EntryType;
 import org.molgenis.atom.FeedType;
+import org.molgenis.catalog.CatalogMeta;
 import org.molgenis.hl7.COCTMT090107UVAssignedPerson;
 import org.molgenis.hl7.COCTMT090107UVPerson;
 import org.molgenis.hl7.COCTMT150007UVOrganization;
@@ -29,6 +35,9 @@ import org.molgenis.hl7.POQMMT000001UVQualityMeasureDocument;
 import org.molgenis.hl7.ST;
 import org.molgenis.lifelines.utils.GenericLayerDataBinder;
 import org.w3c.dom.Node;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 /**
  * Connection to the LL Resource Manager REST Service
