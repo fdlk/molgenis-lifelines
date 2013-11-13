@@ -137,7 +137,6 @@
 						<configuration>
 							<wsdlUrls>
 								<wsdlUrl>${lifelines.catalog.service.wsdl.url}</wsdlUrl>
-								<wsdlUrl>${lifelines.study.definition.service.wsdl.url}</wsdlUrl>
 							</wsdlUrls>
 							<!-- for JDK 6 compilation compatibility -->
 							<xnocompile>false</xnocompile>
