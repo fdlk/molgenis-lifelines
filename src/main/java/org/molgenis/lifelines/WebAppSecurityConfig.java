@@ -55,7 +55,8 @@ public class WebAppSecurityConfig extends MolgenisWebAppSecurityConfig
 				.antMatchers("/menu/entities")
 				.hasAnyAuthority(
 						defaultPluginAuthorities("formdataSet", "formprotocol", "formobservablefeature",
-								"formontologyterm", "formstudydatarequest", "formruntimeproperty"))
+								"formontologyterm", "formstudydatarequest", "formruntimeproperty", "formmolgenisuser",
+								"formmolgenisgroup", "formmolgenisgroupmember"))
 
 				// entities menu plugins
 				.antMatchers("/menu/entities/form.DataSet/**", "/plugin/form.DataSet")
@@ -76,14 +77,27 @@ public class WebAppSecurityConfig extends MolgenisWebAppSecurityConfig
 				.antMatchers("/menu/entities/form.RuntimeProperty/**", "/plugin/form.RuntimeProperty/**")
 				.hasAnyAuthority(defaultPluginAuthorities("formruntimeproperty"))
 
+				.antMatchers("/menu/entities/form.MolgenisUser/**", "/plugin/form.MolgenisUser/**")
+				.hasAnyAuthority(defaultPluginAuthorities("formmolgenisuser"))
+
+				.antMatchers("/menu/entities/form.MolgenisGroup/**", "/plugin/form.MolgenisGroup/**")
+				.hasAnyAuthority(defaultPluginAuthorities("formmolgenisgroup"))
+
+				.antMatchers("/menu/entities/form.MolgenisGroupMember/**", "/plugin/form.MolgenisGroupMember/**")
+				.hasAnyAuthority(defaultPluginAuthorities("formmolgenisgroupmember"))
+
 				// admin menu
 				.antMatchers("/menu/admin")
 				.hasAnyAuthority(
-						defaultPluginAuthorities("permissionmanager", "catalogmanager", "studymanager", "dataindexer"))
+						defaultPluginAuthorities("permissionmanager", "usermanager", "catalogmanager", "studymanager",
+								"dataindexer"))
 
 				// admin menu plugins
 				.antMatchers("/menu/admin/permissionmanager/**", "/plugin/permissionmanager/**")
 				.hasAnyAuthority(defaultPluginAuthorities("permissionmanager"))
+
+				.antMatchers("/menu/admin/usermanager/**", "/plugin/usermanager/**")
+				.hasAnyAuthority(defaultPluginAuthorities("usermanager"))
 
 				.antMatchers("/menu/admin/catalogmanager/**", "/plugin/catalogmanager/**")
 				.hasAnyAuthority(defaultPluginAuthorities("catalogmanager"))
