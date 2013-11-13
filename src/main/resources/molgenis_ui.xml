@@ -9,6 +9,7 @@
 			<plugin id="catalogmanager" name="Catalog Manager" url="catalogmanager"/>
 			<plugin id="studymanager" name="Study Manager" url="studymanager"/>
 			<plugin id="permissionmanager" name="Permission Manager" url="permissionmanager"/>
+			<plugin id="usermanager" name="User Manager" url="usermanager"/>
 			<plugin id="datasetindexer" name="Data Set Indexer" url="dataindexer"/>
 			<menu label="Entities" name ="entities">
 				<plugin id="form.DataSet" name="DataSet" url="form.DataSet"/>
@@ -17,6 +18,9 @@
         		<plugin id="form.Ontology" name="Ontology" url="form.Ontology?subForms=OntologyTerm.ontology"/>
         		<plugin id="form.StudyDataRequest" name="StudyDataRequest" url="form.StudyDataRequest"/>
         		<plugin id="form.RuntimeProperty" name="RuntimeProperty" url="form.RuntimeProperty"/>
+        		<plugin id="form.MolgenisUser" name="MolgenisUser" url="form.MolgenisUser"/>
+        		<plugin id="form.MolgenisGroup" name="MolgenisGroup" url="form.MolgenisGroup"/>
+        		<plugin id="form.MolgenisGroupMember" name="MolgenisGroupMember" url="form.MolgenisGroupMember"/>
 			</menu>
 		</menu>
 		<plugin id="useraccount" name="Account" url="useraccount"/>
