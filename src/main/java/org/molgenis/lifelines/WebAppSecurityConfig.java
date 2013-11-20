@@ -55,7 +55,7 @@ public class WebAppSecurityConfig extends MolgenisWebAppSecurityConfig
 				.antMatchers("/menu/entities")
 				.hasAnyAuthority(
 						defaultPluginAuthorities("formdataSet", "formprotocol", "formobservablefeature",
-								"formontologyterm", "formstudydatarequest", "formruntimeproperty", "formmolgenisuser",
+								"formontology", "formstudydatarequest", "formruntimeproperty", "formmolgenisuser",
 								"formmolgenisgroup", "formmolgenisgroupmember"))
 
 				// entities menu plugins
@@ -68,8 +68,8 @@ public class WebAppSecurityConfig extends MolgenisWebAppSecurityConfig
 				.antMatchers("/menu/entities/form.ObservableFeature/**", "/plugin/form.ObservableFeature/**")
 				.hasAnyAuthority(defaultPluginAuthorities("formobservablefeature"))
 
-				.antMatchers("/menu/entities/form.OntologyTerm/**", "/plugin/form.OntologyTerm/**")
-				.hasAnyAuthority(defaultPluginAuthorities("formontologyterm"))
+				.antMatchers("/menu/entities/form.Ontology/**", "/plugin/form.Ontology/**")
+				.hasAnyAuthority(defaultPluginAuthorities("formontology"))
 
 				.antMatchers("/menu/entities/form.StudyDataRequest/**", "/plugin/form.StudyDataRequest/**")
 				.hasAnyAuthority(defaultPluginAuthorities("formstudydatarequest"))

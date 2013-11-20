@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.molgenis</groupId>
         <artifactId>molgenis</artifactId>
-        <version>0.0.3-SNAPSHOT</version>
+        <version>0.0.4-SNAPSHOT</version>
     </parent>
     <artifactId>molgenis-app-lifelines</artifactId>
     <packaging>war</packaging>
@@ -122,6 +122,11 @@
 				         <name>molgenis.home</name>
 				         <value>${user.home}/.molgenis/lifelines</value>
 				       </systemProperty>
+				       <systemProperty>
+				         <name>javax.xml.bind.JAXBContext</name>
+				         <!-- http://stackoverflow.com/questions/14162159/supplying-a-different-version-of-jaxb-for-jax-ws-in-java-1-6 -->
+				         <value>com.sun.xml.internal.bind.v2.ContextFactory</value>
+				       </systemProperty>
 				    </systemProperties>
 				</configuration>
 			</plugin>
@@ -179,67 +184,67 @@
 		<dependency>
 			<groupId>org.molgenis</groupId>
 			<artifactId>molgenis-core</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.molgenis</groupId>
 			<artifactId>molgenis-core-ui</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.4-SNAPSHOT</version>
 		</dependency>		
 		<dependency>
 			<groupId>org.molgenis</groupId>
 			<artifactId>molgenis-omx-core</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.molgenis</groupId>
 			<artifactId>molgenis-omx-importer</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.molgenis</groupId>
 			<artifactId>molgenis-omx-dataexplorer</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.molgenis</groupId>
 			<artifactId>molgenis-omx-mobile</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.molgenis</groupId>
 			<artifactId>molgenis-omx-protocolviewer</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.molgenis</groupId>
 			<artifactId>molgenis-search</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.molgenis</groupId>
 			<artifactId>molgenis-search-elasticsearch</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.molgenis</groupId>
 			<artifactId>molgenis-security</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-aop</artifactId>
-			<version>3.2.3.RELEASE</version>
+			<version>${spring.version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.springframework</groupId>
 		    <artifactId>spring-context-support</artifactId>
-		    <version>3.2.3.RELEASE</version>
+		    <version>${spring.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-webmvc</artifactId>
-			<version>3.2.3.RELEASE</version>
+			<version>${spring.version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>com.sun.xml.bind</groupId>

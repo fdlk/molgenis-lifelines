@@ -1,6 +1,5 @@
 package org.molgenis.lifelines.studymanager;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -9,39 +8,22 @@ import nl.umcg.hl7.service.studydefinition.ActClass;
 import nl.umcg.hl7.service.studydefinition.ActMood;
 import nl.umcg.hl7.service.studydefinition.ArrayOfXElement;
 import nl.umcg.hl7.service.studydefinition.CD;
-import nl.umcg.hl7.service.studydefinition.CE;
-import nl.umcg.hl7.service.studydefinition.COCTMT090107UVAssignedPerson;
-import nl.umcg.hl7.service.studydefinition.COCTMT090107UVPerson;
-import nl.umcg.hl7.service.studydefinition.COCTMT150007UVContactParty;
-import nl.umcg.hl7.service.studydefinition.COCTMT150007UVOrganization;
-import nl.umcg.hl7.service.studydefinition.CS;
 import nl.umcg.hl7.service.studydefinition.ED;
-import nl.umcg.hl7.service.studydefinition.EntityClassOrganization;
-import nl.umcg.hl7.service.studydefinition.EntityClassPerson;
-import nl.umcg.hl7.service.studydefinition.EntityDeterminerSpecific;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionService;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceCreateFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetSubmittedFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceReviseFAULTFaultMessage;
+import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceSubmitFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GetSubmittedResponse;
 import nl.umcg.hl7.service.studydefinition.HL7Container;
-import nl.umcg.hl7.service.studydefinition.II;
-import nl.umcg.hl7.service.studydefinition.INT;
-import nl.umcg.hl7.service.studydefinition.NullFlavor;
-import nl.umcg.hl7.service.studydefinition.ON;
 import nl.umcg.hl7.service.studydefinition.ObjectFactory;
-import nl.umcg.hl7.service.studydefinition.PN;
 import nl.umcg.hl7.service.studydefinition.POQMMT000001UVAuthor;
 import nl.umcg.hl7.service.studydefinition.POQMMT000001UVComponent2;
-import nl.umcg.hl7.service.studydefinition.POQMMT000001UVCustodian;
 import nl.umcg.hl7.service.studydefinition.POQMMT000001UVEntry;
 import nl.umcg.hl7.service.studydefinition.POQMMT000001UVQualityMeasureDocument;
 import nl.umcg.hl7.service.studydefinition.POQMMT000001UVSection;
 import nl.umcg.hl7.service.studydefinition.POQMMT000002UVObservation;
-import nl.umcg.hl7.service.studydefinition.ParticipationType;
 import nl.umcg.hl7.service.studydefinition.Revise;
-import nl.umcg.hl7.service.studydefinition.RoleClassAssignedEntity;
-import nl.umcg.hl7.service.studydefinition.RoleClassContact;
 import nl.umcg.hl7.service.studydefinition.ST;
 import nl.umcg.hl7.service.studydefinition.StrucDocItem;
 import nl.umcg.hl7.service.studydefinition.StrucDocList;
@@ -236,64 +218,37 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		String id = qualityMeasureDocument.getId().getExtension();
 
 		// update study definition
-		studyDefinition.setId(id);
+		updateQualityMeasureDocument(qualityMeasureDocument, studyDefinition);
+
+		// submit study definition
 		try
 		{
-			updateStudyDefinition(studyDefinition);
+			studyDefinitionService.submit(id);
 		}
-		catch (UnknownStudyDefinitionException e)
+		catch (GenericLayerStudyDefinitionServiceSubmitFAULTFaultMessage e)
 		{
 			logger.error(e.getMessage());
 			throw new RuntimeException(e);
 		}
 
-		// FIXME do not set converted id at this location
 		studyDefinition.setId(StudyDefinitionIdConverter.studyDefinitionIdToOmxIdentifier(id));
-
 		return studyDefinition;
 	}
 
 	@Override
 	public void updateStudyDefinition(StudyDefinition studyDefinition) throws UnknownStudyDefinitionException
 	{
-		POQMMT000001UVQualityMeasureDocument eMeasure = createQualityMeasureDocument(studyDefinition);
-		HL7Container hl7Container = new HL7Container();
-		hl7Container.setQualityMeasureDocument(eMeasure);
+		// POQMMT000001UVQualityMeasureDocument eMeasure = updateQualityMeasureDocument(studyDefinition);
+		// TODO fix
 
-		Revise revise = new Revise();
-		revise.setHL7Container(hl7Container);
-		try
-		{
-			studyDefinitionService.revise(revise);
-		}
-		catch (GenericLayerStudyDefinitionServiceReviseFAULTFaultMessage e)
-		{
-			logger.error(e.getMessage());
-			throw new RuntimeException(e);
-		}
 	}
 
-	private POQMMT000001UVQualityMeasureDocument createQualityMeasureDocument(StudyDefinition studyDefinition)
+	private void updateQualityMeasureDocument(POQMMT000001UVQualityMeasureDocument qualityMeasureDocument,
+			StudyDefinition studyDefinition)
 	{
-		POQMMT000001UVQualityMeasureDocument eMeasure = new POQMMT000001UVQualityMeasureDocument();
-		II typeId = new II();
-		typeId.setRoot("2.16.840.1.113883.1.3");
-		typeId.setExtension("POQM_HD000001");
-		eMeasure.setTypeId(typeId);
-
-		II id = new II();
-		id.setRoot("2.16.840.1.113883.2.4.3.8.1000.54.7");
-		eMeasure.setId(id); // id placeholder
-
-		CE code = new CE();
-		code.setCode("57024-2");
-		code.setCodeSystem("2.16.840.1.113883.6.1");
-		code.setDisplayName("Health Quality Measure document");
-		eMeasure.setCode(code);
-
 		ST title = new ST();
 		title.getContent().add(studyDefinition.getName());
-		eMeasure.setTitle(title);
+		qualityMeasureDocument.setTitle(title);
 
 		StringBuilder textBuilder = new StringBuilder("Created by ")
 				.append(StringUtils.join(studyDefinition.getAuthors(), ' ')).append(" (")
@@ -301,62 +256,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 
 		ED text = new ED();
 		text.getContent().add(textBuilder.toString());
-		eMeasure.setText(text);
-
-		CS statusCode = new CS();
-		statusCode.setCode("active");
-		eMeasure.setStatusCode(statusCode);
-
-		II setId = new II();
-		setId.setRoot("1.1.1");
-		setId.setExtension("example");
-		eMeasure.setSetId(setId);
-
-		INT versionNumber = new INT();
-		versionNumber.setValue(new BigInteger("1"));
-		eMeasure.setVersionNumber(versionNumber);
-
-		POQMMT000001UVAuthor author = new POQMMT000001UVAuthor();
-		author.setTypeCode(ParticipationType.AUT);
-		COCTMT090107UVAssignedPerson assignedPerson = new COCTMT090107UVAssignedPerson();
-		assignedPerson.setClassCode(RoleClassAssignedEntity.ASSIGNED);
-		COCTMT090107UVPerson assignedPersonAssignedPerson = new COCTMT090107UVPerson();
-		assignedPersonAssignedPerson.setClassCode(EntityClassPerson.PSN);
-		assignedPersonAssignedPerson.setDeterminerCode(EntityDeterminerSpecific.INSTANCE);
-
-		PN name = new PN();
-		name.getContent().add("Onderzoeker X");
-		assignedPersonAssignedPerson.getName().add(name);
-		assignedPerson.setAssignedPerson(new ObjectFactory()
-				.createCOCTMT090107UVAssignedPersonAssignedPerson(assignedPersonAssignedPerson));
-
-		COCTMT150007UVOrganization representedOrganization = new COCTMT150007UVOrganization();
-		representedOrganization.setClassCode(EntityClassOrganization.ORG);
-		representedOrganization.setDeterminerCode(EntityDeterminerSpecific.INSTANCE);
-
-		II representedOrganizationId = new II();
-		representedOrganizationId.setRoot("2.16.840.1.113883.19.5");
-		representedOrganization.getId().add(representedOrganizationId);
-		ON representedOrganizationName = new ON();
-		representedOrganizationName.getContent().add("UMCG");
-		representedOrganization.getName().add(representedOrganizationName);
-		COCTMT150007UVContactParty contactParty = new COCTMT150007UVContactParty();
-		contactParty.setClassCode(RoleClassContact.CON);
-		contactParty.setNullFlavor(NullFlavor.UNK);
-		representedOrganization.getContactParty().add(contactParty);
-
-		assignedPerson.setRepresentedOrganization(new ObjectFactory()
-				.createCOCTMT090107UVAssignedPersonRepresentedOrganization(representedOrganization));
-
-		author.setAssignedPerson(assignedPerson);
-		eMeasure.getAuthor().add(author);
-
-		POQMMT000001UVCustodian custodian = new POQMMT000001UVCustodian();
-		custodian.setTypeCode(ParticipationType.CST);
-		COCTMT090107UVAssignedPerson custodianAssignedPerson = new COCTMT090107UVAssignedPerson();
-		custodianAssignedPerson.setClassCode(RoleClassAssignedEntity.ASSIGNED);
-		custodian.setAssignedPerson(custodianAssignedPerson);
-		eMeasure.setCustodian(custodian);
+		qualityMeasureDocument.setText(text);
 
 		POQMMT000001UVComponent2 component = new POQMMT000001UVComponent2();
 		POQMMT000001UVSection section = new POQMMT000001UVSection();
@@ -411,9 +311,23 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		}
 
 		component.setSection(section);
-		eMeasure.getComponent().add(component);
+		qualityMeasureDocument.getComponent().add(component);
 
-		return eMeasure;
+		// study definition revise request
+		HL7Container hl7Container = new HL7Container();
+		hl7Container.setQualityMeasureDocument(qualityMeasureDocument);
+
+		Revise revise = new Revise();
+		revise.setHL7Container(hl7Container);
+		try
+		{
+			studyDefinitionService.revise(revise);
+		}
+		catch (GenericLayerStudyDefinitionServiceReviseFAULTFaultMessage e)
+		{
+			logger.error(e.getMessage());
+			throw new RuntimeException(e);
+		}
 	}
 
 	private POQMMT000001UVQualityMeasureDocument getStudyDefinitionAsQualityMeasureDocument(String id)
@@ -440,6 +354,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				{
 					POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = hl7Container
 							.getQualityMeasureDocument();
+					System.out.println(id + " - " + qualityMeasureDocument.getId().getExtension());
 					if (id.equals(qualityMeasureDocument.getId().getExtension()))
 					{
 						return qualityMeasureDocument;
