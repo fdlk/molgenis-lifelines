@@ -46,7 +46,6 @@ import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.observ.target.Ontology;
 import org.molgenis.omx.observ.target.OntologyTerm;
 import org.molgenis.omx.utils.ProtocolUtils;
-import org.molgenis.study.StudyDefinitionMeta;
 import org.molgenis.study.UnknownStudyDefinitionException;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Node;
@@ -110,9 +109,21 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	@Override
 	public Catalog getCatalogOfStudyDefinition(String id) throws UnknownCatalogException
 	{
-		StudyDefinitionMeta studyDefinitionMeta = resourceManagerService.findStudyDefinition(id);
-		REPCMT000100UV01Organizer catalog = retrieveCatalog(studyDefinitionMeta.getVersion());
-		return new OrganizerCatalog(catalog, studyDefinitionMeta);
+		String omxIdentifier = CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id);
+		return getCatalog(id, omxIdentifier);
+	}
+
+	private Catalog getCatalog(String id, String omxIdentifier)
+	{
+		// retrieve catalog from database
+		DataSet dataSet = dataService.findOne(DataSet.ENTITY_NAME,
+				new QueryImpl().eq(DataSet.IDENTIFIER, omxIdentifier));
+		if (dataSet != null) return new OmxCatalog(dataSet);
+
+		// retrieve catalog from generic layer
+		CatalogMeta catalogMeta = resourceManagerService.findCatalog(id);
+		REPCMT000100UV01Organizer catalog = retrieveCatalog(id);
+		return new OrganizerCatalog(catalog, catalogMeta);
 	}
 
 	@Transactional

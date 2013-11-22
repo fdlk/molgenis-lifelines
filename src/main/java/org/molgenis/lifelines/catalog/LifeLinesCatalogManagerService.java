@@ -34,8 +34,7 @@ public class LifeLinesCatalogManagerService implements CatalogManagerService
 	public Catalog getCatalogOfStudyDefinition(String id) throws UnknownCatalogException,
 			UnknownStudyDefinitionException
 	{
-		String omxId = StudyDefinitionIdConverter.studyDefinitionIdToOmxIdentifier(id);
-		return omxCatalogManagerService.getCatalogOfStudyDefinition(omxId);
+		return omxCatalogManagerService.getCatalogOfStudyDefinition(id);
 	}
 
 	@Override

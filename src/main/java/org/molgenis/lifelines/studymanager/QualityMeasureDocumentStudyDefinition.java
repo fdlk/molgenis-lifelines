@@ -17,7 +17,6 @@ import org.molgenis.hl7.POQMMT000001UVAuthor;
 import org.molgenis.hl7.POQMMT000001UVComponent2;
 import org.molgenis.hl7.POQMMT000001UVEntry;
 import org.molgenis.hl7.POQMMT000001UVQualityMeasureDocument;
-import org.molgenis.lifelines.catalog.PoqmObservationCatalogItem;
 import org.molgenis.study.StudyDefinition;
 
 import com.google.common.base.Function;
@@ -79,7 +78,8 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 					@Override
 					public CatalogItem apply(POQMMT000001UVEntry input)
 					{
-						return new PoqmObservationCatalogItem(input.getObservation());
+						return null; // FIXME
+						// return new PoqmObservationCatalogItem(input.getObservation());
 					}
 				}));
 	}

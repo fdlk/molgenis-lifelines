@@ -8,6 +8,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
 
+import nl.umcg.hl7.service.studydefinition.POQMMT000001UVQualityMeasureDocument;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -20,8 +22,6 @@ import org.molgenis.hl7.ANY;
 import org.molgenis.hl7.BL;
 import org.molgenis.hl7.CD;
 import org.molgenis.hl7.INT;
-import org.molgenis.hl7.ObjectFactory;
-import org.molgenis.hl7.POQMMT000001UVQualityMeasureDocument;
 import org.molgenis.hl7.PQ;
 import org.molgenis.hl7.REAL;
 import org.molgenis.hl7.REPCMT000100UV01Component3;
@@ -93,8 +93,8 @@ public class GenericLayerDataQueryService
 				{
 					try
 					{
-						genericLayerDataBinder.createQualityMeasureDocumentMarshaller().marshal(
-								new ObjectFactory().createQualityMeasureDocument(studyDefinition), outstream);
+						genericLayerDataBinder.createQualityMeasureDocumentMarshaller().marshal(studyDefinition,
+								outstream);
 					}
 					catch (JAXBException e)
 					{
