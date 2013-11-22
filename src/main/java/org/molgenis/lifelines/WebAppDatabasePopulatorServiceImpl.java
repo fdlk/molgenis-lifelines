@@ -3,15 +3,14 @@ package org.molgenis.lifelines;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Vector;
 
 import org.molgenis.catalogmanager.CatalogManagerController;
+import org.molgenis.data.DataService;
+import org.molgenis.data.support.QueryImpl;
 import org.molgenis.dataexplorer.controller.DataExplorerController;
-import org.molgenis.framework.db.Database;
 import org.molgenis.framework.db.DatabaseException;
 import org.molgenis.framework.db.WebAppDatabasePopulatorService;
 import org.molgenis.lifelines.controller.HomeController;
-import org.molgenis.model.elements.Entity;
 import org.molgenis.omx.auth.GroupAuthority;
 import org.molgenis.omx.auth.MolgenisGroup;
 import org.molgenis.omx.auth.MolgenisGroupMember;
@@ -65,13 +64,13 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 	@Value("${lifelines.researcher.email:molgenis+researcher@gmail.com}")
 	private String researcherEmail;
 
-	private final Database unsecuredDatabase;
+	private final DataService dataService;
 
 	@Autowired
-	public WebAppDatabasePopulatorServiceImpl(Database unsecuredDatabase)
+	public WebAppDatabasePopulatorServiceImpl(DataService dataService)
 	{
-		if (unsecuredDatabase == null) throw new IllegalArgumentException("Unsecured database is null");
-		this.unsecuredDatabase = unsecuredDatabase;
+		if (dataService == null) throw new IllegalArgumentException("dataService is null");
+		this.dataService = dataService;
 	}
 
 	@Override
@@ -90,10 +89,10 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 			message.append("in your molgenis-server.properties.");
 			throw new RuntimeException(message.toString());
 		}
-		
+
 		String firstName = "John";
 		String lastName = "Doe";
-			
+
 		// FIXME create users and groups through service class
 		MolgenisUser userAdmin = new MolgenisUser();
 		userAdmin.setUsername(USERNAME_ADMIN);
@@ -103,12 +102,12 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		userAdmin.setLastName(lastName);
 		userAdmin.setActive(true);
 		userAdmin.setSuperuser(true);
-		unsecuredDatabase.add(userAdmin);
+		dataService.add(MolgenisUser.ENTITY_NAME, userAdmin);
 
 		UserAuthority suAuthority = new UserAuthority();
 		suAuthority.setMolgenisUser(userAdmin);
 		suAuthority.setRole("ROLE_SU");
-		unsecuredDatabase.add(suAuthority);
+		dataService.add(UserAuthority.ENTITY_NAME, suAuthority);
 
 		MolgenisUser userUser = new MolgenisUser();
 		userUser.setUsername(USERNAME_USER);
@@ -118,24 +117,23 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		userUser.setLastName(lastName);
 		userUser.setActive(true);
 		userUser.setSuperuser(false);
-		unsecuredDatabase.add(userUser);
+		dataService.add(MolgenisUser.ENTITY_NAME, userUser);
 
 		MolgenisGroup allUsersGroup = new MolgenisGroup();
 		allUsersGroup.setName(AccountService.ALL_USER_GROUP);
-		unsecuredDatabase.add(allUsersGroup);
+		dataService.add(MolgenisGroup.ENTITY_NAME, allUsersGroup);
 
 		MolgenisGroupMember userAllUsersMember = new MolgenisGroupMember();
 		userAllUsersMember.setMolgenisGroup(allUsersGroup);
 		userAllUsersMember.setMolgenisUser(userUser);
-		unsecuredDatabase.add(userAllUsersMember);
+		dataService.add(MolgenisGroupMember.ENTITY_NAME, userAllUsersMember);
 
-		Vector<Entity> entities = unsecuredDatabase.getMetaData().getEntities();
-		for (Entity entity : entities)
+		for (String entityName : dataService.getEntityNames())
 		{
 			GroupAuthority entityAuthority = new GroupAuthority();
 			entityAuthority.setMolgenisGroup(allUsersGroup);
-			entityAuthority.setRole(SecurityUtils.AUTHORITY_ENTITY_READ_PREFIX + entity.getName().toUpperCase());
-			unsecuredDatabase.add(entityAuthority);
+			entityAuthority.setRole(SecurityUtils.AUTHORITY_ENTITY_READ_PREFIX + entityName.toUpperCase());
+			dataService.add(GroupAuthority.ENTITY_NAME, entityAuthority);
 		}
 
 		// lifelines database populator
@@ -172,7 +170,7 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 			runtimeProperty.setIdentifier(RuntimeProperty.class.getSimpleName() + '_' + propertyKey);
 			runtimeProperty.setName(propertyKey);
 			runtimeProperty.setValue(entry.getValue());
-			unsecuredDatabase.add(runtimeProperty);
+			dataService.add(RuntimeProperty.ENTITY_NAME, runtimeProperty);
 		}
 
 		// FIXME create users and groups through service class
@@ -184,50 +182,50 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		datamanagerUser.setLastName(lastName);
 		datamanagerUser.setActive(true);
 		datamanagerUser.setSuperuser(false);
-		unsecuredDatabase.add(datamanagerUser);
+		dataService.add(MolgenisUser.ENTITY_NAME, datamanagerUser);
 
 		MolgenisGroupMember datamanagerUserAllUsersMember = new MolgenisGroupMember();
 		datamanagerUserAllUsersMember.setMolgenisUser(datamanagerUser);
 		datamanagerUserAllUsersMember.setMolgenisGroup(allUsersGroup);
-		unsecuredDatabase.add(datamanagerUserAllUsersMember);
+		dataService.add(MolgenisGroupMember.ENTITY_NAME, datamanagerUserAllUsersMember);
 
 		MolgenisGroup datamanagerGroup = new MolgenisGroup();
 		datamanagerGroup.setName(GROUP_DATAMANAGERS);
-		unsecuredDatabase.add(datamanagerGroup);
+		dataService.add(MolgenisGroup.ENTITY_NAME, datamanagerGroup);
 
 		MolgenisGroupMember datamanagerUserDataManagerGroupMember = new MolgenisGroupMember();
 		datamanagerUserDataManagerGroupMember.setMolgenisUser(datamanagerUser);
 		datamanagerUserDataManagerGroupMember.setMolgenisGroup(datamanagerGroup);
-		unsecuredDatabase.add(datamanagerUserDataManagerGroupMember);
+		dataService.add(MolgenisGroupMember.ENTITY_NAME, datamanagerUserDataManagerGroupMember);
 
 		GroupAuthority allUsersHomeAuthority = new GroupAuthority();
 		allUsersHomeAuthority.setMolgenisGroup(allUsersGroup);
 		allUsersHomeAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX + HomeController.ID.toUpperCase());
-		unsecuredDatabase.add(allUsersHomeAuthority);
+		dataService.add(GroupAuthority.ENTITY_NAME, allUsersHomeAuthority);
 
 		GroupAuthority allUsersProtocolViewerAuthority = new GroupAuthority();
 		allUsersProtocolViewerAuthority.setMolgenisGroup(allUsersGroup);
 		allUsersProtocolViewerAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX
 				+ ProtocolViewerController.ID.toUpperCase());
-		unsecuredDatabase.add(allUsersProtocolViewerAuthority);
+		dataService.add(GroupAuthority.ENTITY_NAME, allUsersProtocolViewerAuthority);
 
 		GroupAuthority allUsersAccountAuthority = new GroupAuthority();
 		allUsersAccountAuthority.setMolgenisGroup(allUsersGroup);
 		allUsersAccountAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX
 				+ UserAccountController.ID.toUpperCase());
-		unsecuredDatabase.add(allUsersAccountAuthority);
+		dataService.add(GroupAuthority.ENTITY_NAME, allUsersAccountAuthority);
 
 		GroupAuthority datamanagerStudyManagerAuthority = new GroupAuthority();
 		datamanagerStudyManagerAuthority.setMolgenisGroup(allUsersGroup);
 		datamanagerStudyManagerAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX
 				+ StudyManagerController.ID.toUpperCase());
-		unsecuredDatabase.add(datamanagerStudyManagerAuthority);
+		dataService.add(GroupAuthority.ENTITY_NAME, datamanagerStudyManagerAuthority);
 
 		GroupAuthority datamanagerCatalogManagerAuthority = new GroupAuthority();
 		datamanagerCatalogManagerAuthority.setMolgenisGroup(allUsersGroup);
 		datamanagerCatalogManagerAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX
 				+ CatalogManagerController.ID.toUpperCase());
-		unsecuredDatabase.add(datamanagerCatalogManagerAuthority);
+		dataService.add(GroupAuthority.ENTITY_NAME, datamanagerCatalogManagerAuthority);
 
 		if (appProfile == LifeLinesAppProfile.WORKSPACE)
 		{
@@ -239,27 +237,27 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 			researcherUser.setFirstName(firstName);
 			researcherUser.setLastName(lastName);
 			researcherUser.setSuperuser(false);
-			unsecuredDatabase.add(researcherUser);
+			dataService.add(MolgenisUser.ENTITY_NAME, researcherUser);
 
 			MolgenisGroupMember researcherUserAllUsersMember = new MolgenisGroupMember();
 			researcherUserAllUsersMember.setMolgenisUser(researcherUser);
 			researcherUserAllUsersMember.setMolgenisGroup(allUsersGroup);
-			unsecuredDatabase.add(researcherUserAllUsersMember);
+			dataService.add(MolgenisGroupMember.ENTITY_NAME, researcherUserAllUsersMember);
 
 			MolgenisGroup researcherGroup = new MolgenisGroup();
 			researcherGroup.setName(GROUP_RESEARCHERS);
-			unsecuredDatabase.add(researcherGroup);
+			dataService.add(MolgenisGroup.ENTITY_NAME, researcherGroup);
 
 			MolgenisGroupMember researcherUserDataManagerGroupMember = new MolgenisGroupMember();
 			researcherUserDataManagerGroupMember.setMolgenisUser(researcherUser);
 			researcherUserDataManagerGroupMember.setMolgenisGroup(researcherGroup);
-			unsecuredDatabase.add(researcherUserDataManagerGroupMember);
+			dataService.add(MolgenisGroupMember.ENTITY_NAME, researcherUserDataManagerGroupMember);
 
 			GroupAuthority allUsersDataExplorerAuthority = new GroupAuthority();
 			allUsersDataExplorerAuthority.setMolgenisGroup(allUsersGroup);
 			allUsersDataExplorerAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX
 					+ DataExplorerController.ID.toUpperCase());
-			unsecuredDatabase.add(allUsersDataExplorerAuthority);
+			dataService.add(GroupAuthority.ENTITY_NAME, allUsersDataExplorerAuthority);
 		}
 	}
 
@@ -267,6 +265,6 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 	@Transactional(readOnly = true, rollbackFor = DatabaseException.class)
 	public boolean isDatabasePopulated() throws DatabaseException
 	{
-		return unsecuredDatabase.count(MolgenisUser.class) > 0;
+		return dataService.count(MolgenisUser.ENTITY_NAME, new QueryImpl()) > 0;
 	}
 }

@@ -14,8 +14,8 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.molgenis.DatabaseConfig;
 import org.molgenis.catalogmanager.CatalogManagerService;
+import org.molgenis.data.DataService;
 import org.molgenis.elasticsearch.config.EmbeddedElasticSearchConfig;
-import org.molgenis.framework.db.Database;
 import org.molgenis.lifelines.catalog.GenericLayerCatalogueManagerService;
 import org.molgenis.lifelines.catalog.LifeLinesCatalogManagerService;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
@@ -50,7 +50,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 public class WebAppConfig extends MolgenisWebAppConfig
 {
 	@Autowired
-	private Database database;
+	private DataService dataService;
 
 	@Bean
 	public HttpClient httpClient()
@@ -91,13 +91,13 @@ public class WebAppConfig extends MolgenisWebAppConfig
 	{
 		if (appProfile == null || LifeLinesAppProfile.valueOf(appProfile.toUpperCase()) == LifeLinesAppProfile.WEBSITE)
 		{
-			return new LifeLinesCatalogManagerService(new OmxCatalogManagerService(database));
+			return new LifeLinesCatalogManagerService(new OmxCatalogManagerService(dataService));
 		}
 		else
 		{
 			GenericLayerCatalogService genericLayerCatalogService = new CatalogService()
 					.getBasicHttpBindingGenericLayerCatalogService();
-			return new GenericLayerCatalogueManagerService(database, genericLayerCatalogService,
+			return new GenericLayerCatalogueManagerService(dataService, genericLayerCatalogService,
 					genericLayerResourceManagerService());
 		}
 	}
@@ -110,7 +110,7 @@ public class WebAppConfig extends MolgenisWebAppConfig
 		if (appProfile == null || LifeLinesAppProfile.valueOf(appProfile.toUpperCase()) == LifeLinesAppProfile.WEBSITE)
 		{
 			return new LifeLinesStudyManagerService(genericLayerStudyManagerService, new OmxStudyManagerService(
-					database), LifeLinesAppProfile.valueOf(appProfile.toUpperCase()));
+					dataService), LifeLinesAppProfile.valueOf(appProfile.toUpperCase()));
 		}
 		else
 		{

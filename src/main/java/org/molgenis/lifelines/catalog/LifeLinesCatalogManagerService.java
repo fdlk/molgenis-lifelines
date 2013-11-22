@@ -1,7 +1,5 @@
 package org.molgenis.lifelines.catalog;
 
-import java.util.List;
-
 import org.molgenis.catalog.Catalog;
 import org.molgenis.catalog.CatalogMeta;
 import org.molgenis.catalog.UnknownCatalogException;
@@ -21,7 +19,7 @@ public class LifeLinesCatalogManagerService implements CatalogManagerService
 	}
 
 	@Override
-	public List<CatalogMeta> findCatalogs()
+	public Iterable<CatalogMeta> findCatalogs()
 	{
 		return omxCatalogManagerService.findCatalogs();
 	}
