@@ -1,5 +1,6 @@
 package org.molgenis.lifelines.catalog;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,20 +10,20 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
-import nl.umcg.hl7.service.catalog.CatalogService;
-import nl.umcg.hl7.service.catalog.GenericLayerCatalogService;
-import nl.umcg.hl7.service.catalog.GenericLayerCatalogServiceGetCatalogFAULTFaultMessage;
-import nl.umcg.hl7.service.catalog.GenericLayerCatalogServiceGetValuesetsFAULTFaultMessage;
-import nl.umcg.hl7.service.catalog.GetCatalogResponse.GetCatalogResult;
-import nl.umcg.hl7.service.catalog.GetValuesetsResponse.GetValuesetsResult;
+import nl.umcg.hl7.CatalogService;
+import nl.umcg.hl7.GenericLayerCatalogService;
+import nl.umcg.hl7.GenericLayerCatalogServiceGetCatalogFAULTFaultMessage;
+import nl.umcg.hl7.GenericLayerCatalogServiceGetValuesetsFAULTFaultMessage;
+import nl.umcg.hl7.GetCatalogResponse.GetCatalogResult;
+import nl.umcg.hl7.GetValuesetsResponse.GetValuesetsResult;
 
 import org.apache.log4j.Logger;
 import org.molgenis.catalog.Catalog;
 import org.molgenis.catalog.CatalogMeta;
 import org.molgenis.catalog.UnknownCatalogException;
 import org.molgenis.catalogmanager.CatalogManagerService;
-import org.molgenis.framework.db.Database;
-import org.molgenis.framework.db.DatabaseException;
+import org.molgenis.data.DataService;
+import org.molgenis.data.support.QueryImpl;
 import org.molgenis.hl7.ANY;
 import org.molgenis.hl7.CD;
 import org.molgenis.hl7.ED;
@@ -69,18 +70,18 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 		}
 	}
 
-	private final Database database;
+	private final DataService dataService;
 	private final GenericLayerCatalogService genericLayerCatalogService;
 	private final GenericLayerResourceManagerService resourceManagerService;
 
-	public GenericLayerCatalogueManagerService(Database database,
+	public GenericLayerCatalogueManagerService(DataService dataService,
 			GenericLayerCatalogService genericLayerCatalogService,
 			GenericLayerResourceManagerService resourceManagerService)
 	{
-		if (database == null) throw new IllegalArgumentException("database is null");
+		if (dataService == null) throw new IllegalArgumentException("dataService is null");
 		if (genericLayerCatalogService == null) throw new IllegalArgumentException("genericLayerCatalogService is null");
 		if (resourceManagerService == null) throw new IllegalArgumentException("resourceManagerService is null");
-		this.database = database;
+		this.dataService = dataService;
 		this.genericLayerCatalogService = new CatalogService().getBasicHttpBindingGenericLayerCatalogService();
 		this.resourceManagerService = resourceManagerService;
 	}
@@ -95,13 +96,18 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	public Catalog getCatalog(String id) throws UnknownCatalogException
 	{
 		// retrieve catalog from database
-		String omxIdentifier = CatalogIdConverter.catalogIdToOmxIdentifier(id);
-		return getCatalog(id, omxIdentifier);
+		String catalogId = CatalogIdConverter.catalogIdToOmxIdentifier(id);
+		DataSet dataSet = dataService.findOne(DataSet.ENTITY_NAME, new QueryImpl().eq(DataSet.IDENTIFIER, catalogId));
+		if (dataSet != null) return new OmxCatalog(dataSet);
+
+		// retrieve catalog from generic layer
+		CatalogMeta catalogMeta = resourceManagerService.findCatalog(id);
+		REPCMT000100UV01Organizer catalog = retrieveCatalog(id);
+		return new OrganizerCatalog(catalog, catalogMeta);
 	}
 
 	@Override
-	public Catalog getCatalogOfStudyDefinition(String id) throws UnknownCatalogException,
-			UnknownStudyDefinitionException
+	public Catalog getCatalogOfStudyDefinition(String id) throws UnknownCatalogException
 	{
 		String omxIdentifier = CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id);
 		return getCatalog(id, omxIdentifier);
@@ -110,15 +116,8 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	private Catalog getCatalog(String id, String omxIdentifier)
 	{
 		// retrieve catalog from database
-		DataSet dataSet;
-		try
-		{
-			dataSet = DataSet.findByIdentifier(database, omxIdentifier);
-		}
-		catch (DatabaseException e)
-		{
-			throw new RuntimeException(e);
-		}
+		DataSet dataSet = dataService.findOne(DataSet.ENTITY_NAME,
+				new QueryImpl().eq(DataSet.IDENTIFIER, omxIdentifier));
 		if (dataSet != null) return new OmxCatalog(dataSet);
 
 		// retrieve catalog from generic layer
@@ -149,23 +148,16 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 
 			Map<String, String> valueSetMap = parseCatalog(dataSet, rootProtocol, catalog);
 
-			database.add(rootProtocol);
-			database.add(dataSet);
+			dataService.add(Protocol.ENTITY_NAME, rootProtocol);
+			dataService.add(DataSet.ENTITY_NAME, dataSet);
 
 			// retrieve catalog data from LifeLines Generic Layer catalog service
-			GetValuesetsResult valueSetsResult;
-			try
-			{
-				valueSetsResult = genericLayerCatalogService.getValuesets(id, null);
-			}
-			catch (GenericLayerCatalogServiceGetValuesetsFAULTFaultMessage e)
-			{
-				throw new RuntimeException(e);
-			}
+			GetValuesetsResult valueSetsResult = genericLayerCatalogService.getValuesets(id, null);
 			loadValueSets(valueSetsResult, valueSetMap);
 		}
-		catch (DatabaseException e)
+		catch (GenericLayerCatalogServiceGetValuesetsFAULTFaultMessage e)
 		{
+			logger.error("", e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -174,14 +166,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	public boolean isCatalogLoaded(String id) throws UnknownCatalogException
 	{
 		String dataSetId = CatalogIdConverter.catalogIdToOmxIdentifier(id);
-		try
-		{
-			return DataSet.findByIdentifier(database, dataSetId) != null;
-		}
-		catch (DatabaseException e)
-		{
-			throw new RuntimeException(e);
-		}
+		return dataService.count(DataSet.ENTITY_NAME, new QueryImpl().eq(DataSet.IDENTIFIER, dataSetId)) == 1;
 	}
 
 	@Transactional
@@ -216,23 +201,16 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 
 			Map<String, String> valueSetMap = parseCatalog(dataSet, rootProtocol, catalog);
 
-			database.add(rootProtocol);
-			database.add(dataSet);
+			dataService.add(Protocol.ENTITY_NAME, rootProtocol);
+			dataService.add(DataSet.ENTITY_NAME, dataSet);
 
 			// retrieve catalog data from LifeLines Generic Layer catalog service
-			GetValuesetsResult valueSetsResult;
-			try
-			{
-				valueSetsResult = genericLayerCatalogService.getValuesets(null, id);
-			}
-			catch (GenericLayerCatalogServiceGetValuesetsFAULTFaultMessage e)
-			{
-				throw new RuntimeException(e);
-			}
+			GetValuesetsResult valueSetsResult = genericLayerCatalogService.getValuesets(null, id);
 			loadValueSets(valueSetsResult, valueSetMap);
 		}
-		catch (DatabaseException e)
+		catch (GenericLayerCatalogServiceGetValuesetsFAULTFaultMessage e)
 		{
+			logger.error("", e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -247,22 +225,16 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 
 	private void deleteDataSetAndProtocols(String dataSetIdentifier) throws UnknownCatalogException
 	{
-		try
+		DataSet dataSet = dataService.findOne(DataSet.ENTITY_NAME,
+				new QueryImpl().eq(DataSet.IDENTIFIER, dataSetIdentifier));
+		if (dataSet == null)
 		{
-			DataSet dataSet = DataSet.findByIdentifier(database, dataSetIdentifier);
-			if (dataSet == null)
-			{
-				throw new UnknownCatalogException("unknown catalog identifier [" + dataSetIdentifier + "]");
-			}
-			List<Protocol> protocols = ProtocolUtils.getProtocolDescendants(dataSet.getProtocolUsed());
+			throw new UnknownCatalogException("unknown catalog identifier [" + dataSetIdentifier + "]");
+		}
+		List<Protocol> protocols = ProtocolUtils.getProtocolDescendants(dataSet.getProtocolUsed());
 
-			database.remove(dataSet);
-			database.remove(protocols);
-		}
-		catch (DatabaseException e)
-		{
-			throw new RuntimeException(e);
-		}
+		dataService.delete(DataSet.ENTITY_NAME, dataSet);
+		dataService.delete(Protocol.ENTITY_NAME, protocols);
 	}
 
 	@Transactional
@@ -289,42 +261,37 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 
 		OntologyIndex ontologyIndex = new OntologyIndex();
 
-		try
+		for (ValueSet valueSet : valueSets.getValueSet())
 		{
-			for (ValueSet valueSet : valueSets.getValueSet())
+			String identifier = featureMap.get(valueSet.getName());
+			ObservableFeature observableFeature = dataService.findOne(ObservableFeature.ENTITY_NAME,
+					new QueryImpl().eq(ObservableFeature.IDENTIFIER, identifier));
+			if (observableFeature == null)
 			{
-				String identifier = featureMap.get(valueSet.getName());
-				ObservableFeature observableFeature = ObservableFeature.findByIdentifier(database, identifier);
-				if (observableFeature == null)
+				throw new RuntimeException("missing ObservableFeature with name '" + identifier + "'");
+			}
+
+			for (Code code : valueSet.getCode())
+			{
+				OntologyTerm ontologyTerm = toOntologyTerm(code, ontologyIndex);
+
+				// create category
+				String categoryIdentifier = OmxIdentifierGenerator.from(Category.class, code.getCodeSystem(),
+						code.getCode());
+				Category category = dataService.findOne(Category.ENTITY_NAME,
+						new QueryImpl().eq(Category.IDENTIFIER, categoryIdentifier));
+				if (category == null)
 				{
-					throw new RuntimeException("missing ObservableFeature with name '" + identifier + "'");
-				}
+					category = new Category();
+					category.setIdentifier(categoryIdentifier);
+					category.setName(code.getDisplayName());
+					category.setObservableFeature(observableFeature);
+					category.setDefinition(ontologyTerm);
+					category.setValueCode(code.getCodeSystemName() + ':' + code.getCode());
 
-				for (Code code : valueSet.getCode())
-				{
-					OntologyTerm ontologyTerm = toOntologyTerm(code, ontologyIndex);
-
-					// create category
-					String categoryIdentifier = OmxIdentifierGenerator.from(Category.class, code.getCodeSystem(),
-							code.getCode());
-					Category category = Category.findByIdentifier(database, categoryIdentifier);
-					if (category == null)
-					{
-						category = new Category();
-						category.setIdentifier(categoryIdentifier);
-						category.setName(code.getDisplayName());
-						category.setObservableFeature(observableFeature);
-						category.setDefinition(ontologyTerm);
-						category.setValueCode(code.getCodeSystemName() + ':' + code.getCode());
-
-						database.add(category);
-					}
+					dataService.add(Category.ENTITY_NAME, category);
 				}
 			}
-		}
-		catch (DatabaseException e)
-		{
-			throw new RuntimeException(e);
 		}
 	}
 
@@ -334,10 +301,11 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 		GetCatalogResult catalogResult;
 		try
 		{
-			catalogResult = genericLayerCatalogService.getCatalog(id, null, null);
+			catalogResult = genericLayerCatalogService.getCatalog(id, null, Boolean.toString(true));
 		}
 		catch (GenericLayerCatalogServiceGetCatalogFAULTFaultMessage e)
 		{
+			logger.error("", e);
 			throw new RuntimeException(e);
 		}
 
@@ -362,10 +330,11 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 		GetCatalogResult catalogResult;
 		try
 		{
-			catalogResult = genericLayerCatalogService.getCatalog(null, id, null);
+			catalogResult = genericLayerCatalogService.getCatalog(null, id, Boolean.toString(true));
 		}
 		catch (GenericLayerCatalogServiceGetCatalogFAULTFaultMessage e)
 		{
+			logger.error("", e);
 			throw new RuntimeException(e);
 		}
 
@@ -385,7 +354,6 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	}
 
 	private Map<String, String> parseCatalog(DataSet dataSet, Protocol rootProtocol, REPCMT000100UV01Organizer catalog)
-			throws DatabaseException
 	{
 		Map<String, String> featureMap = new HashMap<String, String>();
 		OntologyIndex ontologyIndex = new OntologyIndex();
@@ -393,13 +361,13 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 		// parse protocols between root protocols
 		for (REPCMT000100UV01Component3 rootComponent : catalog.getComponent())
 		{
-			parseComponent(rootComponent, rootProtocol, database, featureMap, ontologyIndex);
+			parseComponent(rootComponent, rootProtocol, dataService, featureMap, ontologyIndex);
 		}
 		return featureMap;
 	}
 
-	private void parseComponent(REPCMT000100UV01Component3 component, Protocol parentProtocol, Database database,
-			Map<String, String> featureMap, OntologyIndex ontologyIndex) throws DatabaseException
+	private void parseComponent(REPCMT000100UV01Component3 component, Protocol parentProtocol, DataService dataService,
+			Map<String, String> featureMap, OntologyIndex ontologyIndex)
 	{
 
 		// parse feature
@@ -421,7 +389,8 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 				featureMap.put(value.getCodeSystemName(), featureId);
 			}
 
-			ObservableFeature observableFeature = ObservableFeature.findByIdentifier(database, featureId);
+			ObservableFeature observableFeature = dataService.findOne(ObservableFeature.ENTITY_NAME,
+					new QueryImpl().eq(ObservableFeature.IDENTIFIER, featureId));
 			if (observableFeature == null)
 			{
 				String observationName = observationCode.getDisplayName();
@@ -449,7 +418,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 				ED originalText = observationCode.getOriginalText();
 				if (originalText != null) observableFeature.setDescription(originalText.getContent().get(0).toString());
 				if (dataType != null) observableFeature.setDataType(dataType);
-				observableFeature.setDefinitions(ontologyTerm);
+				observableFeature.setDefinitions(Arrays.asList(ontologyTerm));
 
 				// determine unit
 				if (anyValue instanceof PQ)
@@ -458,7 +427,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 					PQ value = (PQ) anyValue;
 					// TODO how to determine ontologyterms for units and do observableFeature.setUnit()
 				}
-				database.add(observableFeature);
+				dataService.add(ObservableFeature.ENTITY_NAME, observableFeature);
 			}
 
 			// add feature to protocol
@@ -476,7 +445,8 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 			List<II> organizerId = organizer.getId();
 			String protocolId = (organizerId != null && !organizerId.isEmpty()) ? organizerId.get(0).getRoot() : UUID
 					.randomUUID().toString();
-			Protocol protocol = Protocol.findByIdentifier(database, protocolId);
+			Protocol protocol = dataService.findOne(Protocol.ENTITY_NAME,
+					new QueryImpl().eq(Protocol.IDENTIFIER, protocolId));
 			if (protocol == null)
 			{
 				String organizerName = organizerCode.getDisplayName();
@@ -499,29 +469,29 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 
 			// recurse over nested protocols
 			for (REPCMT000100UV01Component3 subComponent : organizer.getComponent())
-				parseComponent(subComponent, protocol, database, featureMap, ontologyIndex);
+				parseComponent(subComponent, protocol, dataService, featureMap, ontologyIndex);
 
 			// add protocol to parent protocol
 			parentProtocol.getSubprotocols().add(protocol);
 		}
 
-		database.add(parentProtocol);
+		dataService.add(Protocol.ENTITY_NAME, parentProtocol);
 	}
 
-	private OntologyTerm toOntologyTerm(Code code, OntologyIndex ontologyIndex) throws DatabaseException
+	private OntologyTerm toOntologyTerm(Code code, OntologyIndex ontologyIndex)
 	{
 		return toOntologyTerm(code.getCodeSystem(), code.getCodeSystemName(), code.getDisplayName(), code.getCode(),
 				ontologyIndex);
 	}
 
-	private OntologyTerm toOntologyTerm(CD code, OntologyIndex ontologyIndex) throws DatabaseException
+	private OntologyTerm toOntologyTerm(CD code, OntologyIndex ontologyIndex)
 	{
 		return toOntologyTerm(code.getCodeSystem(), code.getCodeSystemName(), code.getDisplayName(), code.getCode(),
 				ontologyIndex);
 	}
 
 	private OntologyTerm toOntologyTerm(String codeSystem, String codeSystemName, String displayName, String codeCode,
-			OntologyIndex ontologyIndex) throws DatabaseException
+			OntologyIndex ontologyIndex)
 	{
 		// create and index ontology
 		Ontology ontology = ontologyIndex.get(codeSystem);
@@ -534,7 +504,8 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 			else
 			{
 				String ontologyIdentifier = OmxIdentifierGenerator.from(Ontology.class, codeSystem);
-				ontology = Ontology.findByIdentifier(database, ontologyIdentifier);
+				ontology = dataService.findOne(Ontology.ENTITY_NAME,
+						new QueryImpl().eq(Ontology.IDENTIFIER, ontologyIdentifier));
 				if (ontology == null)
 				{
 					// create ontology for each code system
@@ -543,7 +514,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 					ontology.setName(codeSystemName);
 					ontology.setOntologyAccession(codeSystem);
 
-					database.add(ontology);
+					dataService.add(Ontology.ENTITY_NAME, ontology);
 				}
 				ontologyIndex.put(codeSystem, ontology);
 			}
@@ -554,7 +525,8 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 		if (ontologyTerm == null)
 		{
 			String ontologyTermIdentifier = OmxIdentifierGenerator.from(OntologyTerm.class, codeSystem, codeCode);
-			ontologyTerm = OntologyTerm.findByIdentifier(database, ontologyTermIdentifier);
+			ontologyTerm = dataService.findOne(OntologyTerm.ENTITY_NAME,
+					new QueryImpl().eq(OntologyTerm.IDENTIFIER, ontologyTermIdentifier));
 			if (ontologyTerm == null)
 			{
 				ontologyTerm = new OntologyTerm();
@@ -563,7 +535,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 				ontologyTerm.setTermAccession(codeCode);
 				if (ontology != null) ontologyTerm.setOntology(ontology);
 
-				database.add(ontologyTerm);
+				dataService.add(OntologyTerm.ENTITY_NAME, ontologyTerm);
 			}
 			ontologyIndex.put(codeSystem, codeCode, ontologyTerm);
 		}
