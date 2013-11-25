@@ -21,6 +21,7 @@ import org.molgenis.omx.protocolviewer.ProtocolViewerController;
 import org.molgenis.search.SearchSecurityHandlerInterceptor;
 import org.molgenis.security.SecurityUtils;
 import org.molgenis.security.account.AccountService;
+import org.molgenis.security.runas.RunAsSystem;
 import org.molgenis.security.user.UserAccountController;
 import org.molgenis.studymanager.StudyManagerController;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,6 +76,7 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 
 	@Override
 	@Transactional(rollbackFor = DatabaseException.class)
+	@RunAsSystem
 	public void populateDatabase() throws DatabaseException
 	{
 		if (adminPassword == null || userPassword == null || appProfileStr == null || dataManagerPassword == null
