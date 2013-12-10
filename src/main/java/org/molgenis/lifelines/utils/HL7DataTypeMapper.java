@@ -1,17 +1,9 @@
 package org.molgenis.lifelines.utils;
 
+import nl.umcg.hl7.service.catalog.*;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import org.molgenis.hl7.ANY;
-import org.molgenis.hl7.BL;
-import org.molgenis.hl7.CD;
-import org.molgenis.hl7.CO;
-import org.molgenis.hl7.INT;
-import org.molgenis.hl7.PQ;
-import org.molgenis.hl7.REAL;
-import org.molgenis.hl7.ST;
-import org.molgenis.hl7.TS;
 
 /**
  * Maps HL7v3 data types to OMX data types
