@@ -2,9 +2,9 @@ package org.molgenis.lifelines.catalog;
 
 import java.util.List;
 
+import nl.umcg.hl7.service.catalog.CD;
+import nl.umcg.hl7.service.catalog.REPCMT000100UV01Observation;
 import org.molgenis.catalog.CatalogItem;
-import org.molgenis.hl7.CD;
-import org.molgenis.hl7.REPCMT000100UV01Observation;
 
 public class RepcObservationCatalogItem implements CatalogItem
 {

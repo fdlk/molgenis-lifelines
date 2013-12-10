@@ -1,7 +1,8 @@
 package org.molgenis.lifelines.catalog;
 
+import nl.umcg.hl7.service.studydefinition.POQMMT000002UVObservation;
+
 import org.molgenis.catalog.CatalogItem;
-import org.molgenis.hl7.POQMMT000002UVObservation;
 
 public class PoqmObservationCatalogItem implements CatalogItem
 {
