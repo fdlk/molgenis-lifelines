@@ -3,12 +3,13 @@ package org.molgenis.lifelines.catalog;
 import java.util.ArrayList;
 import java.util.List;
 
+import nl.umcg.hl7.service.catalog.REPCMT000100UV01Component3;
+import nl.umcg.hl7.service.catalog.REPCMT000100UV01Organizer;
+
 import org.molgenis.catalog.Catalog;
 import org.molgenis.catalog.CatalogFolder;
 import org.molgenis.catalog.CatalogItem;
 import org.molgenis.catalog.CatalogMeta;
-import org.molgenis.hl7.REPCMT000100UV01Component3;
-import org.molgenis.hl7.REPCMT000100UV01Organizer;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -21,7 +22,6 @@ public class OrganizerCatalog implements Catalog
 	public OrganizerCatalog(REPCMT000100UV01Organizer organizer, CatalogMeta catalogMeta)
 	{
 		if (organizer == null) throw new IllegalArgumentException("Organizer is null");
-		if (catalogMeta == null) throw new IllegalArgumentException("Catalog meta is null");
 		this.organizer = organizer;
 		this.catalogMeta = catalogMeta;
 	}
@@ -29,19 +29,19 @@ public class OrganizerCatalog implements Catalog
 	@Override
 	public String getId()
 	{
-		return catalogMeta.getId();
+		return catalogMeta != null ? catalogMeta.getId() : null;
 	}
 
 	@Override
 	public String getName()
 	{
-		return catalogMeta.getName();
+		return catalogMeta != null ? catalogMeta.getName() : null;
 	}
 
 	@Override
 	public String getDescription()
 	{
-		return catalogMeta.getDescription();
+		return catalogMeta != null ? catalogMeta.getDescription() : null;
 	}
 
 	@Override
@@ -69,13 +69,13 @@ public class OrganizerCatalog implements Catalog
 	@Override
 	public String getVersion()
 	{
-		return catalogMeta.getVersion();
+		return catalogMeta != null ? catalogMeta.getVersion() : null;
 	}
 
 	@Override
 	public List<String> getAuthors()
 	{
-		return catalogMeta.getAuthors();
+		return catalogMeta != null ? catalogMeta.getAuthors() : null;
 	}
 
 	@Override
