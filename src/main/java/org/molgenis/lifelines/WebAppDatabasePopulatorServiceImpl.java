@@ -8,7 +8,6 @@ import org.molgenis.catalogmanager.CatalogManagerController;
 import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.dataexplorer.controller.DataExplorerController;
-import org.molgenis.framework.db.DatabaseException;
 import org.molgenis.framework.db.WebAppDatabasePopulatorService;
 import org.molgenis.lifelines.controller.HomeController;
 import org.molgenis.omx.auth.GroupAuthority;
@@ -75,9 +74,9 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 	}
 
 	@Override
-	@Transactional(rollbackFor = DatabaseException.class)
+	@Transactional
 	@RunAsSystem
-	public void populateDatabase() throws DatabaseException
+	public void populateDatabase()
 	{
 		if (adminPassword == null || userPassword == null || appProfileStr == null || dataManagerPassword == null
 				|| researcherPassword == null || adminPassword == null)
@@ -264,8 +263,9 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 	}
 
 	@Override
-	@Transactional(readOnly = true, rollbackFor = DatabaseException.class)
-	public boolean isDatabasePopulated() throws DatabaseException
+	@Transactional(readOnly = true)
+	@RunAsSystem
+	public boolean isDatabasePopulated()
 	{
 		return dataService.count(MolgenisUser.ENTITY_NAME, new QueryImpl()) > 0;
 	}
