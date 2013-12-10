@@ -1,22 +1,33 @@
 package org.molgenis.lifelines.studymanager;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import javax.xml.bind.JAXBElement;
 
+import nl.umcg.hl7.service.studydefinition.ActClass;
+import nl.umcg.hl7.service.studydefinition.ActMood;
+import nl.umcg.hl7.service.studydefinition.CD;
+import nl.umcg.hl7.service.studydefinition.COCTMT090107UVAssignedPerson;
+import nl.umcg.hl7.service.studydefinition.COCTMT090107UVPerson;
+import nl.umcg.hl7.service.studydefinition.COCTMT150007UVOrganization;
+import nl.umcg.hl7.service.studydefinition.ED;
+import nl.umcg.hl7.service.studydefinition.INT;
+import nl.umcg.hl7.service.studydefinition.ON;
+import nl.umcg.hl7.service.studydefinition.PN;
+import nl.umcg.hl7.service.studydefinition.POQMMT000001UVAuthor;
+import nl.umcg.hl7.service.studydefinition.POQMMT000001UVComponent2;
+import nl.umcg.hl7.service.studydefinition.POQMMT000001UVEntry;
+import nl.umcg.hl7.service.studydefinition.POQMMT000001UVQualityMeasureDocument;
+import nl.umcg.hl7.service.studydefinition.POQMMT000001UVSection;
+import nl.umcg.hl7.service.studydefinition.POQMMT000002UVObservation;
+import nl.umcg.hl7.service.studydefinition.ST;
+
 import org.molgenis.catalog.CatalogItem;
-import org.molgenis.hl7.COCTMT090107UVAssignedPerson;
-import org.molgenis.hl7.COCTMT090107UVPerson;
-import org.molgenis.hl7.COCTMT150007UVOrganization;
-import org.molgenis.hl7.ED;
-import org.molgenis.hl7.INT;
-import org.molgenis.hl7.ON;
-import org.molgenis.hl7.PN;
-import org.molgenis.hl7.POQMMT000001UVAuthor;
-import org.molgenis.hl7.POQMMT000001UVComponent2;
-import org.molgenis.hl7.POQMMT000001UVEntry;
-import org.molgenis.hl7.POQMMT000001UVQualityMeasureDocument;
+import org.molgenis.lifelines.catalog.PoqmObservationCatalogItem;
+import org.molgenis.omx.utils.I18nTools;
 import org.molgenis.study.StudyDefinition;
 
 import com.google.common.base.Function;
@@ -41,13 +52,21 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 	@Override
 	public void setId(String id)
 	{
-		throw new UnsupportedOperationException();
+		qualityMeasureDocument.getId().setExtension(id);
 	}
 
 	@Override
 	public String getName()
 	{
 		return qualityMeasureDocument.getTitle().getContent().toString();
+	}
+
+	@Override
+	public void setName(String name)
+	{
+		ST title = new ST();
+		title.getContent().add(name);
+		qualityMeasureDocument.setTitle(title);
 	}
 
 	@Override
@@ -65,23 +84,107 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 	}
 
 	@Override
+	public Date getDateCreated()
+	{
+		throw new UnsupportedOperationException("getDateCreated not implemented");
+	}
+
+	@Override
+	public Status getStatus()
+	{
+		String code = qualityMeasureDocument.getStatusCode().getCode();
+		if (code.equals("new")) return Status.DRAFT;
+		else if (code.equals("active")) return Status.SUBMITTED;
+		else throw new RuntimeException("Unknown status code [" + code + "]");
+	}
+
+	@Override
 	public List<CatalogItem> getItems()
 	{
 		List<POQMMT000001UVComponent2> components = qualityMeasureDocument.getComponent();
-		if (components == null || components.isEmpty() || components.size() > 1) throw new RuntimeException(
-				"expected exactly one component");
-		POQMMT000001UVComponent2 component = components.iterator().next();
+		if (components == null || components.isEmpty()) return Collections.emptyList();
+		else if (components.size() > 1) throw new RuntimeException("expected exactly one component");
 
-		return Lists.newArrayList(Lists.transform(component.getSection().getEntry(),
-				new Function<POQMMT000001UVEntry, CatalogItem>()
-				{
-					@Override
-					public CatalogItem apply(POQMMT000001UVEntry input)
-					{
-						return null; // FIXME
-						// return new PoqmObservationCatalogItem(input.getObservation());
-					}
-				}));
+		POQMMT000001UVComponent2 component = components.iterator().next();
+		POQMMT000001UVSection section = component.getSection();
+		if (section == null) return Collections.emptyList();
+
+		return Lists.newArrayList(Lists.transform(section.getEntry(), new Function<POQMMT000001UVEntry, CatalogItem>()
+		{
+			@Override
+			public CatalogItem apply(POQMMT000001UVEntry entry)
+			{
+				return new PoqmObservationCatalogItem(entry.getObservation());
+			}
+		}));
+	}
+
+	@Override
+	public void setItems(List<CatalogItem> items)
+	{
+		List<POQMMT000001UVComponent2> components = qualityMeasureDocument.getComponent();
+		POQMMT000001UVComponent2 component;
+		if (components == null || components.isEmpty())
+		{
+			component = new POQMMT000001UVComponent2();
+			qualityMeasureDocument.getComponent().add(component);
+		}
+		else if (components.size() > 1)
+		{
+			throw new RuntimeException("expected exactly one component");
+		}
+		else
+		{
+			component = components.iterator().next();
+		}
+
+		POQMMT000001UVSection section = component.getSection();
+		if (section == null)
+		{
+			section = new POQMMT000001UVSection();
+
+			CD sectionCode = new CD();
+			sectionCode.setCode("57025-9");
+			sectionCode.setCodeSystem("2.16.840.1.113883.6.1");
+			sectionCode.setDisplayName("Data Criteria section");
+			section.setCode(sectionCode);
+
+			ED sectionTitle = new ED();
+			sectionTitle.getContent().add("Data criteria");
+			section.setTitle(sectionTitle);
+
+			component.setSection(section);
+		}
+
+		List<POQMMT000001UVEntry> entries = section.getEntry();
+		entries.clear();
+		for (CatalogItem item : items)
+		{
+			POQMMT000001UVEntry entry = new POQMMT000001UVEntry();
+			entry.setTypeCode("DRIV");
+			POQMMT000002UVObservation observation = new POQMMT000002UVObservation();
+			observation.setClassCode(ActClass.OBS);
+			observation.setMoodCode(ActMood.CRT);
+
+			String observationCodeCode = item.getCode();
+			String observationCodeCodesystem = item.getCodeSystem();
+			if (observationCodeCode == null || observationCodeCodesystem == null)
+			{
+				// TODO remove once catalogues are always loaded from LL GL
+				observationCodeCode = item.getId();
+				observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.4";
+			}
+			CD observationCode = new CD();
+			observationCode.setDisplayName(item.getName());
+			observationCode.setCode(observationCodeCode);
+			observationCode.setCodeSystem(observationCodeCodesystem);
+			ED observationOriginalText = new ED();
+			observationOriginalText.getContent().add(I18nTools.get(item.getDescription()));
+			observationCode.setOriginalText(observationOriginalText);
+			observation.setCode(observationCode);
+			entry.setObservation(observation);
+			entries.add(entry);
+		}
 	}
 
 	@Override
@@ -140,6 +243,12 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 	public String getAuthorEmail()
 	{
 		return null;
+	}
+
+	@Override
+	public String getRequestProposalForm()
+	{
+		throw new UnsupportedOperationException("getRequestProposalForm not implemented");
 	}
 
 	@Override
