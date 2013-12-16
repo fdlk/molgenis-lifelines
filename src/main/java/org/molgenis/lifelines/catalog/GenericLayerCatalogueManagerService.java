@@ -27,6 +27,7 @@ import nl.umcg.hl7.service.catalog.ST;
 import nl.umcg.hl7.service.catalog.TS;
 import nl.umcg.hl7.service.catalog.ValueSet;
 import nl.umcg.hl7.service.catalog.ValueSet.Code;
+import nl.umcg.hl7.service.catalog.ValueSets;
 
 import org.apache.log4j.Logger;
 import org.molgenis.catalog.Catalog;
@@ -167,8 +168,8 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	private Map<String, List<Code>> createValueSetsIndex(String catalogReleaseId, String studyDefinitionId)
 	{
 		Map<String, List<Code>> valueSetMap = new HashMap<String, List<Code>>();
-		List<ValueSet> valueSets = retrieveValueSets(catalogReleaseId, studyDefinitionId);
-		for (ValueSet valueSet : valueSets)
+		ValueSets valueSets = retrieveValueSets(catalogReleaseId, studyDefinitionId);
+		for (ValueSet valueSet : valueSets.getValueSet())
 		{
 			logger.info(valueSet.getName() + " | " + valueSet.getCode());
 			valueSetMap.put(valueSet.getName(), valueSet.getCode());
@@ -451,7 +452,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 		return catalog;
 	}
 
-	private List<ValueSet> retrieveValueSets(String catalogReleaseId, String studyDefinitionId)
+	private ValueSets retrieveValueSets(String catalogReleaseId, String studyDefinitionId)
 	{
 		HL7Container hl7Container;
 		try
