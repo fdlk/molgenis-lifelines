@@ -2,7 +2,6 @@ package org.molgenis.lifelines.catalog;
 
 import static org.testng.Assert.assertEquals;
 
-import org.molgenis.lifelines.catalog.CatalogIdConverter;
 import org.testng.annotations.Test;
 
 public class CatalogIdConverterTest
@@ -31,17 +30,19 @@ public class CatalogIdConverterTest
 	@Test
 	public void catalogOfStudyDefinitionIdToOmxIdentifier()
 	{
-		assertEquals(CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier("4"), "studydefinition_4");
-		assertEquals(CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier("studydefinition_4"),
-				"studydefinition_studydefinition_4");
+		assertEquals(CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier("4"), "catalog_studydefinition_4");
+		assertEquals(CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier("catalog_studydefinition_4"),
+				"catalog_studydefinition_catalog_studydefinition_4");
 	}
 
 	@Test
 	public void omxIdentifierToCatalogOfStudyDefinitionId()
 	{
-		assertEquals(CatalogIdConverter.omxIdentifierToCatalogOfStudyDefinitionId("studydefinition_4"), "4");
-		assertEquals(CatalogIdConverter.omxIdentifierToCatalogOfStudyDefinitionId("studydefinition_studydefinition_4"),
-				"studydefinition_4");
+		assertEquals(CatalogIdConverter.omxIdentifierToCatalogOfStudyDefinitionId("catalog_studydefinition_4"), "4");
+		assertEquals(
+				CatalogIdConverter
+						.omxIdentifierToCatalogOfStudyDefinitionId("catalog_studydefinition_catalog_studydefinition_4"),
+				"catalog_studydefinition_4");
 	}
 
 	@Test(expectedExceptions = IllegalArgumentException.class)
