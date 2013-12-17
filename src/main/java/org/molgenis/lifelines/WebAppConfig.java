@@ -35,6 +35,7 @@ import org.molgenis.studymanager.StudyManagerService;
 import org.molgenis.ui.MolgenisWebAppConfig;
 import org.molgenis.util.SchemaLoader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -100,6 +101,7 @@ public class WebAppConfig extends MolgenisWebAppConfig
 	private String appProfile;
 
 	@Bean
+	@Qualifier("catalogService")
 	public org.molgenis.catalog.CatalogService catalogService()
 	{
 		return new OmxCatalogManagerService(dataService);
