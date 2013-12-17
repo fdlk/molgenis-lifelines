@@ -2,8 +2,10 @@ package org.molgenis.lifelines;
 
 import javax.xml.validation.Schema;
 
-import nl.umcg.hl7.CatalogService;
-import nl.umcg.hl7.GenericLayerCatalogService;
+import nl.umcg.hl7.service.catalog.CatalogService;
+import nl.umcg.hl7.service.catalog.GenericLayerCatalogService;
+import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionService;
+import nl.umcg.hl7.service.studydefinition.StudyDefinitionService;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ClientConnectionManager;
@@ -14,10 +16,10 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.molgenis.DatabaseConfig;
 import org.molgenis.catalogmanager.CatalogManagerService;
+import org.molgenis.data.DataService;
+import org.molgenis.data.jpa.JpaEntitySourceRegistrator;
 import org.molgenis.elasticsearch.config.EmbeddedElasticSearchConfig;
-import org.molgenis.framework.db.Database;
 import org.molgenis.lifelines.catalog.GenericLayerCatalogueManagerService;
-import org.molgenis.lifelines.catalog.LifeLinesCatalogManagerService;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
 import org.molgenis.lifelines.studymanager.GenericLayerDataQueryService;
 import org.molgenis.lifelines.studymanager.GenericLayerStudyManagerService;
@@ -28,11 +30,14 @@ import org.molgenis.omx.catalogmanager.OmxCatalogManagerService;
 import org.molgenis.omx.config.DataExplorerConfig;
 import org.molgenis.omx.studymanager.OmxStudyManagerService;
 import org.molgenis.search.SearchSecurityConfig;
+import org.molgenis.security.user.MolgenisUserService;
 import org.molgenis.studymanager.StudyManagerService;
 import org.molgenis.ui.MolgenisWebAppConfig;
 import org.molgenis.util.SchemaLoader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -50,7 +55,16 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 public class WebAppConfig extends MolgenisWebAppConfig
 {
 	@Autowired
-	private Database database;
+	private DataService dataService;
+
+	@Autowired
+	private MolgenisUserService molgenisUserService;
+
+	@Bean
+	public ApplicationListener<?> jpaEntitySourceRegistrator()
+	{
+		return new JpaEntitySourceRegistrator(dataService);
+	}
 
 	@Bean
 	public HttpClient httpClient()
@@ -87,30 +101,35 @@ public class WebAppConfig extends MolgenisWebAppConfig
 	private String appProfile;
 
 	@Bean
+	@Qualifier("catalogService")
+	public org.molgenis.catalog.CatalogService catalogService()
+	{
+		return new OmxCatalogManagerService(dataService);
+	}
+
+	@Bean
 	public CatalogManagerService catalogManagerService()
 	{
-		if (appProfile == null || LifeLinesAppProfile.valueOf(appProfile.toUpperCase()) == LifeLinesAppProfile.WEBSITE)
-		{
-			return new LifeLinesCatalogManagerService(new OmxCatalogManagerService(database));
-		}
-		else
-		{
-			GenericLayerCatalogService genericLayerCatalogService = new CatalogService()
-					.getBasicHttpBindingGenericLayerCatalogService();
-			return new GenericLayerCatalogueManagerService(database, genericLayerCatalogService,
-					genericLayerResourceManagerService());
-		}
+		GenericLayerCatalogService genericLayerCatalogService = new CatalogService()
+				.getBasicHttpBindingGenericLayerCatalogService();
+		return new GenericLayerCatalogueManagerService(dataService, genericLayerCatalogService,
+				genericLayerResourceManagerService());
 	}
 
 	@Bean
 	public StudyManagerService studyDefinitionManagerService()
 	{
+		GenericLayerStudyDefinitionService genericLayerStudyDefinitionService = new StudyDefinitionService()
+				.getBasicHttpBindingGenericLayerStudyDefinitionService();
+
 		GenericLayerStudyManagerService genericLayerStudyManagerService = new GenericLayerStudyManagerService(
-				genericLayerResourceManagerService(), catalogManagerService(), genericLayerDataQueryService);
+				genericLayerStudyDefinitionService, catalogManagerService(), genericLayerDataQueryService,
+				molgenisUserService);
 		if (appProfile == null || LifeLinesAppProfile.valueOf(appProfile.toUpperCase()) == LifeLinesAppProfile.WEBSITE)
 		{
 			return new LifeLinesStudyManagerService(genericLayerStudyManagerService, new OmxStudyManagerService(
-					database), LifeLinesAppProfile.valueOf(appProfile.toUpperCase()));
+					dataService, molgenisUserService), dataService, LifeLinesAppProfile.valueOf(appProfile
+					.toUpperCase()));
 		}
 		else
 		{

@@ -1,6 +1,6 @@
 package org.molgenis.lifelines.utils;
 
-import org.molgenis.util.Entity;
+import org.molgenis.data.Entity;
 
 public class OmxIdentifierGenerator
 {

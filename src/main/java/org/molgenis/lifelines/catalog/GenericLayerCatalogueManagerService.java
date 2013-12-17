@@ -1,91 +1,73 @@
 package org.molgenis.lifelines.catalog;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-
-import nl.umcg.hl7.CatalogService;
-import nl.umcg.hl7.GenericLayerCatalogService;
-import nl.umcg.hl7.GetCatalogResponse.GetCatalogResult;
-import nl.umcg.hl7.GetValuesetsResponse.GetValuesetsResult;
+import nl.umcg.hl7.service.catalog.ANY;
+import nl.umcg.hl7.service.catalog.BL;
+import nl.umcg.hl7.service.catalog.CD;
+import nl.umcg.hl7.service.catalog.CO;
+import nl.umcg.hl7.service.catalog.CatalogService;
+import nl.umcg.hl7.service.catalog.GenericLayerCatalogService;
+import nl.umcg.hl7.service.catalog.GenericLayerCatalogServiceGetCatalogFAULTFaultMessage;
+import nl.umcg.hl7.service.catalog.GenericLayerCatalogServiceGetValueSetsFAULTFaultMessage;
+import nl.umcg.hl7.service.catalog.HL7Container;
+import nl.umcg.hl7.service.catalog.HumanLanguage;
+import nl.umcg.hl7.service.catalog.II;
+import nl.umcg.hl7.service.catalog.INT;
+import nl.umcg.hl7.service.catalog.PQ;
+import nl.umcg.hl7.service.catalog.REAL;
+import nl.umcg.hl7.service.catalog.REPCMT000100UV01Component3;
+import nl.umcg.hl7.service.catalog.REPCMT000100UV01Observation;
+import nl.umcg.hl7.service.catalog.REPCMT000100UV01Organizer;
+import nl.umcg.hl7.service.catalog.ST;
+import nl.umcg.hl7.service.catalog.TS;
+import nl.umcg.hl7.service.catalog.ValueSet;
+import nl.umcg.hl7.service.catalog.ValueSet.Code;
+import nl.umcg.hl7.service.catalog.ValueSets;
 
 import org.apache.log4j.Logger;
 import org.molgenis.catalog.Catalog;
 import org.molgenis.catalog.CatalogMeta;
 import org.molgenis.catalog.UnknownCatalogException;
 import org.molgenis.catalogmanager.CatalogManagerService;
-import org.molgenis.framework.db.Database;
-import org.molgenis.framework.db.DatabaseException;
-import org.molgenis.hl7.ANY;
-import org.molgenis.hl7.CD;
-import org.molgenis.hl7.ED;
-import org.molgenis.hl7.II;
-import org.molgenis.hl7.PQ;
-import org.molgenis.hl7.REPCMT000100UV01Component3;
-import org.molgenis.hl7.REPCMT000100UV01Observation;
-import org.molgenis.hl7.REPCMT000100UV01Organizer;
-import org.molgenis.hl7.ValueSets;
-import org.molgenis.hl7.ValueSets.ValueSet;
-import org.molgenis.hl7.ValueSets.ValueSet.Code;
+import org.molgenis.data.DataService;
+import org.molgenis.data.support.QueryImpl;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
-import org.molgenis.lifelines.utils.HL7DataTypeMapper;
-import org.molgenis.lifelines.utils.OmxIdentifierGenerator;
-import org.molgenis.omx.catalogmanager.OmxCatalog;
 import org.molgenis.omx.observ.Category;
 import org.molgenis.omx.observ.DataSet;
 import org.molgenis.omx.observ.ObservableFeature;
 import org.molgenis.omx.observ.Protocol;
-import org.molgenis.omx.observ.target.Ontology;
 import org.molgenis.omx.observ.target.OntologyTerm;
 import org.molgenis.omx.utils.ProtocolUtils;
-import org.molgenis.study.StudyDefinitionMeta;
 import org.molgenis.study.UnknownStudyDefinitionException;
 import org.springframework.transaction.annotation.Transactional;
-import org.w3c.dom.Node;
 
 public class GenericLayerCatalogueManagerService implements CatalogManagerService
 {
 	private static final Logger logger = Logger.getLogger(GenericLayerCatalogueManagerService.class);
 
-	private static final JAXBContext JAXB_CONTEXT_VALUESETS;
-	private static final JAXBContext JAXB_CONTEXT_ORGANIZER;
-
-	static
-	{
-		try
-		{
-			JAXB_CONTEXT_VALUESETS = JAXBContext.newInstance(ValueSets.class);
-			JAXB_CONTEXT_ORGANIZER = JAXBContext.newInstance(REPCMT000100UV01Organizer.class);
-		}
-		catch (JAXBException e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
-
-	private final Database database;
+	private final DataService dataService;
 	private final GenericLayerCatalogService genericLayerCatalogService;
 	private final GenericLayerResourceManagerService resourceManagerService;
 
-	public GenericLayerCatalogueManagerService(Database database,
+	public GenericLayerCatalogueManagerService(DataService dataService,
 			GenericLayerCatalogService genericLayerCatalogService,
 			GenericLayerResourceManagerService resourceManagerService)
 	{
-		if (database == null) throw new IllegalArgumentException("database is null");
+		if (dataService == null) throw new IllegalArgumentException("dataService is null");
 		if (genericLayerCatalogService == null) throw new IllegalArgumentException("genericLayerCatalogService is null");
 		if (resourceManagerService == null) throw new IllegalArgumentException("resourceManagerService is null");
-		this.database = database;
+		this.dataService = dataService;
 		this.genericLayerCatalogService = new CatalogService().getBasicHttpBindingGenericLayerCatalogService();
 		this.resourceManagerService = resourceManagerService;
 	}
 
 	@Override
-	public List<CatalogMeta> findCatalogs()
+	public Iterable<CatalogMeta> getCatalogs()
 	{
 		return resourceManagerService.findCatalogs();
 	}
@@ -93,480 +75,396 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	@Override
 	public Catalog getCatalog(String id) throws UnknownCatalogException
 	{
-		// retrieve catalog from database
-		String catalogId = CatalogIdConverter.catalogIdToOmxIdentifier(id);
-		DataSet dataSet;
-		try
-		{
-			dataSet = DataSet.findByIdentifier(database, catalogId);
-		}
-		catch (DatabaseException e)
-		{
-			throw new RuntimeException(e);
-		}
-		if (dataSet != null) return new OmxCatalog(dataSet);
-
-		// retrieve catalog from generic layer
 		CatalogMeta catalogMeta = resourceManagerService.findCatalog(id);
-		REPCMT000100UV01Organizer catalog = retrieveCatalog(id);
+		REPCMT000100UV01Organizer catalog = retrieveCatalog(id, null, true);
 		return new OrganizerCatalog(catalog, catalogMeta);
 	}
 
 	@Override
 	public Catalog getCatalogOfStudyDefinition(String id) throws UnknownCatalogException
 	{
-		StudyDefinitionMeta studyDefinitionMeta = resourceManagerService.findStudyDefinition(id);
-		REPCMT000100UV01Organizer catalog = retrieveCatalog(studyDefinitionMeta.getVersion());
-		return new OrganizerCatalog(catalog, studyDefinitionMeta);
+		REPCMT000100UV01Organizer catalog = retrieveCatalog(null, id, true);
+		return new OrganizerCatalog(catalog, null);
 	}
 
 	@Transactional
 	@Override
 	public void loadCatalog(String id)
 	{
-		try
-		{
-			// retrieve catalog data from LifeLines Generic Layer catalog service
-			REPCMT000100UV01Organizer catalog = retrieveCatalog(id);
-
-			// convert to MOLGENIS OMX model and add to database
-			DataSet dataSet = new DataSet();
-			dataSet.setIdentifier(CatalogIdConverter.catalogIdToOmxIdentifier(id));
-			dataSet.setName("Catalogue #" + id);
-
-			Protocol rootProtocol = new Protocol();
-			rootProtocol.setIdentifier(UUID.randomUUID().toString());
-			rootProtocol.setName("LifeLines");
-
-			dataSet.setProtocolUsed(rootProtocol);
-
-			Map<String, String> valueSetMap = parseCatalog(dataSet, rootProtocol, catalog);
-
-			database.add(rootProtocol);
-			database.add(dataSet);
-
-			// retrieve catalog data from LifeLines Generic Layer catalog service
-			GetValuesetsResult valueSetsResult = genericLayerCatalogService.getValuesets(id, null);
-			loadValueSets(valueSetsResult, valueSetMap);
-		}
-		catch (DatabaseException e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
-
-	@Override
-	public boolean isCatalogLoaded(String id) throws UnknownCatalogException
-	{
-		String dataSetId = CatalogIdConverter.catalogIdToOmxIdentifier(id);
-		try
-		{
-			return DataSet.findByIdentifier(database, dataSetId) != null;
-		}
-		catch (DatabaseException e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
-
-	@Transactional
-	@Override
-	public void unloadCatalog(String id) throws UnknownCatalogException
-	{
-		String dataSetId = CatalogIdConverter.catalogIdToOmxIdentifier(id);
-		deleteDataSetAndProtocols(dataSetId);
+		loadCatalog(id, null);
 	}
 
 	@Transactional
 	@Override
 	public void loadCatalogOfStudyDefinition(String id) throws UnknownCatalogException
 	{
-		try
-		{
-			// retrieve catalog data from LifeLines Generic Layer catalog service
-			REPCMT000100UV01Organizer catalog = retrieveCatalogOfStudyDefinition(id);
-
-			// convert to MOLGENIS OMX model and add to database
-			DataSet dataSet = new DataSet();
-			dataSet.setIdentifier(CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id));
-			dataSet.setName("Study definition #" + id);
-
-			Protocol rootProtocol = new Protocol();
-			rootProtocol.setIdentifier(UUID.randomUUID().toString());
-			rootProtocol.setName("LifeLines");
-
-			dataSet.setProtocolUsed(rootProtocol);
-
-			// FIXME add patient protocol/features
-
-			Map<String, String> valueSetMap = parseCatalog(dataSet, rootProtocol, catalog);
-
-			database.add(rootProtocol);
-			database.add(dataSet);
-
-			// retrieve catalog data from LifeLines Generic Layer catalog service
-			GetValuesetsResult valueSetsResult = genericLayerCatalogService.getValuesets(null, id);
-			loadValueSets(valueSetsResult, valueSetMap);
-		}
-		catch (DatabaseException e)
-		{
-			throw new RuntimeException(e);
-		}
+		loadCatalog(null, id);
 	}
 
+	private void loadCatalog(String catalogReleaseId, String studyDefinitionId)
+	{
+		boolean useOntology = true;
+		Map<String, List<Code>> valueSetsIndex = createValueSetsIndex(catalogReleaseId, studyDefinitionId);
+		REPCMT000100UV01Organizer catalog = retrieveCatalog(catalogReleaseId, studyDefinitionId, useOntology);
+
+		// create catalog root protocol
+		Protocol rootProtocol = new Protocol();
+		rootProtocol.setIdentifier(getCatalogIdentifier(catalogReleaseId, studyDefinitionId));
+		rootProtocol.setName("LifeLines");
+		rootProtocol.setRoot(true);
+		rootProtocol.setActive(true);
+
+		List<Protocol> subprotocols = new ArrayList<Protocol>();
+		for (REPCMT000100UV01Component3 component : catalog.getComponent())
+		{
+			REPCMT000100UV01Organizer organizer = component.getOrganizer().getValue();
+			String code = organizer.getCode().getCode();
+			if (code.equals("Generic"))
+			{
+				Protocol genericProtocol = new Protocol();
+				genericProtocol.setIdentifier(UUID.randomUUID().toString());
+				genericProtocol.setName(code);
+
+				List<Protocol> genericSubprotocols = new ArrayList<Protocol>();
+				if (organizer.getComponent() != null)
+				{
+					for (REPCMT000100UV01Component3 genericComponent : organizer.getComponent())
+					{
+						Protocol protocol = parseGenericCatalogOrganizer(genericComponent.getOrganizer().getValue(),
+								useOntology, valueSetsIndex);
+						genericSubprotocols.add(protocol);
+					}
+				}
+				if (!genericSubprotocols.isEmpty()) genericProtocol.setSubprotocols(genericSubprotocols);
+				subprotocols.add(genericProtocol);
+				dataService.add(Protocol.ENTITY_NAME, genericProtocol);
+			}
+			else
+			{
+				Protocol dataSourceProtocol = new Protocol();
+				dataSourceProtocol.setIdentifier(UUID.randomUUID().toString());
+				dataSourceProtocol.setName(code);
+
+				List<Protocol> dataSourceSubprotocols = new ArrayList<Protocol>();
+				if (organizer.getComponent() != null)
+				{
+					for (REPCMT000100UV01Component3 dataSourceComponent : organizer.getComponent())
+					{
+						Protocol protocol = parseDataSourceCatalogOrganizer(dataSourceComponent.getOrganizer()
+								.getValue(), useOntology, valueSetsIndex);
+						dataSourceSubprotocols.add(protocol);
+					}
+				}
+				if (!dataSourceSubprotocols.isEmpty()) dataSourceProtocol.setSubprotocols(dataSourceSubprotocols);
+				subprotocols.add(dataSourceProtocol);
+				dataService.add(Protocol.ENTITY_NAME, dataSourceProtocol);
+			}
+		}
+		if (!subprotocols.isEmpty()) rootProtocol.setSubprotocols(subprotocols);
+
+		dataService.add(Protocol.ENTITY_NAME, rootProtocol);
+	}
+
+	private Map<String, List<Code>> createValueSetsIndex(String catalogReleaseId, String studyDefinitionId)
+	{
+		Map<String, List<Code>> valueSetMap = new HashMap<String, List<Code>>();
+		ValueSets valueSets = retrieveValueSets(catalogReleaseId, studyDefinitionId);
+		for (ValueSet valueSet : valueSets.getValueSet())
+		{
+			logger.info(valueSet.getName() + " | " + valueSet.getCode());
+			valueSetMap.put(valueSet.getName(), valueSet.getCode());
+		}
+		return valueSetMap;
+	}
+
+	private Protocol parseDataSourceCatalogOrganizer(REPCMT000100UV01Organizer cohortOrganizer, boolean useOntology,
+			Map<String, List<Code>> valueSetsIndex)
+	{
+		Protocol cohortProtocol;
+		if (useOntology)
+		{
+			cohortProtocol = new Protocol();
+			cohortProtocol.setIdentifier(UUID.randomUUID().toString());
+			cohortProtocol.setName(cohortOrganizer.getCode().getDisplayName());
+			String cohortId = cohortOrganizer.getCode().getCode();
+
+			// measurement components
+			List<Protocol> cohortSubprotocols = new ArrayList<Protocol>();
+			for (REPCMT000100UV01Component3 measurementComponent : cohortOrganizer.getComponent())
+			{
+				if (measurementComponent.getOrganizer() == null) break; // FIXME remove
+				REPCMT000100UV01Organizer measurementOrganizer = measurementComponent.getOrganizer().getValue();
+
+				Protocol measurementProtocol = new Protocol();
+				measurementProtocol.setIdentifier(UUID.randomUUID().toString());
+				measurementProtocol.setName(measurementOrganizer.getCode().getDisplayName());
+				String measurementId = measurementOrganizer.getCode().getCode();
+
+				List<Protocol> measurementSubprotocols = new ArrayList<Protocol>();
+				for (REPCMT000100UV01Component3 component : measurementOrganizer.getComponent())
+				{
+					REPCMT000100UV01Organizer componentOrganizer = component.getOrganizer().getValue();
+					Protocol measurementSubprotocol = parseDataSourceCatalogOrganizerRec(componentOrganizer,
+							useOntology, valueSetsIndex, cohortId, measurementId);
+					measurementSubprotocols.add(measurementSubprotocol);
+				}
+				if (!measurementSubprotocols.isEmpty()) measurementProtocol.setSubprotocols(measurementSubprotocols);
+
+				cohortSubprotocols.add(measurementProtocol);
+				dataService.add(Protocol.ENTITY_NAME, measurementProtocol);
+			}
+			if (!cohortSubprotocols.isEmpty()) cohortProtocol.setSubprotocols(cohortSubprotocols);
+		}
+		else
+		{
+			throw new UnsupportedOperationException("load generic catalog for useOntology=false not implemented");
+		}
+
+		dataService.add(Protocol.ENTITY_NAME, cohortProtocol);
+		return cohortProtocol;
+	}
+
+	private Protocol parseDataSourceCatalogOrganizerRec(REPCMT000100UV01Organizer organizer, boolean useOntology,
+			Map<String, List<Code>> valueSetsIndex, String cohortId, String measurementId)
+	{
+		Protocol protocol;
+		if (useOntology)
+		{
+			protocol = new Protocol();
+			protocol.setIdentifier(UUID.randomUUID().toString());
+			protocol.setName(organizer.getCode().getDisplayName());
+
+			List<Protocol> subprotocols = new ArrayList<Protocol>();
+			List<ObservableFeature> features = new ArrayList<ObservableFeature>();
+			for (REPCMT000100UV01Component3 component : organizer.getComponent())
+			{
+				// create subprotocol recursively
+				if (component.getOrganizer() != null)
+				{
+					REPCMT000100UV01Organizer componentOrganizer = component.getOrganizer().getValue();
+					Protocol subProtocol = parseDataSourceCatalogOrganizerRec(componentOrganizer, useOntology,
+							valueSetsIndex, cohortId, measurementId);
+					subprotocols.add(subProtocol);
+				}
+				// create feature
+				else if (component.getObservation() != null)
+				{
+					REPCMT000100UV01Observation componentObservation = component.getObservation().getValue();
+					ObservableFeature feature = parseDataSourceCatalogObservation(componentObservation, valueSetsIndex,
+							cohortId, measurementId);
+					features.add(feature);
+				}
+			}
+			if (!subprotocols.isEmpty()) protocol.setSubprotocols(subprotocols);
+			if (!features.isEmpty()) protocol.setFeatures(features);
+		}
+		else
+		{
+			throw new UnsupportedOperationException("load data source catalog for useOntology=false not implemented");
+		}
+
+		dataService.add(Protocol.ENTITY_NAME, protocol);
+		return protocol;
+	}
+
+	private ObservableFeature parseDataSourceCatalogObservation(REPCMT000100UV01Observation observation,
+			Map<String, List<Code>> valueSetsIndex, String cohortId, String measurementId)
+	{
+		CD code = observation.getCode();
+		ObservableFeature observableFeature = new ObservableFeature();
+		observableFeature.setIdentifier(code.getCode() + '.' + cohortId + '.' + measurementId);
+		observableFeature.setName(code.getDisplayName());
+
+		String dataType;
+		ANY value = observation.getValue();
+		if (value instanceof BL) dataType = "bool";
+		else if (value instanceof CD) dataType = "categorical";
+		else if (value instanceof CO) dataType = "categorical";
+		else if (value instanceof II) dataType = "string";
+		else if (value instanceof INT) dataType = "int";
+		else if (value instanceof PQ) dataType = "string";
+		else if (value instanceof REAL) dataType = "decimal";
+		else if (value instanceof ST) dataType = "string";
+		else if (value instanceof TS) dataType = "datetime";
+		else throw new RuntimeException("Unsupported data type [" + value.getClass().getSimpleName() + "]");
+		observableFeature.setDataType(dataType);
+
+		if (value instanceof PQ)
+		{
+			OntologyTerm unitOntologyTerm = new OntologyTerm();
+			unitOntologyTerm.setIdentifier(UUID.randomUUID().toString());
+			unitOntologyTerm.setName(((PQ) value).getUnit());
+			dataService.add(OntologyTerm.ENTITY_NAME, unitOntologyTerm);
+
+			observableFeature.setUnit(unitOntologyTerm);
+		}
+
+		dataService.add(ObservableFeature.ENTITY_NAME, observableFeature);
+
+		if (value instanceof CD || value instanceof CO)
+		{
+			CD cdValue = (CD) value;
+			String valueSetName = cdValue.getCodeSystemName();
+			if (valueSetsIndex.get(valueSetName) == null) throw new RuntimeException(valueSetName);
+			for (Code valueCode : valueSetsIndex.get(valueSetName))
+			{
+				Category category = new Category();
+				category.setIdentifier(UUID.randomUUID().toString());
+				category.setName(valueCode.getDisplayName());
+				category.setValueCode(valueCode.getCode());
+				category.setObservableFeature(observableFeature);
+				dataService.add(Category.ENTITY_NAME, category);
+			}
+		}
+
+		return observableFeature;
+	}
+
+	private Protocol parseGenericCatalogOrganizer(REPCMT000100UV01Organizer organizer, boolean useOntology,
+			Map<String, List<Code>> valueSetsIndex)
+	{
+		Protocol protocol;
+		if (useOntology)
+		{
+			protocol = new Protocol();
+			protocol.setIdentifier(UUID.randomUUID().toString());
+			protocol.setName(organizer.getCode().getDisplayName());
+
+			List<Protocol> subprotocols = new ArrayList<Protocol>();
+			List<ObservableFeature> features = new ArrayList<ObservableFeature>();
+			for (REPCMT000100UV01Component3 component : organizer.getComponent())
+			{
+				// create subprotocol recursively
+				if (component.getOrganizer() != null)
+				{
+					REPCMT000100UV01Organizer componentOrganizer = component.getOrganizer().getValue();
+					Protocol subProtocol = parseGenericCatalogOrganizer(componentOrganizer, useOntology, valueSetsIndex);
+					subprotocols.add(subProtocol);
+				}
+				// create feature
+				else if (component.getObservation() != null)
+				{
+					REPCMT000100UV01Observation componentObservation = component.getObservation().getValue();
+					ObservableFeature feature = parseGenericCatalogObservation(componentObservation, valueSetsIndex);
+					features.add(feature);
+				}
+			}
+			if (!subprotocols.isEmpty()) protocol.setSubprotocols(subprotocols);
+			if (!features.isEmpty()) protocol.setFeatures(features);
+		}
+		else
+		{
+			throw new UnsupportedOperationException("load generic catalog for useOntology=false not implemented");
+		}
+
+		dataService.add(Protocol.ENTITY_NAME, protocol);
+		return protocol;
+	}
+
+	private ObservableFeature parseGenericCatalogObservation(REPCMT000100UV01Observation observation,
+			Map<String, List<Code>> valueSetsIndex)
+	{
+		CD code = observation.getCode();
+
+		ObservableFeature observableFeature = new ObservableFeature();
+		observableFeature.setIdentifier(UUID.randomUUID().toString());
+		observableFeature.setName(code.getDisplayName());
+
+		dataService.add(ObservableFeature.ENTITY_NAME, observableFeature);
+		return observableFeature;
+	}
+
+	@Transactional(readOnly = true)
+	@Override
+	public boolean isCatalogLoaded(String id) throws UnknownCatalogException
+	{
+		return isCatalogLoaded(id, null);
+	}
+
+	@Transactional(readOnly = true)
 	@Override
 	public boolean isCatalogOfStudyDefinitionLoaded(String id) throws UnknownCatalogException,
 			UnknownStudyDefinitionException
 	{
-		// FIXME implement
-		throw new UnsupportedOperationException();
+		return isCatalogLoaded(null, id);
 	}
 
-	private void deleteDataSetAndProtocols(String dataSetIdentifier) throws UnknownCatalogException
+	private boolean isCatalogLoaded(String catalogReleaseId, String studyDefinitionId)
 	{
-		try
-		{
-			DataSet dataSet = DataSet.findByIdentifier(database, dataSetIdentifier);
-			if (dataSet == null)
-			{
-				throw new UnknownCatalogException("unknown catalog identifier [" + dataSetIdentifier + "]");
-			}
-			List<Protocol> protocols = ProtocolUtils.getProtocolDescendants(dataSet.getProtocolUsed());
+		String catalogIdentifier = getCatalogIdentifier(catalogReleaseId, studyDefinitionId);
+		return dataService.count(Protocol.ENTITY_NAME, new QueryImpl().eq(Protocol.IDENTIFIER, catalogIdentifier)) == 1;
+	}
 
-			database.remove(dataSet);
-			database.remove(protocols);
-		}
-		catch (DatabaseException e)
+	private String getCatalogIdentifier(String catalogReleaseId, String studyDefinitionId)
+	{
+		if (catalogReleaseId != null) return CatalogIdConverter.catalogIdToOmxIdentifier(catalogReleaseId);
+		else return CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(studyDefinitionId);
+	}
+
+	@Transactional
+	@Override
+	public void unloadCatalog(String id) throws UnknownCatalogException
+	{
+		String protocolIdentifier = CatalogIdConverter.catalogIdToOmxIdentifier(id);
+		deleteCatalog(protocolIdentifier);
+	}
+
+	// FIXME does not delete full catalog
+	private void deleteCatalog(String protocolIdentifier) throws UnknownCatalogException
+	{
+		Protocol protocol = dataService.findOne(Protocol.ENTITY_NAME,
+				new QueryImpl().eq(DataSet.IDENTIFIER, protocolIdentifier));
+		if (protocol == null)
 		{
-			throw new RuntimeException(e);
+			throw new UnknownCatalogException("unknown catalog identifier [" + protocolIdentifier + "]");
 		}
+		List<Protocol> protocols = ProtocolUtils.getProtocolDescendants(protocol);
+
+		dataService.delete(DataSet.ENTITY_NAME, protocol);
+		dataService.delete(Protocol.ENTITY_NAME, protocols);
 	}
 
 	@Transactional
 	@Override
 	public void unloadCatalogOfStudyDefinition(String id) throws UnknownCatalogException
 	{
-		String dataSetIdentifier = CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id);
-		deleteDataSetAndProtocols(dataSetIdentifier);
+		String protocolIdentifier = CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id);
+		deleteCatalog(protocolIdentifier);
 	}
 
-	private void loadValueSets(GetValuesetsResult valueSetsResult, Map<String, String> featureMap)
-	{
-		// convert to HL7 organizer
-		ValueSets valueSets;
-		try
-		{
-			Unmarshaller um = JAXB_CONTEXT_VALUESETS.createUnmarshaller();
-			valueSets = um.unmarshal((Node) valueSetsResult.getAny(), ValueSets.class).getValue();
-		}
-		catch (JAXBException e)
-		{
-			throw new RuntimeException(e);
-		}
-
-		OntologyIndex ontologyIndex = new OntologyIndex();
-
-		try
-		{
-			for (ValueSet valueSet : valueSets.getValueSet())
-			{
-				String identifier = featureMap.get(valueSet.getName());
-				ObservableFeature observableFeature = ObservableFeature.findByIdentifier(database, identifier);
-				if (observableFeature == null)
-				{
-					throw new RuntimeException("missing ObservableFeature with name '" + identifier + "'");
-				}
-
-				for (Code code : valueSet.getCode())
-				{
-					OntologyTerm ontologyTerm = toOntologyTerm(code, ontologyIndex);
-
-					// create category
-					String categoryIdentifier = OmxIdentifierGenerator.from(Category.class, code.getCodeSystem(),
-							code.getCode());
-					Category category = Category.findByIdentifier(database, categoryIdentifier);
-					if (category == null)
-					{
-						category = new Category();
-						category.setIdentifier(categoryIdentifier);
-						category.setName(code.getDisplayName());
-						category.setObservableFeature(observableFeature);
-						category.setDefinition(ontologyTerm);
-						category.setValueCode(code.getCodeSystemName() + ':' + code.getCode());
-
-						database.add(category);
-					}
-				}
-			}
-		}
-		catch (DatabaseException e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
-
-	private REPCMT000100UV01Organizer retrieveCatalog(String id)
+	private REPCMT000100UV01Organizer retrieveCatalog(String catalogReleaseId, String studyDefinitionId,
+			boolean useOntology)
 	{
 		// retrieve catalog data from LifeLines Generic Layer catalog service
-		GetCatalogResult catalogResult = genericLayerCatalogService.getCatalog(id, null);
-
-		// convert to HL7 organizer
 		REPCMT000100UV01Organizer catalog;
 		try
 		{
-			Unmarshaller um = JAXB_CONTEXT_ORGANIZER.createUnmarshaller();
-			catalog = um.unmarshal((Node) catalogResult.getAny(), REPCMT000100UV01Organizer.class).getValue();
+			HL7Container hl7Container = genericLayerCatalogService.getCatalog(catalogReleaseId, null,
+					studyDefinitionId, useOntology);
+			if (hl7Container == null) throw new RuntimeException("HL7Container is null");
+			catalog = hl7Container.getCatalog();
 		}
-		catch (JAXBException e)
+		catch (GenericLayerCatalogServiceGetCatalogFAULTFaultMessage e)
 		{
+			logger.error("", e);
 			throw new RuntimeException(e);
 		}
-
 		return catalog;
 	}
 
-	private REPCMT000100UV01Organizer retrieveCatalogOfStudyDefinition(String id)
+	private ValueSets retrieveValueSets(String catalogReleaseId, String studyDefinitionId)
 	{
-		// retrieve catalog data from LifeLines Generic Layer catalog service
-		GetCatalogResult catalogResult = genericLayerCatalogService.getCatalog(null, id);
-
-		// convert to HL7 organizer
-		REPCMT000100UV01Organizer catalog;
+		HL7Container hl7Container;
 		try
 		{
-			Unmarshaller um = JAXB_CONTEXT_ORGANIZER.createUnmarshaller();
-			catalog = um.unmarshal((Node) catalogResult.getAny(), REPCMT000100UV01Organizer.class).getValue();
+			hl7Container = genericLayerCatalogService.getValueSets(catalogReleaseId, HumanLanguage.EN,
+					studyDefinitionId);
+			return hl7Container.getValueSets();
 		}
-		catch (JAXBException e)
+		catch (GenericLayerCatalogServiceGetValueSetsFAULTFaultMessage e)
 		{
+			logger.error("", e);
 			throw new RuntimeException(e);
-		}
-
-		return catalog;
-	}
-
-	private Map<String, String> parseCatalog(DataSet dataSet, Protocol rootProtocol, REPCMT000100UV01Organizer catalog)
-			throws DatabaseException
-	{
-		Map<String, String> featureMap = new HashMap<String, String>();
-		OntologyIndex ontologyIndex = new OntologyIndex();
-
-		// parse protocols between root protocols
-		for (REPCMT000100UV01Component3 rootComponent : catalog.getComponent())
-		{
-			parseComponent(rootComponent, rootProtocol, database, featureMap, ontologyIndex);
-		}
-		return featureMap;
-	}
-
-	private void parseComponent(REPCMT000100UV01Component3 component, Protocol parentProtocol, Database database,
-			Map<String, String> featureMap, OntologyIndex ontologyIndex) throws DatabaseException
-	{
-
-		// parse feature
-		if (component.getObservation() != null)
-		{
-			REPCMT000100UV01Observation observation = component.getObservation().getValue();
-			CD observationCode = observation.getCode();
-
-			logger.debug("parsing observation " + observationCode.getDisplayName());
-
-			// get or create feature
-			List<II> observationId = observation.getId();
-			String featureId = (observationId != null && !observationId.isEmpty()) ? observationId.get(0).getRoot() : UUID
-					.randomUUID().toString();
-			ANY anyValue = observation.getValue();
-			if (anyValue instanceof CD)
-			{
-				CD value = (CD) anyValue;
-				featureMap.put(value.getCodeSystemName(), featureId);
-			}
-
-			ObservableFeature observableFeature = ObservableFeature.findByIdentifier(database, featureId);
-			if (observableFeature == null)
-			{
-				String observationName = observationCode.getDisplayName();
-				if (observationName == null)
-				{
-					logger.warn("observation does not have a display name '" + observationCode.getCode() + "'");
-					observationName = observationCode.getCode();
-				}
-
-				// TODO what to do in case of multiple translations?
-				OntologyTerm ontologyTerm;
-				List<CD> translationCodes = observationCode.getTranslation();
-				if (translationCodes != null && !translationCodes.isEmpty()) ontologyTerm = toOntologyTerm(
-						translationCodes.get(0), ontologyIndex);
-				else ontologyTerm = null;
-
-				// determine data type
-				String dataType = HL7DataTypeMapper.get(anyValue);
-				if (dataType == null) logger
-						.warn("HL7 data type not supported: " + anyValue.getClass().getSimpleName());
-
-				observableFeature = new ObservableFeature();
-				observableFeature.setIdentifier(featureId);
-				observableFeature.setName(observationName);
-				ED originalText = observationCode.getOriginalText();
-				if (originalText != null) observableFeature.setDescription(originalText.getContent().get(0).toString());
-				if (dataType != null) observableFeature.setDataType(dataType);
-				observableFeature.setDefinitions(ontologyTerm);
-
-				// determine unit
-				if (anyValue instanceof PQ)
-				{
-					@SuppressWarnings("unused")
-					PQ value = (PQ) anyValue;
-					// TODO how to determine ontologyterms for units and do observableFeature.setUnit()
-				}
-				database.add(observableFeature);
-			}
-
-			// add feature to protocol
-			parentProtocol.getFeatures().add(observableFeature);
-		}
-
-		// parse sub-protocol
-		if (component.getOrganizer() != null)
-		{
-			REPCMT000100UV01Organizer organizer = component.getOrganizer().getValue();
-			CD organizerCode = organizer.getCode();
-			logger.debug("parsing organizer " + organizerCode.getCode() + " " + organizerCode.getDisplayName());
-
-			// get or create protocol
-			List<II> organizerId = organizer.getId();
-			String protocolId = (organizerId != null && !organizerId.isEmpty()) ? organizerId.get(0).getRoot() : UUID
-					.randomUUID().toString();
-			Protocol protocol = Protocol.findByIdentifier(database, protocolId);
-			if (protocol == null)
-			{
-				String organizerName = organizerCode.getDisplayName();
-				if (organizerName == null)
-				{
-					logger.warn("organizer does not have a display name '" + organizerCode.getCode() + "'");
-					organizerName = organizerCode.getCode();
-				}
-
-				OntologyTerm ontologyTerm = toOntologyTerm(organizerCode, ontologyIndex);
-
-				protocol = new Protocol();
-				protocol.setIdentifier(protocolId);
-				protocol.setName(organizerName);
-				ED originalText = organizerCode.getOriginalText();
-				if (originalText != null) protocol.setDescription(originalText.getContent().get(0).toString());
-				protocol.setProtocolType(ontologyTerm);
-
-			}
-
-			// recurse over nested protocols
-			for (REPCMT000100UV01Component3 subComponent : organizer.getComponent())
-				parseComponent(subComponent, protocol, database, featureMap, ontologyIndex);
-
-			// add protocol to parent protocol
-			parentProtocol.getSubprotocols().add(protocol);
-		}
-
-		database.add(parentProtocol);
-	}
-
-	private OntologyTerm toOntologyTerm(Code code, OntologyIndex ontologyIndex) throws DatabaseException
-	{
-		return toOntologyTerm(code.getCodeSystem(), code.getCodeSystemName(), code.getDisplayName(), code.getCode(),
-				ontologyIndex);
-	}
-
-	private OntologyTerm toOntologyTerm(CD code, OntologyIndex ontologyIndex) throws DatabaseException
-	{
-		return toOntologyTerm(code.getCodeSystem(), code.getCodeSystemName(), code.getDisplayName(), code.getCode(),
-				ontologyIndex);
-	}
-
-	private OntologyTerm toOntologyTerm(String codeSystem, String codeSystemName, String displayName, String codeCode,
-			OntologyIndex ontologyIndex) throws DatabaseException
-	{
-		// create and index ontology
-		Ontology ontology = ontologyIndex.get(codeSystem);
-		if (ontology == null)
-		{
-			if (codeSystem == null || codeSystemName == null)
-			{
-				logger.warn("missing code system or code system name for ontology term '" + displayName + "'");
-			}
-			else
-			{
-				String ontologyIdentifier = OmxIdentifierGenerator.from(Ontology.class, codeSystem);
-				ontology = Ontology.findByIdentifier(database, ontologyIdentifier);
-				if (ontology == null)
-				{
-					// create ontology for each code system
-					ontology = new Ontology();
-					ontology.setIdentifier(ontologyIdentifier);
-					ontology.setName(codeSystemName);
-					ontology.setOntologyAccession(codeSystem);
-
-					database.add(ontology);
-				}
-				ontologyIndex.put(codeSystem, ontology);
-			}
-		}
-
-		// create and index ontology term
-		OntologyTerm ontologyTerm = ontologyIndex.get(codeSystem, codeCode);
-		if (ontologyTerm == null)
-		{
-			String ontologyTermIdentifier = OmxIdentifierGenerator.from(OntologyTerm.class, codeSystem, codeCode);
-			ontologyTerm = OntologyTerm.findByIdentifier(database, ontologyTermIdentifier);
-			if (ontologyTerm == null)
-			{
-				ontologyTerm = new OntologyTerm();
-				ontologyTerm.setIdentifier(ontologyTermIdentifier);
-				ontologyTerm.setName(displayName != null ? displayName : "");
-				ontologyTerm.setTermAccession(codeCode);
-				if (ontology != null) ontologyTerm.setOntology(ontology);
-
-				database.add(ontologyTerm);
-			}
-			ontologyIndex.put(codeSystem, codeCode, ontologyTerm);
-		}
-		return ontologyTerm;
-	}
-
-	private static class OntologyIndex
-	{
-		private final Map<String, Ontology> ontologyMap;
-		private final Map<String, Map<String, OntologyTerm>> ontologyTermMap;
-
-		public OntologyIndex()
-		{
-			ontologyMap = new HashMap<String, Ontology>();
-			ontologyTermMap = new HashMap<String, Map<String, OntologyTerm>>();
-		}
-
-		public void put(String codeSystem, Ontology ontology)
-		{
-			ontologyMap.put(codeSystem, ontology);
-		}
-
-		public void put(String codeSystem, String code, OntologyTerm ontologyTerm)
-		{
-			Map<String, OntologyTerm> codeMap = ontologyTermMap.get(codeSystem);
-			if (codeMap == null)
-			{
-				codeMap = new HashMap<String, OntologyTerm>();
-				ontologyTermMap.put(codeSystem, codeMap);
-			}
-			codeMap.put(code, ontologyTerm);
-		}
-
-		public Ontology get(String codeSystem)
-		{
-			return ontologyMap.get(codeSystem);
-		}
-
-		public OntologyTerm get(String codeSystem, String code)
-		{
-			Map<String, OntologyTerm> codeMap = ontologyTermMap.get(codeSystem);
-			return codeMap != null ? codeMap.get(code) : null;
 		}
 	}
 }

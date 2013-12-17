@@ -8,19 +8,20 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
 
+import nl.umcg.hl7.service.studydefinition.POQMMT000001UVQualityMeasureDocument;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.log4j.Logger;
-import org.molgenis.framework.db.Database;
+import org.molgenis.data.DataService;
+import org.molgenis.data.support.QueryImpl;
 import org.molgenis.framework.db.DatabaseException;
 import org.molgenis.hl7.ANY;
 import org.molgenis.hl7.BL;
 import org.molgenis.hl7.CD;
 import org.molgenis.hl7.INT;
-import org.molgenis.hl7.ObjectFactory;
-import org.molgenis.hl7.POQMMT000001UVQualityMeasureDocument;
 import org.molgenis.hl7.PQ;
 import org.molgenis.hl7.REAL;
 import org.molgenis.hl7.REPCMT000100UV01Component3;
@@ -75,7 +76,7 @@ public class GenericLayerDataQueryService
 	@Autowired
 	private GenericLayerDataBinder genericLayerDataBinder;
 	@Autowired
-	private Database database;
+	private DataService dataService;
 
 	@Transactional
 	public void loadStudyDefinitionData(final POQMMT000001UVQualityMeasureDocument studyDefinition)
@@ -92,8 +93,8 @@ public class GenericLayerDataQueryService
 				{
 					try
 					{
-						genericLayerDataBinder.createQualityMeasureDocumentMarshaller().marshal(
-								new ObjectFactory().createQualityMeasureDocument(studyDefinition), outstream);
+						genericLayerDataBinder.createQualityMeasureDocumentMarshaller().marshal(studyDefinition,
+								outstream);
 					}
 					catch (JAXBException e)
 					{
@@ -128,9 +129,8 @@ public class GenericLayerDataQueryService
 
 			// convert REPCMT000400UV01ActCategory to OMX and put in database
 			String id = studyDefinition.getId().getExtension();
-			DataSet dataSet = database.query(DataSet.class)
-					.eq(DataSet.IDENTIFIER, CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id)).find()
-					.get(0);
+			String omxId = CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id);
+			DataSet dataSet = dataService.findOne(DataSet.ENTITY_NAME, new QueryImpl().eq(DataSet.IDENTIFIER, omxId));
 
 			for (REPCMT000400UV01Component4 rootComponent : actCategory.getComponent())
 			{
@@ -153,7 +153,8 @@ public class GenericLayerDataQueryService
 				{
 					REPCMT000100UV01Observation observation = organizerComponent.getObservation().getValue();
 					String featureId = observation.getId().get(0).getRoot();
-					ObservableFeature observableFeature = ObservableFeature.findByIdentifier(database, featureId);
+					ObservableFeature observableFeature = dataService.findOne(ObservableFeature.ENTITY_NAME,
+							new QueryImpl().eq(ObservableFeature.IDENTIFIER, featureId));
 					if (observableFeature == null) throw new RuntimeException(
 							"missing ObservableFeature with identifier " + featureId);
 
@@ -165,10 +166,10 @@ public class GenericLayerDataQueryService
 						observedValue.setFeature(observableFeature);
 						observedValue.setValue(value);
 
-						database.add(observedValue);
+						dataService.add(ObservedValue.ENTITY_NAME, observedValue);
 					}
 				}
-				database.add(observationSet);
+				dataService.add(ObservationSet.ENTITY_NAME, observationSet);
 			}
 		}
 		catch (DatabaseException e)
@@ -196,16 +197,7 @@ public class GenericLayerDataQueryService
 	public boolean isStudyDataLoaded(String id)
 	{
 		String dataSetId = CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id);
-		DataSet dataSet;
-		try
-		{
-			dataSet = DataSet.findByIdentifier(database, dataSetId);
-		}
-		catch (DatabaseException e)
-		{
-			throw new RuntimeException(e);
-		}
-		return dataSet != null;
+		return dataService.count(DataSet.IDENTIFIER, new QueryImpl().eq(DataSet.IDENTIFIER, dataSetId)) == 1;
 	}
 
 	private org.molgenis.omx.observ.value.Value toValue(ANY anyValue) throws DatabaseException
@@ -265,7 +257,8 @@ public class GenericLayerDataQueryService
 			// categorical
 			CD value = (CD) anyValue;
 			String identifier = OmxIdentifierGenerator.from(Category.class, value.getCodeSystem(), value.getCode());
-			Category category = Category.findByIdentifier(database, identifier);
+			Category category = dataService.findOne(Category.ENTITY_NAME,
+					new QueryImpl().eq(Category.IDENTIFIER, identifier));
 			if (category == null)
 			{
 				logger.error("missing category identifier: " + identifier);

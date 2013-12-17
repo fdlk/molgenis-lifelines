@@ -2,7 +2,6 @@ package org.molgenis.lifelines.resourcemanager;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -18,23 +17,23 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
 import org.apache.log4j.Logger;
 import org.molgenis.atom.ContentType;
 import org.molgenis.atom.EntryType;
 import org.molgenis.atom.FeedType;
 import org.molgenis.catalog.CatalogMeta;
+import org.molgenis.hl7.COCTMT090107UVAssignedPerson;
+import org.molgenis.hl7.COCTMT090107UVPerson;
+import org.molgenis.hl7.COCTMT150007UVOrganization;
 import org.molgenis.hl7.ED;
 import org.molgenis.hl7.II;
 import org.molgenis.hl7.INT;
-import org.molgenis.hl7.ObjectFactory;
+import org.molgenis.hl7.ON;
+import org.molgenis.hl7.PN;
+import org.molgenis.hl7.POQMMT000001UVAuthor;
 import org.molgenis.hl7.POQMMT000001UVQualityMeasureDocument;
 import org.molgenis.hl7.ST;
-import org.molgenis.lifelines.studymanager.QualityMeasureDocumentStudyDefinition;
 import org.molgenis.lifelines.utils.GenericLayerDataBinder;
-import org.molgenis.lifelines.utils.OutputStreamHttpEntity;
-import org.molgenis.study.StudyDefinitionMeta;
 import org.w3c.dom.Node;
 
 import com.google.common.base.Function;
@@ -78,209 +77,6 @@ public class GenericLayerResourceManagerService
 		this.httpClient = httpClient;
 		this.resourceManagerServiceUrl = resourceManagerServiceUrl;
 		this.genericLayerDataBinder = genericLayerDataBinder;
-	}
-
-	/**
-	 * Gets all available StudyDefinitions
-	 * 
-	 * @return
-	 */
-	public StudyDefinitionMeta findStudyDefinition(String id)
-	{
-		CatalogSearchResult catalogSearchResult = findCatalogRelease("/studydefinition/" + id);
-
-		StudyDefinitionMeta studyDefinitionInfo = new StudyDefinitionMeta(catalogSearchResult.getId(),
-				catalogSearchResult.getName(), null, null);
-		studyDefinitionInfo.setDescription(catalogSearchResult.getDescription());
-		studyDefinitionInfo.setVersion(catalogSearchResult.getVersion());
-		studyDefinitionInfo.setAuthors(catalogSearchResult.getAuthors());
-		return studyDefinitionInfo;
-	}
-
-	/**
-	 * Gets all available StudyDefinitions
-	 * 
-	 * @return
-	 */
-	public List<StudyDefinitionMeta> findStudyDefinitions()
-	{
-		List<CatalogSearchResult> catalogs = findCatalogReleases("/studydefinition");
-		return Lists.transform(catalogs, new Function<CatalogSearchResult, StudyDefinitionMeta>()
-		{
-			@Override
-			public StudyDefinitionMeta apply(CatalogSearchResult input)
-			{
-				return new StudyDefinitionMeta(input.getId(), input.getName(), null, null);
-			}
-		});
-	}
-
-	public POQMMT000001UVQualityMeasureDocument findStudyDefinitionHL7(String id)
-	{
-		HttpGet httpGet = new HttpGet(resourceManagerServiceUrl + "/studydefinition/" + id);
-		InputStream xmlStream = null;
-		try
-		{
-			HttpResponse response = httpClient.execute(httpGet);
-			HttpEntity responseEntity = response.getEntity();
-			if (responseEntity != null) xmlStream = responseEntity.getContent();
-
-			int statusCode = response.getStatusLine().getStatusCode();
-			if (statusCode < 200 || statusCode >= 400)
-			{
-				LOG.error("Error retrieving study definition " + id + " (statuscode: " + statusCode + ")");
-				throw new IOException("Error retrieving study definition (statuscode: " + statusCode + ")");
-			}
-			return genericLayerDataBinder.createQualityMeasureDocumentUnmarshaller()
-					.unmarshal(new StreamSource(xmlStream), POQMMT000001UVQualityMeasureDocument.class).getValue();
-		}
-		catch (RuntimeException e)
-		{
-			httpGet.abort();
-			throw e;
-		}
-		catch (IOException e)
-		{
-			httpGet.abort();
-			throw new RuntimeException(e);
-		}
-		catch (JAXBException e)
-		{
-			httpGet.abort();
-			throw new RuntimeException(e);
-		}
-		finally
-		{
-			IOUtils.closeQuietly(xmlStream);
-		}
-	}
-
-	/**
-	 * Persist a studydefinition
-	 * 
-	 * @param studyDefinition
-	 * @return generic layer study definition id
-	 */
-	public String persistStudyDefinition(final POQMMT000001UVQualityMeasureDocument studyDefinition)
-	{
-		HttpPost httpPost = new HttpPost(resourceManagerServiceUrl + "/studydefinition");
-		httpPost.setHeader("Content-Type", "application/xml");
-		httpPost.setEntity(new OutputStreamHttpEntity()
-		{
-			@Override
-			public void writeTo(final OutputStream outstream) throws IOException
-			{
-				try
-				{
-					genericLayerDataBinder.createQualityMeasureDocumentMarshaller().marshal(
-							new ObjectFactory().createQualityMeasureDocument(studyDefinition), outstream);
-				}
-				catch (JAXBException e)
-				{
-					throw new RuntimeException(e);
-				}
-				finally
-				{
-					outstream.close();
-				}
-			}
-		});
-
-		InputStream xmlStream = null;
-		try
-		{
-			HttpResponse response = httpClient.execute(httpPost);
-			HttpEntity responseEntity = response.getEntity();
-			if (responseEntity != null) xmlStream = responseEntity.getContent();
-
-			int statusCode = response.getStatusLine().getStatusCode();
-			if (statusCode < 200 || statusCode >= 400)
-			{
-				LOG.error("Error persisting study definition (statuscode: " + statusCode + ")");
-				throw new IOException("Error persisting study definition (statuscode: " + statusCode + ")");
-			}
-
-			POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = genericLayerDataBinder
-					.createQualityMeasureDocumentUnmarshaller()
-					.unmarshal(new StreamSource(xmlStream), POQMMT000001UVQualityMeasureDocument.class).getValue();
-
-			return qualityMeasureDocument.getId().getExtension();
-		}
-		catch (RuntimeException e)
-		{
-			httpPost.abort();
-			throw e;
-		}
-		catch (IOException e)
-		{
-			httpPost.abort();
-			throw new RuntimeException(e);
-		}
-		catch (JAXBException e)
-		{
-			httpPost.abort();
-			throw new RuntimeException(e);
-		}
-		finally
-		{
-			IOUtils.closeQuietly(xmlStream);
-		}
-	}
-
-	public void updateStudyDefinition(String studyDefinitionId,
-			final POQMMT000001UVQualityMeasureDocument studyDefinition) throws JAXBException
-	{
-		HttpPut httpPut = new HttpPut(resourceManagerServiceUrl + "/studydefinition/" + studyDefinitionId);
-		httpPut.setHeader("Content-Type", "application/xml");
-		httpPut.setEntity(new OutputStreamHttpEntity()
-		{
-			@Override
-			public void writeTo(final OutputStream outstream) throws IOException
-			{
-				try
-				{
-					genericLayerDataBinder.createQualityMeasureDocumentMarshaller().marshal(
-							new ObjectFactory().createQualityMeasureDocument(studyDefinition), outstream);
-				}
-				catch (JAXBException e)
-				{
-					throw new RuntimeException(e);
-				}
-				finally
-				{
-					outstream.close();
-				}
-			}
-		});
-
-		InputStream xmlStream = null;
-		try
-		{
-			HttpResponse response = httpClient.execute(httpPut);
-			HttpEntity responseEntity = response.getEntity();
-			if (responseEntity != null) xmlStream = responseEntity.getContent();
-
-			int statusCode = response.getStatusLine().getStatusCode();
-			if (statusCode < 200 || statusCode >= 400)
-			{
-				LOG.error("Error updating study definition " + studyDefinitionId + " (statuscode: " + statusCode + ")");
-				throw new IOException("Error updating study definition (statuscode: " + statusCode + ")");
-			}
-		}
-		catch (RuntimeException e)
-		{
-			httpPut.abort();
-			throw e;
-		}
-		catch (IOException e)
-		{
-			httpPut.abort();
-			throw new RuntimeException(e);
-		}
-		finally
-		{
-			IOUtils.closeQuietly(xmlStream);
-		}
 	}
 
 	/**
@@ -439,13 +235,71 @@ public class GenericLayerResourceManagerService
 		}
 
 		// author(s)
-		List<String> authors = new QualityMeasureDocumentStudyDefinition(qualityMeasureDocument).getAuthors();
+		List<String> authors = getAuthors(qualityMeasureDocument);
 		if (authors != null)
 		{
 			for (String author : authors)
 				catalogSearchResult.addAuthor(author);
 		}
 		return catalogSearchResult;
+	}
+
+	/**
+	 * Copied from QualityMeasureDocumentStudyDefinition FIXME get rid of hack
+	 * 
+	 * @param qualityMeasureDocument
+	 * @return
+	 */
+	@Deprecated
+	private List<String> getAuthors(POQMMT000001UVQualityMeasureDocument qualityMeasureDocument)
+	{
+		List<POQMMT000001UVAuthor> authors = qualityMeasureDocument.getAuthor();
+		if (authors == null) return null;
+
+		List<String> authorNames = new ArrayList<String>();
+		for (POQMMT000001UVAuthor author : authors)
+		{
+			COCTMT090107UVAssignedPerson personContainer = author.getAssignedPerson();
+			if (personContainer != null && personContainer.getAssignedPerson() != null)
+			{
+
+				COCTMT090107UVPerson person = personContainer.getAssignedPerson().getValue();
+
+				if (person.getName() != null)
+				{
+					StringBuilder authorBuilder = new StringBuilder();
+
+					// author name
+					for (PN namePart : person.getName())
+					{
+						if (authorBuilder.length() > 0) authorBuilder.append(' ');
+						authorBuilder.append(namePart.getContent().toString());
+					}
+
+					JAXBElement<COCTMT150007UVOrganization> organizationNode = personContainer
+							.getRepresentedOrganization();
+					if (organizationNode != null && organizationNode.getValue() != null)
+					{
+						COCTMT150007UVOrganization organization = organizationNode.getValue();
+
+						if (organization.getName() != null)
+						{
+							// author organization
+							StringBuilder organizationBuilder = new StringBuilder();
+							for (ON namePart : organization.getName())
+							{
+								if (organizationBuilder.length() > 0) organizationBuilder.append(' ');
+								organizationBuilder.append(namePart.getContent().toString());
+							}
+							if (organizationBuilder.length() > 0) authorBuilder.append(" (")
+									.append(organizationBuilder).append(')');
+						}
+					}
+					authorNames.add(authorBuilder.toString());
+				}
+			}
+		}
+		return authorNames;
 	}
 
 	private FeedType getFeed(String uri) throws JAXBException, IOException

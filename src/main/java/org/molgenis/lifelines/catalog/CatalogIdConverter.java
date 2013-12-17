@@ -10,7 +10,7 @@ package org.molgenis.lifelines.catalog;
 public class CatalogIdConverter
 {
 	private static final String PREFIX_CATALOG = "catalog_";
-	private static final String PREFIX_STUDYDEFINITION = "studydefinition_";
+	private static final String PREFIX_STUDYDEFINITION = PREFIX_CATALOG + "studydefinition_";
 
 	public static String catalogIdToOmxIdentifier(String id)
 	{
