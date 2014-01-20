@@ -14,7 +14,6 @@ import org.molgenis.omx.auth.GroupAuthority;
 import org.molgenis.omx.auth.MolgenisGroup;
 import org.molgenis.omx.auth.MolgenisGroupMember;
 import org.molgenis.omx.auth.MolgenisUser;
-import org.molgenis.omx.auth.UserAuthority;
 import org.molgenis.omx.core.RuntimeProperty;
 import org.molgenis.omx.protocolviewer.ProtocolViewerController;
 import org.molgenis.search.SearchSecurityHandlerInterceptor;
@@ -104,11 +103,6 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		userAdmin.setActive(true);
 		userAdmin.setSuperuser(true);
 		dataService.add(MolgenisUser.ENTITY_NAME, userAdmin);
-
-		UserAuthority suAuthority = new UserAuthority();
-		suAuthority.setMolgenisUser(userAdmin);
-		suAuthority.setRole("ROLE_SU");
-		dataService.add(UserAuthority.ENTITY_NAME, suAuthority);
 
 		MolgenisUser userUser = new MolgenisUser();
 		userUser.setUsername(USERNAME_USER);
