@@ -149,7 +149,7 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 								+ "<div class=\"row-fluid\">"
 								+ "<div class=\"span6\">"
 								+ "<h3>Welcome at the LifeLines Data Catalogue!</h3>"
-								+ "<p>The LifeLines Data Catalogue provides an overview of all the data collected in LifeLines.</p>"
+								+ "<p>The LifeLines Data Catalogue provides an overview of all the data collected in LifeLines and is only available for researcher with a research proposal fitting within the theme of Healthy Ageing and which is approved by the Scientific Board.</p>"
 								+ "<p>When you click 'catalogue' you can browse all available data items from questionnaires,  measurements and (blood and urine) sample analysis. Also, you can make a selection of data  items that you will need for your research, and download the list.</p>"
 								+ "<p>If you want to save your selection and apply for LifeLines data, you need to  register first. You can register by clicking the 'login' button on top. After you  have registered, you will receive a confirmation email. Subsequently, you are able  to download your selection or submit the selection together with you proposal.</p>"
 								+ "<p>The catalogue will regularly be updated with new collected data items.  For questions regarding the catalogue or submission of your proposal, please contact the  LifeLines Research Office  <a href=\"mailto:LLscience@umcg.nl\">LLscience@umcg.nl</a></p>"
