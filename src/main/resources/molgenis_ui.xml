@@ -2,7 +2,7 @@
 <molgenis name="lifelines" label="LifeLines">
 	<menu label="Home" name="main">
 		<plugin id="home" name="Home" url="home"/>
-		<plugin id="protocolviewer" name="Catalog" url="protocolviewer"/>
+		<plugin id="protocolviewer" name="Catalogue" url="protocolviewer"/>
 		<plugin id="dataexplorer" name="Data Explorer" url="dataexplorer"/>
 		<plugin id="importwizard" name="Upload" url="importwizard"/>
 		<menu label="Admin" name="admin">
