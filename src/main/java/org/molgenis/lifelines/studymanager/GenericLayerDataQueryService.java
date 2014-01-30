@@ -8,20 +8,19 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
 
-import nl.umcg.hl7.service.studydefinition.POQMMT000001UVQualityMeasureDocument;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.log4j.Logger;
+import org.eclipse.persistence.exceptions.DatabaseException;
 import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
-import org.molgenis.framework.db.DatabaseException;
 import org.molgenis.hl7.ANY;
 import org.molgenis.hl7.BL;
 import org.molgenis.hl7.CD;
 import org.molgenis.hl7.INT;
+import org.molgenis.hl7.POQMMT000001UVQualityMeasureDocument;
 import org.molgenis.hl7.PQ;
 import org.molgenis.hl7.REAL;
 import org.molgenis.hl7.REPCMT000100UV01Component3;
@@ -130,7 +129,8 @@ public class GenericLayerDataQueryService
 			// convert REPCMT000400UV01ActCategory to OMX and put in database
 			String id = studyDefinition.getId().getExtension();
 			String omxId = CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id);
-			DataSet dataSet = dataService.findOne(DataSet.ENTITY_NAME, new QueryImpl().eq(DataSet.IDENTIFIER, omxId));
+			DataSet dataSet = dataService.findOne(DataSet.ENTITY_NAME, new QueryImpl().eq(DataSet.IDENTIFIER, omxId),
+					DataSet.class);
 
 			for (REPCMT000400UV01Component4 rootComponent : actCategory.getComponent())
 			{
@@ -154,7 +154,7 @@ public class GenericLayerDataQueryService
 					REPCMT000100UV01Observation observation = organizerComponent.getObservation().getValue();
 					String featureId = observation.getId().get(0).getRoot();
 					ObservableFeature observableFeature = dataService.findOne(ObservableFeature.ENTITY_NAME,
-							new QueryImpl().eq(ObservableFeature.IDENTIFIER, featureId));
+							new QueryImpl().eq(ObservableFeature.IDENTIFIER, featureId), ObservableFeature.class);
 					if (observableFeature == null) throw new RuntimeException(
 							"missing ObservableFeature with identifier " + featureId);
 
@@ -258,7 +258,7 @@ public class GenericLayerDataQueryService
 			CD value = (CD) anyValue;
 			String identifier = OmxIdentifierGenerator.from(Category.class, value.getCodeSystem(), value.getCode());
 			Category category = dataService.findOne(Category.ENTITY_NAME,
-					new QueryImpl().eq(Category.IDENTIFIER, identifier));
+					new QueryImpl().eq(Category.IDENTIFIER, identifier), Category.class);
 			if (category == null)
 			{
 				logger.error("missing category identifier: " + identifier);

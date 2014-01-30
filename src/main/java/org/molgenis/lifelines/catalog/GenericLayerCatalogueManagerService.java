@@ -6,28 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import nl.umcg.hl7.service.catalog.ANY;
-import nl.umcg.hl7.service.catalog.BL;
-import nl.umcg.hl7.service.catalog.CD;
-import nl.umcg.hl7.service.catalog.CO;
-import nl.umcg.hl7.service.catalog.CatalogService;
-import nl.umcg.hl7.service.catalog.GenericLayerCatalogService;
-import nl.umcg.hl7.service.catalog.GenericLayerCatalogServiceGetCatalogFAULTFaultMessage;
-import nl.umcg.hl7.service.catalog.GenericLayerCatalogServiceGetValueSetsFAULTFaultMessage;
-import nl.umcg.hl7.service.catalog.HL7Container;
-import nl.umcg.hl7.service.catalog.HumanLanguage;
-import nl.umcg.hl7.service.catalog.II;
-import nl.umcg.hl7.service.catalog.INT;
-import nl.umcg.hl7.service.catalog.PQ;
-import nl.umcg.hl7.service.catalog.REAL;
-import nl.umcg.hl7.service.catalog.REPCMT000100UV01Component3;
-import nl.umcg.hl7.service.catalog.REPCMT000100UV01Observation;
-import nl.umcg.hl7.service.catalog.REPCMT000100UV01Organizer;
-import nl.umcg.hl7.service.catalog.ST;
-import nl.umcg.hl7.service.catalog.TS;
-import nl.umcg.hl7.service.catalog.ValueSet;
-import nl.umcg.hl7.service.catalog.ValueSet.Code;
-import nl.umcg.hl7.service.catalog.ValueSets;
+import nl.umcg.hl7.CatalogService;
+import nl.umcg.hl7.GenericLayerCatalogService;
 
 import org.apache.log4j.Logger;
 import org.molgenis.catalog.Catalog;
@@ -36,6 +16,21 @@ import org.molgenis.catalog.UnknownCatalogException;
 import org.molgenis.catalogmanager.CatalogManagerService;
 import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
+import org.molgenis.hl7.ANY;
+import org.molgenis.hl7.BL;
+import org.molgenis.hl7.CD;
+import org.molgenis.hl7.CO;
+import org.molgenis.hl7.II;
+import org.molgenis.hl7.INT;
+import org.molgenis.hl7.PQ;
+import org.molgenis.hl7.REAL;
+import org.molgenis.hl7.REPCMT000100UV01Component3;
+import org.molgenis.hl7.REPCMT000100UV01Observation;
+import org.molgenis.hl7.REPCMT000100UV01Organizer;
+import org.molgenis.hl7.ST;
+import org.molgenis.hl7.TS;
+import org.molgenis.hl7.ValueSets;
+import org.molgenis.hl7.ValueSets.ValueSet;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
 import org.molgenis.omx.observ.Category;
 import org.molgenis.omx.observ.DataSet;
@@ -413,7 +408,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	private void deleteCatalog(String protocolIdentifier) throws UnknownCatalogException
 	{
 		Protocol protocol = dataService.findOne(Protocol.ENTITY_NAME,
-				new QueryImpl().eq(DataSet.IDENTIFIER, protocolIdentifier));
+				new QueryImpl().eq(DataSet.IDENTIFIER, protocolIdentifier), Protocol.class);
 		if (protocol == null)
 		{
 			throw new UnknownCatalogException("unknown catalog identifier [" + protocolIdentifier + "]");
