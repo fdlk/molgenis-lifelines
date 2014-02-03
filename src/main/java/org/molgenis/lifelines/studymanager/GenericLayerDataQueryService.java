@@ -13,7 +13,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.log4j.Logger;
-import org.eclipse.persistence.exceptions.DatabaseException;
 import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.hl7.ANY;
@@ -172,11 +171,6 @@ public class GenericLayerDataQueryService
 				dataService.add(ObservationSet.ENTITY_NAME, observationSet);
 			}
 		}
-		catch (DatabaseException e)
-		{
-			logger.error(e);
-			throw new RuntimeException(e);
-		}
 		catch (IOException e)
 		{
 			logger.error(e);
@@ -200,7 +194,7 @@ public class GenericLayerDataQueryService
 		return dataService.count(DataSet.IDENTIFIER, new QueryImpl().eq(DataSet.IDENTIFIER, dataSetId)) == 1;
 	}
 
-	private org.molgenis.omx.observ.value.Value toValue(ANY anyValue) throws DatabaseException
+	private org.molgenis.omx.observ.value.Value toValue(ANY anyValue)
 	{
 		if (anyValue instanceof INT)
 		{
