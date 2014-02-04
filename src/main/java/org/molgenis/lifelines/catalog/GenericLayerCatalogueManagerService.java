@@ -413,7 +413,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	private void deleteCatalog(String protocolIdentifier) throws UnknownCatalogException
 	{
 		Protocol protocol = dataService.findOne(Protocol.ENTITY_NAME,
-				new QueryImpl().eq(DataSet.IDENTIFIER, protocolIdentifier));
+				new QueryImpl().eq(DataSet.IDENTIFIER, protocolIdentifier), Protocol.class);
 		if (protocol == null)
 		{
 			throw new UnknownCatalogException("unknown catalog identifier [" + protocolIdentifier + "]");
