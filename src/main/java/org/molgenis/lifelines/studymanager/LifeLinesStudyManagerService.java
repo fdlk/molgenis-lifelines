@@ -108,7 +108,7 @@ public class LifeLinesStudyManagerService implements StudyManagerService
 	{
 		String omxIdentifier = StudyDefinitionIdConverter.studyDefinitionIdToOmxIdentifier(id);
 		StudyDataRequest studyDataRequest = dataService.findOne(StudyDataRequest.ENTITY_NAME,
-				new QueryImpl().eq(StudyDataRequest.IDENTIFIER, omxIdentifier));
+				new QueryImpl().eq(StudyDataRequest.IDENTIFIER, omxIdentifier), StudyDataRequest.class);
 		if (studyDataRequest == null)
 		{
 			throw new UnknownStudyDefinitionException("Study definition [" + id + "] does not exist");
