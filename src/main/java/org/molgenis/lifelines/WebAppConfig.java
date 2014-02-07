@@ -17,7 +17,6 @@ import org.apache.http.params.HttpParams;
 import org.molgenis.DatabaseConfig;
 import org.molgenis.catalogmanager.CatalogManagerService;
 import org.molgenis.data.DataService;
-import org.molgenis.data.jpa.JpaEntitySourceRegistrator;
 import org.molgenis.elasticsearch.config.EmbeddedElasticSearchConfig;
 import org.molgenis.lifelines.catalog.GenericLayerCatalogueManagerService;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
@@ -37,7 +36,6 @@ import org.molgenis.util.SchemaLoader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -59,12 +57,6 @@ public class WebAppConfig extends MolgenisWebAppConfig
 
 	@Autowired
 	private MolgenisUserService molgenisUserService;
-
-	@Bean
-	public ApplicationListener<?> jpaEntitySourceRegistrator()
-	{
-		return new JpaEntitySourceRegistrator(dataService);
-	}
 
 	@Bean
 	public HttpClient httpClient()
