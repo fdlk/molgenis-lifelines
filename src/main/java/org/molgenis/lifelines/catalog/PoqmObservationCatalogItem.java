@@ -43,4 +43,10 @@ public class PoqmObservationCatalogItem implements CatalogItem
 	{
 		return observation.getCode().getCodeSystem();
 	}
+
+	@Override
+	public Iterable<String> getPath()
+	{
+		throw new UnsupportedOperationException();
+	}
 }

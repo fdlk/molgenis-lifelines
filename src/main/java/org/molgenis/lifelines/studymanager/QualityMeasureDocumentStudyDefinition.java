@@ -120,7 +120,7 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 	}
 
 	@Override
-	public void setItems(List<CatalogItem> items)
+	public void setItems(Iterable<CatalogItem> items)
 	{
 		List<POQMMT000001UVComponent2> components = qualityMeasureDocument.getComponent();
 		POQMMT000001UVComponent2 component;
