@@ -4,6 +4,7 @@ import java.util.List;
 
 import nl.umcg.hl7.service.catalog.CD;
 import nl.umcg.hl7.service.catalog.REPCMT000100UV01Observation;
+
 import org.molgenis.catalog.CatalogItem;
 
 public class RepcObservationCatalogItem implements CatalogItem
@@ -55,5 +56,11 @@ public class RepcObservationCatalogItem implements CatalogItem
 	public String getCodeSystem()
 	{
 		return observation.getCode().getCodeSystem();
+	}
+
+	@Override
+	public Iterable<String> getPath()
+	{
+		throw new UnsupportedOperationException();
 	}
 }
