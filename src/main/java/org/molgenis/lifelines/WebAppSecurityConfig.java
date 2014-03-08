@@ -1,7 +1,7 @@
 package org.molgenis.lifelines;
 
-import static org.molgenis.security.SecurityUtils.defaultPluginAuthorities;
-import static org.molgenis.security.SecurityUtils.getPluginReadAuthority;
+import static org.molgenis.security.core.utils.SecurityUtils.defaultPluginAuthorities;
+import static org.molgenis.security.core.utils.SecurityUtils.getPluginReadAuthority;
 
 import java.util.List;
 
