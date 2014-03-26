@@ -14,6 +14,7 @@ import org.molgenis.omx.auth.GroupAuthority;
 import org.molgenis.omx.auth.MolgenisGroup;
 import org.molgenis.omx.auth.MolgenisGroupMember;
 import org.molgenis.omx.auth.MolgenisUser;
+import org.molgenis.omx.auth.UserAuthority;
 import org.molgenis.omx.core.RuntimeProperty;
 import org.molgenis.omx.protocolviewer.ProtocolViewerController;
 import org.molgenis.search.SearchSecurityHandlerInterceptor;
@@ -127,6 +128,11 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		anonymousUser.setFirstName(SecurityUtils.ANONYMOUS_USERNAME);
 		anonymousUser.setLastName(SecurityUtils.ANONYMOUS_USERNAME);
 		dataService.add(MolgenisUser.ENTITY_NAME, anonymousUser);
+
+		UserAuthority anonymousAuthority = new UserAuthority();
+		anonymousAuthority.setMolgenisUser(anonymousUser);
+		anonymousAuthority.setRole(SecurityUtils.AUTHORITY_ANONYMOUS);
+		dataService.add(UserAuthority.ENTITY_NAME, anonymousUser);
 
 		MolgenisGroup allUsersGroup = new MolgenisGroup();
 		allUsersGroup.setName(AccountService.ALL_USER_GROUP);
