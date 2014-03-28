@@ -14,6 +14,7 @@ import org.molgenis.omx.auth.GroupAuthority;
 import org.molgenis.omx.auth.MolgenisGroup;
 import org.molgenis.omx.auth.MolgenisGroupMember;
 import org.molgenis.omx.auth.MolgenisUser;
+import org.molgenis.omx.auth.UserAuthority;
 import org.molgenis.omx.core.RuntimeProperty;
 import org.molgenis.omx.protocolviewer.ProtocolViewerController;
 import org.molgenis.search.SearchSecurityHandlerInterceptor;
@@ -42,6 +43,8 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 	private String adminPassword;
 	@Value("${admin.email:molgenis+admin@gmail.com}")
 	private String adminEmail;
+	@Value("${anonymous.email:molgenis+anonymous@gmail.com}")
+	private String anonymousEmail;
 	@Value("${user.password:@null}")
 	private String userPassword;
 	@Value("${user.email:molgenis+user@gmail.com}")
@@ -113,6 +116,23 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		userUser.setActive(true);
 		userUser.setSuperuser(false);
 		dataService.add(MolgenisUser.ENTITY_NAME, userUser);
+
+		MolgenisUser anonymousUser = new MolgenisUser();
+		anonymousUser.setUsername(SecurityUtils.ANONYMOUS_USERNAME);
+		anonymousUser.setPassword(new BCryptPasswordEncoder().encode(SecurityUtils.ANONYMOUS_USERNAME));
+		anonymousUser.setEmail(anonymousEmail);
+		anonymousUser.setFirstName(firstName);
+		anonymousUser.setLastName(lastName);
+		anonymousUser.setActive(true);
+		anonymousUser.setSuperuser(false);
+		anonymousUser.setFirstName(SecurityUtils.ANONYMOUS_USERNAME);
+		anonymousUser.setLastName(SecurityUtils.ANONYMOUS_USERNAME);
+		dataService.add(MolgenisUser.ENTITY_NAME, anonymousUser);
+
+		UserAuthority anonymousAuthority = new UserAuthority();
+		anonymousAuthority.setMolgenisUser(anonymousUser);
+		anonymousAuthority.setRole(SecurityUtils.AUTHORITY_ANONYMOUS);
+		dataService.add(UserAuthority.ENTITY_NAME, anonymousUser);
 
 		MolgenisGroup allUsersGroup = new MolgenisGroup();
 		allUsersGroup.setName(AccountService.ALL_USER_GROUP);
