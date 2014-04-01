@@ -9,6 +9,7 @@ import org.molgenis.lifelines.LifeLinesAppProfile;
 import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.omx.studymanager.OmxStudyManagerService;
 import org.molgenis.study.StudyDefinition;
+import org.molgenis.study.StudyDefinition.Status;
 import org.molgenis.study.UnknownStudyDefinitionException;
 import org.molgenis.studymanager.StudyManagerService;
 
@@ -37,6 +38,12 @@ public class LifeLinesStudyManagerService implements StudyManagerService
 	public List<StudyDefinition> getStudyDefinitions()
 	{
 		return genericLayerStudyManagerService.getStudyDefinitions();
+	}
+
+	@Override
+	public List<StudyDefinition> getStudyDefinitions(Status status)
+	{
+		return genericLayerStudyManagerService.getStudyDefinitions(status);
 	}
 
 	@Override
