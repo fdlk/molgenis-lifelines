@@ -192,7 +192,7 @@ public class GenericLayerDataQueryService
 	public boolean isStudyDataLoaded(String id)
 	{
 		String dataSetId = CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id);
-		return dataService.count(DataSet.IDENTIFIER, new QueryImpl().eq(DataSet.IDENTIFIER, dataSetId)) == 1;
+		return dataService.count(DataSet.ENTITY_NAME, new QueryImpl().eq(DataSet.IDENTIFIER, dataSetId)) == 1;
 	}
 
 	private org.molgenis.omx.observ.value.Value toValue(ANY anyValue)
