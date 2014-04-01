@@ -86,7 +86,7 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 	@Override
 	public Date getDateCreated()
 	{
-		throw new UnsupportedOperationException("getDateCreated not implemented");
+		return null;
 	}
 
 	@Override
