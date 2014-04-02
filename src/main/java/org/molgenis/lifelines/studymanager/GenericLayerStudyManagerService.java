@@ -1,6 +1,7 @@
 package org.molgenis.lifelines.studymanager;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import nl.umcg.hl7.service.studydefinition.ActClass;
@@ -124,12 +125,59 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 	}
 
 	@Override
+	public List<StudyDefinition> getStudyDefinitions(Status status)
+	{
+		ArrayOfXElement hl7Containers;
+		switch (status)
+		{
+			case APPROVED:
+				try
+				{
+					hl7Containers = studyDefinitionService.getApproved().getHL7Containers();
+				}
+				catch (GenericLayerStudyDefinitionServiceGetApprovedFAULTFaultMessage e)
+				{
+					logger.error(e.getMessage());
+					throw new RuntimeException(e);
+				}
+				break;
+			case DRAFT:
+				try
+				{
+					hl7Containers = studyDefinitionService.getDraft().getHL7Containers();
+				}
+				catch (GenericLayerStudyDefinitionServiceGetDraftFAULTFaultMessage e)
+				{
+					logger.error(e.getMessage());
+					throw new RuntimeException(e);
+				}
+				break;
+			case REJECTED:
+				// Study manager service does not support state REJECTED
+				return Collections.emptyList();
+			case SUBMITTED:
+				try
+				{
+					hl7Containers = studyDefinitionService.getSubmitted().getHL7Containers();
+				}
+				catch (GenericLayerStudyDefinitionServiceGetSubmittedFAULTFaultMessage e)
+				{
+					logger.error(e.getMessage());
+					throw new RuntimeException(e);
+				}
+				break;
+			default:
+				throw new RuntimeException("Unknown status: " + status);
+		}
+		return toStudyDefinitionList(hl7Containers);
+	}
+
+	@Override
 	public List<StudyDefinition> getStudyDefinitions(String username, StudyDefinition.Status status)
 	{
 		MolgenisUser user = userService.getUser(username);
 		if (user == null) throw new RuntimeException("Unknown user [" + username + "]");
 
-		List<StudyDefinition> studyDefinitions = new ArrayList<StudyDefinition>();
 		ArrayOfXElement elements;
 		try
 		{
@@ -140,6 +188,12 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			logger.error(e.getMessage());
 			throw new RuntimeException(e);
 		}
+		return toStudyDefinitionList(elements);
+	}
+
+	private List<StudyDefinition> toStudyDefinitionList(ArrayOfXElement elements)
+	{
+		List<StudyDefinition> studyDefinitions = new ArrayList<StudyDefinition>();
 		if (elements != null)
 		{
 			List<HL7Container> hl7Containers = elements.getHL7Container();
