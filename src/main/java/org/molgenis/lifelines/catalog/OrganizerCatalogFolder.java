@@ -34,8 +34,9 @@ public class OrganizerCatalogFolder implements CatalogFolder
 	public String getName()
 	{
 		CD code = organizer.getCode();
-		if (code.getCode() != null) return code.getCode();
-		else return code.getDisplayName();
+		if (null != code.getDisplayName()) return code.getDisplayName();
+		else if (null != code.getCode()) return code.getCode();
+		else return "null";
 	}
 
 	@Override
