@@ -1,7 +1,6 @@
 package org.molgenis.lifelines.catalog;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,8 +42,6 @@ import org.molgenis.omx.observ.DataSet;
 import org.molgenis.omx.observ.ObservableFeature;
 import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.observ.target.OntologyTerm;
-import org.molgenis.omx.search.AsyncDataSetsIndexer;
-import org.molgenis.omx.search.DataSetsIndexer;
 import org.molgenis.omx.utils.ProtocolUtils;
 import org.molgenis.study.UnknownStudyDefinitionException;
 import org.molgenis.util.ApplicationContextProvider;
