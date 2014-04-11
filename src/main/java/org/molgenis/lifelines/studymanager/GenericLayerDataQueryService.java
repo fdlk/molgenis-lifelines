@@ -15,6 +15,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.log4j.Logger;
+import org.molgenis.catalog.UnknownCatalogException;
 import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.hl7.ANY;
@@ -44,6 +45,7 @@ import org.molgenis.omx.observ.value.BoolValue;
 import org.molgenis.omx.observ.value.CategoricalValue;
 import org.molgenis.omx.observ.value.LongValue;
 import org.molgenis.omx.observ.value.StringValue;
+import org.molgenis.study.UnknownStudyDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -193,6 +195,18 @@ public class GenericLayerDataQueryService
 	{
 		String dataSetId = CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id);
 		return dataService.count(DataSet.ENTITY_NAME, new QueryImpl().eq(DataSet.IDENTIFIER, dataSetId)) == 1;
+	}
+
+	public boolean isStudyDataActivated(String id) throws UnknownStudyDefinitionException, UnknownCatalogException
+	{
+		String dataSetId = CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id);
+		DataSet dataset = (DataSet) dataService.findOne(DataSet.ENTITY_NAME, new QueryImpl().eq(DataSet.IDENTIFIER, dataSetId));
+		if (dataset == null) throw new UnknownStudyDefinitionException(
+				"StudyData [" + id + "] does not exist");
+
+		if (dataset.getProtocolUsed() == null) throw new UnknownCatalogException("StudyData [" + id
+				+ "] does not exist");
+		return dataset.getProtocolUsed().getActive();
 	}
 
 	private org.molgenis.omx.observ.value.Value toValue(ANY anyValue)

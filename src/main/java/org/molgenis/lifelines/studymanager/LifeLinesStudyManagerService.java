@@ -86,6 +86,12 @@ public class LifeLinesStudyManagerService implements StudyManagerService
 	}
 
 	@Override
+	public boolean isStudyDataActivated(String id) throws UnknownStudyDefinitionException, UnknownCatalogException
+	{
+		return genericLayerStudyManagerService.isStudyDataActivated(id);
+	}
+
+	@Override
 	public StudyDefinition createStudyDefinition(String username, String catalogId) throws UnknownCatalogException
 	{
 		StudyDefinition studyDefinition = genericLayerStudyManagerService.createStudyDefinition(username, catalogId);
