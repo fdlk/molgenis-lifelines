@@ -44,6 +44,8 @@ import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.observ.target.OntologyTerm;
 import org.molgenis.omx.utils.ProtocolUtils;
 import org.molgenis.study.UnknownStudyDefinitionException;
+import org.molgenis.util.ApplicationContextProvider;
+import org.molgenis.util.EntityImportedEvent;
 import org.springframework.transaction.annotation.Transactional;
 
 public class GenericLayerCatalogueManagerService implements CatalogManagerService
@@ -163,6 +165,9 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 		if (!subprotocols.isEmpty()) rootProtocol.setSubprotocols(subprotocols);
 
 		dataService.add(Protocol.ENTITY_NAME, rootProtocol);
+
+		ApplicationContextProvider.getApplicationContext().publishEvent(
+				new EntityImportedEvent(this, Protocol.ENTITY_NAME, rootProtocol.getId()));
 	}
 
 	private Map<String, List<Code>> createValueSetsIndex(String catalogReleaseId, String studyDefinitionId)
