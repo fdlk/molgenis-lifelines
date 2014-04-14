@@ -247,6 +247,12 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 	}
 
 	@Override
+	public boolean isStudyDataActivated(String id) throws UnknownStudyDefinitionException, UnknownCatalogException
+	{
+		return dataQueryService.isStudyDataActivated(id);
+	}
+
+	@Override
 	public StudyDefinition createStudyDefinition(String username, String catalogId)
 	{
 		MolgenisUser user = userService.getUser(username);

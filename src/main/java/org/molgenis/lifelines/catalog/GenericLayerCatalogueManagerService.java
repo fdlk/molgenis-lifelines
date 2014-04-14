@@ -472,4 +472,38 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 			throw new RuntimeException(e);
 		}
 	}
+
+	@Override
+	public boolean isCatalogActivated(String id) throws UnknownCatalogException
+	{
+		String protocolIdentifier = CatalogIdConverter.catalogIdToOmxIdentifier(id);
+		Protocol protocol = dataService.findOne(Protocol.ENTITY_NAME,
+				new QueryImpl().eq(DataSet.IDENTIFIER, protocolIdentifier), Protocol.class);
+		return protocol != null && protocol.getActive();
+	}
+
+	private void updateCatalogActivation(String id, boolean activate) throws UnknownCatalogException
+	{
+		String protocolIdentifier = CatalogIdConverter.catalogIdToOmxIdentifier(id);
+		Protocol protocol = dataService.findOne(Protocol.ENTITY_NAME,
+				new QueryImpl().eq(DataSet.IDENTIFIER, protocolIdentifier), Protocol.class);
+		if (protocol == null)
+		{
+			throw new UnknownCatalogException("unknown catalog identifier [" + protocolIdentifier + "]");
+		}
+		protocol.setActive(activate);
+		dataService.update(Protocol.ENTITY_NAME, protocol);
+	}
+
+	@Override
+	public void activateCatalog(String id) throws UnknownCatalogException
+	{
+		updateCatalogActivation(id, true);
+	}
+
+	@Override
+	public void deactivateCatalog(String id) throws UnknownCatalogException
+	{
+		updateCatalogActivation(id, false);
+	}
 }
