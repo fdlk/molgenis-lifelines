@@ -166,6 +166,8 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 
 		dataService.add(Protocol.ENTITY_NAME, rootProtocol);
 
+		dataService.getCrudRepository(Protocol.ENTITY_NAME).flush();
+		dataService.getCrudRepository(Protocol.ENTITY_NAME).clearCache();
 		ApplicationContextProvider.getApplicationContext().publishEvent(
 				new EntityImportedEvent(this, Protocol.ENTITY_NAME, rootProtocol.getId()));
 	}
