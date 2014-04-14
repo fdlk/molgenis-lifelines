@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.google.gson.Gson;
 import nl.umcg.hl7.service.catalog.ANY;
 import nl.umcg.hl7.service.catalog.BL;
 import nl.umcg.hl7.service.catalog.CD;
@@ -277,10 +278,23 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	private ObservableFeature parseDataSourceCatalogObservation(REPCMT000100UV01Observation observation,
 			Map<String, List<Code>> valueSetsIndex, String cohortId, String measurementId)
 	{
+		Gson gson = new Gson();
 		CD code = observation.getCode();
 		ObservableFeature observableFeature = new ObservableFeature();
 		observableFeature.setIdentifier(code.getCode() + '.' + cohortId + '.' + measurementId);
 		observableFeature.setName(code.getDisplayName());
+
+		Map<String, String> descriptions = new HashMap<String, String>();
+		// Content has always exactly one item
+		descriptions.put(code.getOriginalText().getLanguage(), code.getOriginalText().getContent().get(0).toString());
+		// get all the translations for the description
+		for (CD translation : code.getTranslation())
+		{
+			descriptions.put(translation.getOriginalText().getLanguage(), translation.getOriginalText().getContent()
+					.get(0).toString());
+		}
+
+		observableFeature.setDescription(gson.toJson(descriptions).toString());
 
 		String dataType;
 		ANY value = observation.getValue();
