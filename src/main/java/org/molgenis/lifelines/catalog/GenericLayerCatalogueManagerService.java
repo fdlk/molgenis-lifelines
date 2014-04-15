@@ -173,7 +173,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 
 		dataService.getCrudRepository(Protocol.ENTITY_NAME).flush();
 		dataService.getCrudRepository(Protocol.ENTITY_NAME).clearCache();
-		dataSetsIndexer.indexProtocolsSynced(Collections.singletonList(rootProtocol.getIdValue()));
+		dataSetsIndexer.indexProtocolsSynced(Collections.singletonList(rootProtocol.getId()));
 	}
 
 	private Map<String, List<Code>> createValueSetsIndex(String catalogReleaseId, String studyDefinitionId)
