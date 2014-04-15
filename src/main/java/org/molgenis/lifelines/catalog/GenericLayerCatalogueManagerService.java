@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
 import java.util.UUID;
 
 import com.google.gson.Gson;
@@ -43,6 +44,7 @@ import org.molgenis.omx.observ.DataSet;
 import org.molgenis.omx.observ.ObservableFeature;
 import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.observ.target.OntologyTerm;
+import org.molgenis.omx.search.DataSetsIndexer;
 import org.molgenis.omx.utils.ProtocolUtils;
 import org.molgenis.study.UnknownStudyDefinitionException;
 import org.molgenis.util.ApplicationContextProvider;
@@ -56,10 +58,11 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	private final DataService dataService;
 	private final GenericLayerCatalogService genericLayerCatalogService;
 	private final GenericLayerResourceManagerService resourceManagerService;
+	private final DataSetsIndexer dataSetsIndexer;
 
 	public GenericLayerCatalogueManagerService(DataService dataService,
 			GenericLayerCatalogService genericLayerCatalogService,
-			GenericLayerResourceManagerService resourceManagerService)
+			GenericLayerResourceManagerService resourceManagerService, DataSetsIndexer dataSetsIndexer)
 	{
 		if (dataService == null) throw new IllegalArgumentException("dataService is null");
 		if (genericLayerCatalogService == null) throw new IllegalArgumentException("genericLayerCatalogService is null");
@@ -67,6 +70,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 		this.dataService = dataService;
 		this.genericLayerCatalogService = new CatalogService().getBasicHttpBindingGenericLayerCatalogService();
 		this.resourceManagerService = resourceManagerService;
+		this.dataSetsIndexer = dataSetsIndexer;
 	}
 
 	@Override
@@ -169,8 +173,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 
 		dataService.getCrudRepository(Protocol.ENTITY_NAME).flush();
 		dataService.getCrudRepository(Protocol.ENTITY_NAME).clearCache();
-		ApplicationContextProvider.getApplicationContext().publishEvent(
-				new EntityImportedEvent(this, Protocol.ENTITY_NAME, rootProtocol.getId()));
+		dataSetsIndexer.indexProtocolsSynced(Collections.singletonList(rootProtocol.getIdValue()));
 	}
 
 	private Map<String, List<Code>> createValueSetsIndex(String catalogReleaseId, String studyDefinitionId)
