@@ -120,7 +120,7 @@ public class WebAppConfig extends MolgenisWebAppConfig
 
 		GenericLayerStudyManagerService genericLayerStudyManagerService = new GenericLayerStudyManagerService(
 				genericLayerStudyDefinitionService, catalogManagerService(), genericLayerDataQueryService,
-				molgenisUserService);
+				molgenisUserService, dataService);
 		if (appProfile == null || LifeLinesAppProfile.valueOf(appProfile.toUpperCase()) == LifeLinesAppProfile.WEBSITE)
 		{
 			return new LifeLinesStudyManagerService(genericLayerStudyManagerService, new OmxStudyManagerService(
