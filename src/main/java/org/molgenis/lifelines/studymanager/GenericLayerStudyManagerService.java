@@ -10,7 +10,6 @@ import nl.umcg.hl7.service.studydefinition.ArrayOfXElement;
 import nl.umcg.hl7.service.studydefinition.CD;
 import nl.umcg.hl7.service.studydefinition.ED;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionService;
-import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceCreateFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetApprovedFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetByEmailFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetDraftFAULTFaultMessage;
@@ -38,7 +37,12 @@ import org.apache.log4j.Logger;
 import org.molgenis.catalog.CatalogItem;
 import org.molgenis.catalog.UnknownCatalogException;
 import org.molgenis.catalogmanager.CatalogManagerService;
+import org.molgenis.data.DataService;
+import org.molgenis.data.Query;
+import org.molgenis.data.support.QueryImpl;
 import org.molgenis.omx.auth.MolgenisUser;
+import org.molgenis.omx.observ.ObservableFeature;
+import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.omx.utils.I18nTools;
 import org.molgenis.security.user.MolgenisUserService;
 import org.molgenis.study.StudyDefinition;
@@ -54,10 +58,11 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 	private final CatalogManagerService catalogLoaderService;
 	private final GenericLayerDataQueryService dataQueryService;
 	private final MolgenisUserService userService;
+	private final DataService dataService;
 
 	public GenericLayerStudyManagerService(GenericLayerStudyDefinitionService studyDefinitionService,
 			CatalogManagerService catalogLoaderService, GenericLayerDataQueryService dataQueryService,
-			MolgenisUserService userService)
+			MolgenisUserService userService, DataService dataService)
 	{
 		if (studyDefinitionService == null) throw new IllegalArgumentException("Study definition service is null");
 		if (catalogLoaderService == null) throw new IllegalArgumentException("Catalog manager service is null");
@@ -67,6 +72,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		this.catalogLoaderService = catalogLoaderService;
 		this.dataQueryService = dataQueryService;
 		this.userService = userService;
+		this.dataService = dataService;
 	}
 
 	/**
@@ -84,7 +90,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		{
 			throw new UnknownStudyDefinitionException("unknown submitted study definition id [" + id + "]");
 		}
-		return new QualityMeasureDocumentStudyDefinition(qualityMeasureDocument);
+		return new QualityMeasureDocumentStudyDefinition(qualityMeasureDocument, dataService);
 	}
 
 	/**
@@ -117,7 +123,8 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				{
 					POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = hl7Container
 							.getQualityMeasureDocument();
-					studyDefinitions.add(new QualityMeasureDocumentStudyDefinition(qualityMeasureDocument));
+					studyDefinitions
+							.add(new QualityMeasureDocumentStudyDefinition(qualityMeasureDocument, dataService));
 				}
 			}
 		}
@@ -203,7 +210,19 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				{
 					POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = hl7Container
 							.getQualityMeasureDocument();
-					studyDefinitions.add(new QualityMeasureDocumentStudyDefinition(qualityMeasureDocument));
+
+					String omxIdentifier = StudyDefinitionIdConverter
+							.studyDefinitionIdToOmxIdentifier(qualityMeasureDocument.getId().getExtension());
+					Query q = new QueryImpl().eq(StudyDataRequest.IDENTIFIER, omxIdentifier);
+					StudyDataRequest sdr = dataService.findOne(StudyDataRequest.ENTITY_NAME, q, StudyDataRequest.class);
+					if (sdr == null)
+					{
+						throw new RuntimeException("Unknow studydatarequest with idenfifier [" + omxIdentifier + "]");
+					}
+					qualityMeasureDocument.getId().setExtension(sdr.getId().toString());
+
+					studyDefinitions
+							.add(new QualityMeasureDocumentStudyDefinition(qualityMeasureDocument, dataService));
 				}
 			}
 		}
@@ -266,12 +285,13 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			if (hl7Container == null) throw new RuntimeException("HL7Container is null");
 			qualityMeasureDocument = hl7Container.getQualityMeasureDocument();
 		}
-		catch (GenericLayerStudyDefinitionServiceCreateFAULTFaultMessage e)
+		catch (Throwable t)
 		{
-			logger.error(e.getMessage());
-			throw new RuntimeException(e);
+			t.printStackTrace();
+			logger.error(t.getMessage());
+			throw new RuntimeException(t);
 		}
-		return new QualityMeasureDocumentStudyDefinition(qualityMeasureDocument);
+		return new QualityMeasureDocumentStudyDefinition(qualityMeasureDocument, dataService);
 	}
 
 	@Override
@@ -365,8 +385,14 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			String observationCodeCodesystem = item.getCodeSystem();
 			if (observationCodeCode == null || observationCodeCodesystem == null)
 			{
-				// TODO remove once catalogues are always loaded from LL GL
-				observationCodeCode = item.getId();
+				ObservableFeature of = dataService.findOne(ObservableFeature.ENTITY_NAME,
+						Integer.valueOf(item.getId()), ObservableFeature.class);
+				if (of == null)
+				{
+					throw new RuntimeException("Unknown Observablefeature with id [" + item.getId() + "]");
+				}
+
+				observationCodeCode = of.getIdentifier();
 				observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.4";
 			}
 			CD observationCode = new CD();
@@ -452,6 +478,6 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				}
 			}
 		}
-		throw new UnknownStudyDefinitionException("unknown submitted study definition id [" + id + "]");
+		throw new UnknownStudyDefinitionException("unknown [" + status + "] study definition id [" + id + "]");
 	}
 }

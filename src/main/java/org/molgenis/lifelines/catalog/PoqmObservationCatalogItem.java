@@ -2,22 +2,18 @@ package org.molgenis.lifelines.catalog;
 
 import nl.umcg.hl7.service.studydefinition.POQMMT000002UVObservation;
 
-import org.molgenis.catalog.CatalogItem;
+import org.molgenis.omx.catalogmanager.OmxCatalogItem;
+import org.molgenis.omx.observ.ObservableFeature;
 
-public class PoqmObservationCatalogItem implements CatalogItem
+public class PoqmObservationCatalogItem extends OmxCatalogItem
 {
 	private final POQMMT000002UVObservation observation;
 
-	public PoqmObservationCatalogItem(POQMMT000002UVObservation observation)
+	public PoqmObservationCatalogItem(POQMMT000002UVObservation observation, ObservableFeature observableFeature)
 	{
+		super(observableFeature);
 		if (observation == null) throw new IllegalArgumentException("observation is null");
 		this.observation = observation;
-	}
-
-	@Override
-	public String getId()
-	{
-		return getCode();
 	}
 
 	@Override
@@ -44,9 +40,4 @@ public class PoqmObservationCatalogItem implements CatalogItem
 		return observation.getCode().getCodeSystem();
 	}
 
-	@Override
-	public Iterable<String> getPath()
-	{
-		throw new UnsupportedOperationException();
-	}
 }
