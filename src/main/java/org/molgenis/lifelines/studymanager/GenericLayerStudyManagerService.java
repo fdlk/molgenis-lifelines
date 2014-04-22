@@ -76,7 +76,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 	}
 
 	/**
-	 * Find the SUBMITTED study definition with the given id
+	 * Find the study definition with the given id
 	 * 
 	 * @return
 	 * @throws UnknownStudyDefinitionException
@@ -84,12 +84,17 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 	@Override
 	public StudyDefinition getStudyDefinition(String id) throws UnknownStudyDefinitionException
 	{
-		POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = getStudyDefinitionAsQualityMeasureDocument(id,
-				Status.SUBMITTED);
-		if (qualityMeasureDocument == null)
+		StudyDataRequest sdr = dataService.findOne(StudyDataRequest.ENTITY_NAME, Integer.valueOf(id),
+				StudyDataRequest.class);
+		if (sdr == null)
 		{
-			throw new UnknownStudyDefinitionException("unknown submitted study definition id [" + id + "]");
+			throw new UnknownStudyDefinitionException("Unknown StudyDataRequest with id [" + id + "]");
 		}
+
+		POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = getStudyDefinitionAsQualityMeasureDocument(
+				StudyDefinitionIdConverter.omxIdentifierToStudyDefinitionId(sdr.getIdentifier()),
+				Status.valueOf(sdr.getRequestStatus().toUpperCase()));
+
 		return new QualityMeasureDocumentStudyDefinition(qualityMeasureDocument, dataService);
 	}
 
@@ -297,6 +302,16 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 	@Override
 	public void updateStudyDefinition(StudyDefinition studyDefinition) throws UnknownStudyDefinitionException
 	{
+		// Hack, but we need to finish this!
+		// Check if it is a omx id -> convert to ll id
+		StudyDataRequest sdr = dataService.findOne(StudyDataRequest.ENTITY_NAME,
+				Integer.valueOf(studyDefinition.getId()), StudyDataRequest.class);
+		if (sdr != null)
+		{
+			String llId = StudyDefinitionIdConverter.omxIdentifierToStudyDefinitionId(sdr.getIdentifier());
+			studyDefinition.setId(llId);
+		}
+
 		POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = getStudyDefinitionAsQualityMeasureDocument(
 				studyDefinition.getId(), studyDefinition.getStatus());
 
@@ -478,6 +493,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				}
 			}
 		}
+
 		throw new UnknownStudyDefinitionException("unknown [" + status + "] study definition id [" + id + "]");
 	}
 }

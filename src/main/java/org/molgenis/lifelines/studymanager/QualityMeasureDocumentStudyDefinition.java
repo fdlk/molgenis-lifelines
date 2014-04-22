@@ -263,7 +263,7 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 	@Override
 	public String getAuthorEmail()
 	{
-		return null;
+		return qualityMeasureDocument.getAuthor().iterator().next().getAssignedPerson().getTelecom().get(0).getValue();
 	}
 
 	@Override
