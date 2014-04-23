@@ -47,9 +47,9 @@ public class LifeLinesStudyManagerService implements StudyManagerService
 	}
 
 	@Override
-	public List<StudyDefinition> getStudyDefinitions(String username, StudyDefinition.Status status)
+	public List<StudyDefinition> getStudyDefinitions(String username)
 	{
-		return genericLayerStudyManagerService.getStudyDefinitions(username, status);
+		return genericLayerStudyManagerService.getStudyDefinitions(username);
 	}
 
 	@Override
