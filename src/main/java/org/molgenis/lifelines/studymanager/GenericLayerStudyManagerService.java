@@ -185,7 +185,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 	}
 
 	@Override
-	public List<StudyDefinition> getStudyDefinitions(String username, StudyDefinition.Status status)
+	public List<StudyDefinition> getStudyDefinitions(String username)
 	{
 		MolgenisUser user = userService.getUser(username);
 		if (user == null) throw new RuntimeException("Unknown user [" + username + "]");
@@ -225,7 +225,6 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 						throw new RuntimeException("Unknow studydatarequest with idenfifier [" + omxIdentifier + "]");
 					}
 					qualityMeasureDocument.getId().setExtension(sdr.getId().toString());
-
 					studyDefinitions
 							.add(new QualityMeasureDocumentStudyDefinition(qualityMeasureDocument, dataService));
 				}
