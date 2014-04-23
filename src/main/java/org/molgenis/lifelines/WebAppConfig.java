@@ -27,6 +27,7 @@ import org.molgenis.lifelines.utils.GenericLayerDataBinder;
 import org.molgenis.omx.OmxConfig;
 import org.molgenis.omx.catalogmanager.OmxCatalogManagerService;
 import org.molgenis.omx.config.DataExplorerConfig;
+import org.molgenis.omx.search.DataSetsIndexer;
 import org.molgenis.omx.studymanager.OmxStudyManagerService;
 import org.molgenis.search.SearchSecurityConfig;
 import org.molgenis.security.user.MolgenisUserService;
@@ -57,6 +58,9 @@ public class WebAppConfig extends MolgenisWebAppConfig
 
 	@Autowired
 	private MolgenisUserService molgenisUserService;
+
+	@Autowired
+	private DataSetsIndexer dataSetsIndexer;
 
 	@Bean
 	public HttpClient httpClient()
@@ -105,7 +109,7 @@ public class WebAppConfig extends MolgenisWebAppConfig
 		GenericLayerCatalogService genericLayerCatalogService = new CatalogService()
 				.getBasicHttpBindingGenericLayerCatalogService();
 		return new GenericLayerCatalogueManagerService(dataService, genericLayerCatalogService,
-				genericLayerResourceManagerService());
+				genericLayerResourceManagerService(), dataSetsIndexer);
 	}
 
 	@Bean
@@ -116,7 +120,7 @@ public class WebAppConfig extends MolgenisWebAppConfig
 
 		GenericLayerStudyManagerService genericLayerStudyManagerService = new GenericLayerStudyManagerService(
 				genericLayerStudyDefinitionService, catalogManagerService(), genericLayerDataQueryService,
-				molgenisUserService);
+				molgenisUserService, dataService);
 		if (appProfile == null || LifeLinesAppProfile.valueOf(appProfile.toUpperCase()) == LifeLinesAppProfile.WEBSITE)
 		{
 			return new LifeLinesStudyManagerService(genericLayerStudyManagerService, new OmxStudyManagerService(

@@ -26,7 +26,10 @@ import nl.umcg.hl7.service.studydefinition.POQMMT000002UVObservation;
 import nl.umcg.hl7.service.studydefinition.ST;
 
 import org.molgenis.catalog.CatalogItem;
+import org.molgenis.data.DataService;
+import org.molgenis.data.support.QueryImpl;
 import org.molgenis.lifelines.catalog.PoqmObservationCatalogItem;
+import org.molgenis.omx.observ.ObservableFeature;
 import org.molgenis.omx.utils.I18nTools;
 import org.molgenis.study.StudyDefinition;
 
@@ -36,11 +39,14 @@ import com.google.common.collect.Lists;
 public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 {
 	private final POQMMT000001UVQualityMeasureDocument qualityMeasureDocument;
+	private final DataService dataService;
 
-	public QualityMeasureDocumentStudyDefinition(POQMMT000001UVQualityMeasureDocument qualityMeasureDocument)
+	public QualityMeasureDocumentStudyDefinition(POQMMT000001UVQualityMeasureDocument qualityMeasureDocument,
+			DataService dataService)
 	{
 		if (qualityMeasureDocument == null) throw new IllegalArgumentException("qualityMeasureDocument is null");
 		this.qualityMeasureDocument = qualityMeasureDocument;
+		this.dataService = dataService;
 	}
 
 	@Override
@@ -114,7 +120,16 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 			@Override
 			public CatalogItem apply(POQMMT000001UVEntry entry)
 			{
-				return new PoqmObservationCatalogItem(entry.getObservation());
+				ObservableFeature observableFeature = dataService.findOne(ObservableFeature.ENTITY_NAME,
+						new QueryImpl().eq(ObservableFeature.IDENTIFIER, entry.getObservation().getCode().getCode()),
+						ObservableFeature.class);
+
+				if (observableFeature == null)
+				{
+					throw new RuntimeException("Unknown ObservableFeature with identifier ["
+							+ entry.getObservation().getCode().getCode() + "]");
+				}
+				return new PoqmObservationCatalogItem(entry.getObservation(), observableFeature);
 			}
 		}));
 	}
@@ -170,8 +185,14 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 			String observationCodeCodesystem = item.getCodeSystem();
 			if (observationCodeCode == null || observationCodeCodesystem == null)
 			{
+				ObservableFeature of = dataService.findOne(ObservableFeature.ENTITY_NAME,
+						Integer.valueOf(item.getId()), ObservableFeature.class);
+				if (of == null)
+				{
+					throw new RuntimeException("Unknown Observablefeature with id [" + item.getId() + "]");
+				}
 				// TODO remove once catalogues are always loaded from LL GL
-				observationCodeCode = item.getId();
+				observationCodeCode = of.getIdentifier();
 				observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.4";
 			}
 			CD observationCode = new CD();
@@ -242,7 +263,7 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 	@Override
 	public String getAuthorEmail()
 	{
-		return null;
+		return qualityMeasureDocument.getAuthor().iterator().next().getAssignedPerson().getTelecom().get(0).getValue();
 	}
 
 	@Override

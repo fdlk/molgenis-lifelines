@@ -47,9 +47,9 @@ public class LifeLinesStudyManagerService implements StudyManagerService
 	}
 
 	@Override
-	public List<StudyDefinition> getStudyDefinitions(String username, StudyDefinition.Status status)
+	public List<StudyDefinition> getStudyDefinitions(String username)
 	{
-		return genericLayerStudyManagerService.getStudyDefinitions(username, status);
+		return genericLayerStudyManagerService.getStudyDefinitions(username);
 	}
 
 	@Override
@@ -113,8 +113,17 @@ public class LifeLinesStudyManagerService implements StudyManagerService
 	public void submitStudyDefinition(String id, String catalogId) throws UnknownStudyDefinitionException,
 			UnknownCatalogException
 	{
-		genericLayerStudyManagerService.submitStudyDefinition(id, catalogId);
-		omxStudyManagerService.submitStudyDefinition(studyDefinitionGenericLayerIdToOmxId(id), catalogId);
+		StudyDataRequest sdr = dataService.findOne(StudyDataRequest.ENTITY_NAME, Integer.valueOf(id),
+				StudyDataRequest.class);
+
+		if (sdr == null)
+		{
+			throw new UnknownStudyDefinitionException("Ubnknown StudyDataRequest with id [" + id + "]");
+		}
+
+		genericLayerStudyManagerService.submitStudyDefinition(
+				StudyDefinitionIdConverter.omxIdentifierToStudyDefinitionId(sdr.getIdentifier()), catalogId);
+		omxStudyManagerService.submitStudyDefinition(id, catalogId);
 	}
 
 	private String studyDefinitionGenericLayerIdToOmxId(String id) throws UnknownStudyDefinitionException
