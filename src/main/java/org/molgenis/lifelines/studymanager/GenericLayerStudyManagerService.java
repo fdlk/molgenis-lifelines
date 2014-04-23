@@ -421,9 +421,16 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			entry.setObservation(observation);
 			section.getEntry().add(entry);
 		}
-
+		List<POQMMT000001UVComponent2> components = qualityMeasureDocument.getComponent();
 		component.setSection(section);
-		qualityMeasureDocument.getComponent().add(component);
+		if (components.size() > 0)
+		{
+			components.set(0, component);
+		}
+		else
+		{
+			components.add(component);
+		}
 	}
 
 	private POQMMT000001UVQualityMeasureDocument getStudyDefinitionAsQualityMeasureDocument(String id, Status status)
