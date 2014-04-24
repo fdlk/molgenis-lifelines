@@ -30,6 +30,7 @@ import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.lifelines.catalog.PoqmObservationCatalogItem;
 import org.molgenis.omx.observ.ObservableFeature;
+import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.omx.utils.I18nTools;
 import org.molgenis.study.StudyDefinition;
 
@@ -269,7 +270,10 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 	@Override
 	public String getRequestProposalForm()
 	{
-		throw new UnsupportedOperationException("getRequestProposalForm not implemented");
+		String studyDataRequestId = StudyDefinitionIdConverter.studyDefinitionIdToOmxIdentifier(getId());
+		StudyDataRequest studyDataRequest = dataService.findOne(StudyDataRequest.ENTITY_NAME,
+				new QueryImpl().eq(StudyDataRequest.IDENTIFIER, studyDataRequestId), StudyDataRequest.class);
+		return studyDataRequest.getRequestForm();
 	}
 
 	@Override
