@@ -4,8 +4,6 @@ import javax.xml.validation.Schema;
 
 import nl.umcg.hl7.service.catalog.CatalogService;
 import nl.umcg.hl7.service.catalog.GenericLayerCatalogService;
-import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionService;
-import nl.umcg.hl7.service.studydefinition.StudyDefinitionService;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ClientConnectionManager;
@@ -21,8 +19,6 @@ import org.molgenis.elasticsearch.config.EmbeddedElasticSearchConfig;
 import org.molgenis.lifelines.catalog.GenericLayerCatalogueManagerService;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
 import org.molgenis.lifelines.studymanager.GenericLayerDataQueryService;
-import org.molgenis.lifelines.studymanager.GenericLayerStudyManagerService;
-import org.molgenis.lifelines.studymanager.LifeLinesStudyManagerService;
 import org.molgenis.lifelines.utils.GenericLayerDataBinder;
 import org.molgenis.omx.OmxConfig;
 import org.molgenis.omx.catalogmanager.OmxCatalogManagerService;
@@ -115,22 +111,7 @@ public class WebAppConfig extends MolgenisWebAppConfig
 	@Bean
 	public StudyManagerService studyDefinitionManagerService()
 	{
-		GenericLayerStudyDefinitionService genericLayerStudyDefinitionService = new StudyDefinitionService()
-				.getBasicHttpBindingGenericLayerStudyDefinitionService();
-
-		GenericLayerStudyManagerService genericLayerStudyManagerService = new GenericLayerStudyManagerService(
-				genericLayerStudyDefinitionService, catalogManagerService(), genericLayerDataQueryService,
-				molgenisUserService, dataService);
-		if (appProfile == null || LifeLinesAppProfile.valueOf(appProfile.toUpperCase()) == LifeLinesAppProfile.WEBSITE)
-		{
-			return new LifeLinesStudyManagerService(genericLayerStudyManagerService, new OmxStudyManagerService(
-					dataService, molgenisUserService), dataService, LifeLinesAppProfile.valueOf(appProfile
-					.toUpperCase()));
-		}
-		else
-		{
-			return genericLayerStudyManagerService;
-		}
+		return new OmxStudyManagerService(dataService, molgenisUserService);
 	}
 
 	@Bean

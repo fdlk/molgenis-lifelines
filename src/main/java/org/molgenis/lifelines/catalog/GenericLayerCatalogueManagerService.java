@@ -1,13 +1,12 @@
 package org.molgenis.lifelines.catalog;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Collections;
 import java.util.UUID;
 
-import com.google.gson.Gson;
 import nl.umcg.hl7.service.catalog.ANY;
 import nl.umcg.hl7.service.catalog.BL;
 import nl.umcg.hl7.service.catalog.CD;
@@ -39,17 +38,19 @@ import org.molgenis.catalogmanager.CatalogManagerService;
 import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
+import org.molgenis.omx.catalogmanager.OmxCatalog;
 import org.molgenis.omx.observ.Category;
 import org.molgenis.omx.observ.DataSet;
 import org.molgenis.omx.observ.ObservableFeature;
 import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.observ.target.OntologyTerm;
 import org.molgenis.omx.search.DataSetsIndexer;
+import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.omx.utils.ProtocolUtils;
 import org.molgenis.study.UnknownStudyDefinitionException;
-import org.molgenis.util.ApplicationContextProvider;
-import org.molgenis.util.EntityImportedEvent;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.google.gson.Gson;
 
 public class GenericLayerCatalogueManagerService implements CatalogManagerService
 {
@@ -88,10 +89,17 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	}
 
 	@Override
-	public Catalog getCatalogOfStudyDefinition(String id) throws UnknownCatalogException
+	public Catalog getCatalogOfStudyDefinition(String id) throws UnknownCatalogException,
+			UnknownStudyDefinitionException
 	{
-		REPCMT000100UV01Organizer catalog = retrieveCatalog(null, id, true);
-		return new OrganizerCatalog(catalog, null);
+		// use catalog of study data request in the molgenis db
+		StudyDataRequest studyDataRequest = dataService.findOne(StudyDataRequest.ENTITY_NAME,
+				new QueryImpl().eq(StudyDataRequest.ID, Integer.valueOf(id)), StudyDataRequest.class);
+		if (studyDataRequest == null) throw new UnknownStudyDefinitionException("Study definition [" + id
+				+ "] does not exist");
+		Protocol protocol = studyDataRequest.getProtocol();
+		if (protocol == null) throw new UnknownCatalogException("Catalog [" + id + "] does not exist");
+		return new OmxCatalog(protocol, dataService);
 	}
 
 	@Transactional
