@@ -121,7 +121,7 @@
 					<systemProperties>
 				      <systemProperty>
 				         <name>molgenis.home</name>
-				         <value>${user.home}/.molgenis/lifelines</value>
+				         <value>${user.home}${file.separator}.molgenis${file.separator}lifelines</value>
 				       </systemProperty>
 				    </systemProperties>
 				</configuration>
