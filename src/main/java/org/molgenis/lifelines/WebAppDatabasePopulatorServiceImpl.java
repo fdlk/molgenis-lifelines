@@ -105,7 +105,7 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		// FIXME create users and groups through service class
 		MolgenisUser userAdmin = new MolgenisUser();
 		userAdmin.setUsername(USERNAME_ADMIN);
-		userAdmin.setPassword(new BCryptPasswordEncoder().encode(adminPassword));
+		userAdmin.setPassword(adminPassword);
 		userAdmin.setEmail(adminEmail);
 		userAdmin.setFirstName(firstName);
 		userAdmin.setLastName(lastName);
@@ -115,7 +115,7 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 
 		MolgenisUser userUser = new MolgenisUser();
 		userUser.setUsername(USERNAME_USER);
-		userUser.setPassword(new BCryptPasswordEncoder().encode(userPassword));
+		userUser.setPassword(userPassword);
 		userUser.setEmail(userEmail);
 		userUser.setFirstName(firstName);
 		userUser.setLastName(lastName);
@@ -125,7 +125,7 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 
 		MolgenisUser anonymousUser = new MolgenisUser();
 		anonymousUser.setUsername(SecurityUtils.ANONYMOUS_USERNAME);
-		anonymousUser.setPassword(new BCryptPasswordEncoder().encode(SecurityUtils.ANONYMOUS_USERNAME));
+		anonymousUser.setPassword(SecurityUtils.ANONYMOUS_USERNAME);
 		anonymousUser.setEmail(anonymousEmail);
 		anonymousUser.setFirstName(firstName);
 		anonymousUser.setLastName(lastName);
