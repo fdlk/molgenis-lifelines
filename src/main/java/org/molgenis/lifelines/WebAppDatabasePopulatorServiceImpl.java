@@ -25,7 +25,6 @@ import org.molgenis.security.user.UserAccountController;
 import org.molgenis.studymanager.StudyManagerController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -213,7 +212,7 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		// FIXME create users and groups through service class
 		MolgenisUser datamanagerUser = new MolgenisUser();
 		datamanagerUser.setUsername(USERNAME_DATAMANAGER);
-		datamanagerUser.setPassword(new BCryptPasswordEncoder().encode(dataManagerPassword));
+		datamanagerUser.setPassword(dataManagerPassword);
 		datamanagerUser.setEmail(dataManagerEmail);
 		datamanagerUser.setFirstName(firstName);
 		datamanagerUser.setLastName(lastName);
@@ -268,7 +267,7 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		{
 			MolgenisUser researcherUser = new MolgenisUser();
 			researcherUser.setUsername(USERNAME_RESEARCHER);
-			researcherUser.setPassword(new BCryptPasswordEncoder().encode(researcherPassword));
+			researcherUser.setPassword(researcherPassword);
 			researcherUser.setEmail(researcherEmail);
 			researcherUser.setActive(true);
 			researcherUser.setFirstName(firstName);
