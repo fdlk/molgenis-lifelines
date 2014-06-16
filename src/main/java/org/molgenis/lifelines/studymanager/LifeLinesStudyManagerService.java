@@ -137,4 +137,10 @@ public class LifeLinesStudyManagerService implements StudyManagerService
 		}
 		return studyDataRequest.getId().toString();
 	}
+
+	@Override
+	public List<StudyDefinition> findStudyDefinitions(Status status, String search)
+	{
+		return omxStudyManagerService.findStudyDefinitions(status, search);
+	}
 }

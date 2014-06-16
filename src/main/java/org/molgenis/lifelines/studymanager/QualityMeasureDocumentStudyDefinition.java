@@ -290,4 +290,10 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 		}
 		return contains;
 	}
+
+	@Override
+	public void setRequestProposalForm(String fileName)
+	{
+		throw new UnsupportedOperationException();
+	}
 }
