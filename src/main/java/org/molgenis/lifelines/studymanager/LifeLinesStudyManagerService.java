@@ -143,4 +143,10 @@ public class LifeLinesStudyManagerService implements StudyManagerService
 	{
 		return omxStudyManagerService.findStudyDefinitions(status, search);
 	}
+
+	public void exportStudyDefinition(String id, String catalogId) throws UnknownStudyDefinitionException,
+			UnknownCatalogException
+	{
+		throw new UnsupportedOperationException("No export functionality available for OMX");
+	}
 }
