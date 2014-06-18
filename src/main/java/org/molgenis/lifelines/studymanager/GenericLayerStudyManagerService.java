@@ -502,4 +502,10 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 
 		throw new UnknownStudyDefinitionException("unknown [" + status + "] study definition id [" + id + "]");
 	}
+
+	@Override
+	public List<StudyDefinition> findStudyDefinitions(Status status, String search)
+	{
+		throw new UnsupportedOperationException();
+	}
 }
