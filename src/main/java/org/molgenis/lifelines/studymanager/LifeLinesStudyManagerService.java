@@ -137,4 +137,11 @@ public class LifeLinesStudyManagerService implements StudyManagerService
 		}
 		return studyDataRequest.getId().toString();
 	}
+
+	@Override
+	public void exportStudyDefinition(String id, String catalogId) throws UnknownStudyDefinitionException,
+			UnknownCatalogException
+	{
+		throw new UnsupportedOperationException("No export functionality available for OMX");
+	}
 }
