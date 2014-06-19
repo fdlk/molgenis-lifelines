@@ -8,8 +8,10 @@ import nl.umcg.hl7.service.studydefinition.ActClass;
 import nl.umcg.hl7.service.studydefinition.ActMood;
 import nl.umcg.hl7.service.studydefinition.ArrayOfXElement;
 import nl.umcg.hl7.service.studydefinition.CD;
+import nl.umcg.hl7.service.studydefinition.CreateResponse;
 import nl.umcg.hl7.service.studydefinition.ED;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionService;
+import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceApproveFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetApprovedFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetByEmailFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetDraftFAULTFaultMessage;
@@ -17,6 +19,7 @@ import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGet
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceReviseFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceSubmitFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GetApprovedResponse;
+import nl.umcg.hl7.service.studydefinition.GetByEmailResponse;
 import nl.umcg.hl7.service.studydefinition.GetDraftResponse;
 import nl.umcg.hl7.service.studydefinition.GetSubmittedResponse;
 import nl.umcg.hl7.service.studydefinition.HL7Container;
@@ -26,7 +29,6 @@ import nl.umcg.hl7.service.studydefinition.POQMMT000001UVEntry;
 import nl.umcg.hl7.service.studydefinition.POQMMT000001UVQualityMeasureDocument;
 import nl.umcg.hl7.service.studydefinition.POQMMT000001UVSection;
 import nl.umcg.hl7.service.studydefinition.POQMMT000002UVObservation;
-import nl.umcg.hl7.service.studydefinition.Revise;
 import nl.umcg.hl7.service.studydefinition.ST;
 import nl.umcg.hl7.service.studydefinition.StrucDocItem;
 import nl.umcg.hl7.service.studydefinition.StrucDocList;
@@ -37,6 +39,7 @@ import org.apache.log4j.Logger;
 import org.molgenis.catalog.CatalogItem;
 import org.molgenis.catalog.UnknownCatalogException;
 import org.molgenis.catalogmanager.CatalogManagerService;
+import org.molgenis.data.CrudRepository;
 import org.molgenis.data.DataService;
 import org.molgenis.data.Query;
 import org.molgenis.data.support.QueryImpl;
@@ -109,7 +112,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		GetSubmittedResponse submittedResponse;
 		try
 		{
-			submittedResponse = studyDefinitionService.getSubmitted();
+			submittedResponse = studyDefinitionService.getSubmitted(null);
 		}
 		catch (GenericLayerStudyDefinitionServiceGetSubmittedFAULTFaultMessage e)
 		{
@@ -145,7 +148,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			case APPROVED:
 				try
 				{
-					hl7Containers = studyDefinitionService.getApproved().getHL7Containers();
+					hl7Containers = studyDefinitionService.getApproved(null).getHL7Containers();
 				}
 				catch (GenericLayerStudyDefinitionServiceGetApprovedFAULTFaultMessage e)
 				{
@@ -156,7 +159,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			case DRAFT:
 				try
 				{
-					hl7Containers = studyDefinitionService.getDraft().getHL7Containers();
+					hl7Containers = studyDefinitionService.getDraft(null).getHL7Containers();
 				}
 				catch (GenericLayerStudyDefinitionServiceGetDraftFAULTFaultMessage e)
 				{
@@ -170,7 +173,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			case SUBMITTED:
 				try
 				{
-					hl7Containers = studyDefinitionService.getSubmitted().getHL7Containers();
+					hl7Containers = studyDefinitionService.getSubmitted(null).getHL7Containers();
 				}
 				catch (GenericLayerStudyDefinitionServiceGetSubmittedFAULTFaultMessage e)
 				{
@@ -190,17 +193,17 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		MolgenisUser user = userService.getUser(username);
 		if (user == null) throw new RuntimeException("Unknown user [" + username + "]");
 
-		ArrayOfXElement elements;
+		GetByEmailResponse emailResponse;
 		try
 		{
-			elements = studyDefinitionService.getByEmail(user.getEmail());
+			emailResponse = studyDefinitionService.getByEmail(user.getEmail());
 		}
 		catch (GenericLayerStudyDefinitionServiceGetByEmailFAULTFaultMessage e)
 		{
 			logger.error(e.getMessage());
 			throw new RuntimeException(e);
 		}
-		return toStudyDefinitionList(elements);
+		return toStudyDefinitionList(emailResponse.getHL7Containers());
 	}
 
 	private List<StudyDefinition> toStudyDefinitionList(ArrayOfXElement elements)
@@ -285,13 +288,12 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		POQMMT000001UVQualityMeasureDocument qualityMeasureDocument;
 		try
 		{
-			HL7Container hl7Container = studyDefinitionService.create(user.getEmail());
-			if (hl7Container == null) throw new RuntimeException("HL7Container is null");
-			qualityMeasureDocument = hl7Container.getQualityMeasureDocument();
+			CreateResponse createResponse = studyDefinitionService.create(user.getEmail());
+			if (createResponse == null) throw new RuntimeException("CreateResponse is null");
+			qualityMeasureDocument = createResponse.getHL7Container().getQualityMeasureDocument();
 		}
 		catch (Throwable t)
 		{
-			t.printStackTrace();
 			logger.error(t.getMessage());
 			throw new RuntimeException(t);
 		}
@@ -322,9 +324,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		{
 			HL7Container hl7Container = new HL7Container();
 			hl7Container.setQualityMeasureDocument(qualityMeasureDocument);
-			Revise revise = new Revise();
-			revise.setHL7Container(hl7Container);
-			studyDefinitionService.revise(revise);
+			studyDefinitionService.revise(hl7Container);
 		}
 		catch (GenericLayerStudyDefinitionServiceReviseFAULTFaultMessage e)
 		{
@@ -442,7 +442,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				GetApprovedResponse approvedResponse;
 				try
 				{
-					approvedResponse = studyDefinitionService.getApproved();
+					approvedResponse = studyDefinitionService.getApproved(null);
 				}
 				catch (GenericLayerStudyDefinitionServiceGetApprovedFAULTFaultMessage e)
 				{
@@ -455,7 +455,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				GetDraftResponse draftResponse;
 				try
 				{
-					draftResponse = studyDefinitionService.getDraft();
+					draftResponse = studyDefinitionService.getDraft(null);
 				}
 				catch (GenericLayerStudyDefinitionServiceGetDraftFAULTFaultMessage e)
 				{
@@ -470,7 +470,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				GetSubmittedResponse submittedResponse;
 				try
 				{
-					submittedResponse = studyDefinitionService.getSubmitted();
+					submittedResponse = studyDefinitionService.getSubmitted(null);
 				}
 				catch (GenericLayerStudyDefinitionServiceGetSubmittedFAULTFaultMessage e)
 				{
@@ -508,4 +508,165 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 	{
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public void exportStudyDefinition(String id, String catalogId) throws UnknownStudyDefinitionException,
+			UnknownCatalogException
+	{
+		CrudRepository repository = dataService.getCrudRepository(StudyDataRequest.ENTITY_NAME);
+		StudyDataRequest studyDataRequest = repository.findOne(id, StudyDataRequest.class);
+		if (studyDataRequest == null)
+		{
+			throw new UnknownStudyDefinitionException("StudyDataRequest does not exist [" + id + "]");
+		}
+		sendStudyDataRequestToGenericLayer(studyDataRequest);
+	}
+
+	private void sendStudyDataRequestToGenericLayer(StudyDataRequest studyDataRequest)
+	{
+		MolgenisUser molgenisUser = studyDataRequest.getMolgenisUser();
+
+		// create empty study definition
+		POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = createStudyDefinition(molgenisUser);
+		// update study definition
+		updateStudyDefinition(qualityMeasureDocument, studyDataRequest);
+
+		String studyDefinitionId = qualityMeasureDocument.getId().getExtension();
+
+		// submit study definition
+		sumbitStudyDefinition(studyDefinitionId);
+		// approve study definition
+		approveStudyDefinition(studyDefinitionId);
+	}
+
+	private POQMMT000001UVQualityMeasureDocument createStudyDefinition(MolgenisUser molgenisUser)
+	{
+		try
+		{
+			CreateResponse createResponse = studyDefinitionService.create(molgenisUser.getEmail());
+			if (createResponse == null) throw new RuntimeException("CreateResponse is null");
+			HL7Container hl7Container = createResponse.getHL7Container();
+			if (hl7Container == null) throw new RuntimeException("HL7Container is null");
+			return hl7Container.getQualityMeasureDocument();
+		}
+		catch (Throwable t)
+		{
+			logger.error("", t);
+			throw new RuntimeException(t);
+		}
+	}
+
+	private POQMMT000001UVQualityMeasureDocument updateStudyDefinition(
+			POQMMT000001UVQualityMeasureDocument qualityMeasureDocument, StudyDataRequest studyDataRequest)
+	{
+		MolgenisUser molgenisUser = studyDataRequest.getMolgenisUser();
+
+		ST title = new ST();
+		title.getContent().add(studyDataRequest.getName());
+		qualityMeasureDocument.setTitle(title);
+
+		StringBuilder textBuilder = new StringBuilder("Created by ").append(molgenisUser.getUsername()).append(" (")
+				.append(molgenisUser.getEmail()).append(')');
+
+		ED text = new ED();
+		text.getContent().add(textBuilder.toString());
+		qualityMeasureDocument.setText(text);
+
+		POQMMT000001UVComponent2 component = new POQMMT000001UVComponent2();
+		POQMMT000001UVSection section = new POQMMT000001UVSection();
+
+		CD sectionCode = new CD();
+		sectionCode.setCode("57025-9");
+		sectionCode.setCodeSystem("2.16.840.1.113883.6.1");
+		sectionCode.setDisplayName("Data Criteria section");
+		section.setCode(sectionCode);
+
+		ED sectionTitle = new ED();
+		sectionTitle.getContent().add("Data criteria");
+		section.setTitle(sectionTitle);
+
+		StrucDocText sectionText = new StrucDocText();
+		StrucDocList strucDocList = new StrucDocList();
+		for (ObservableFeature feature : studyDataRequest.getFeatures())
+		{
+			StrucDocItem strucDocItem = new StrucDocItem();
+			strucDocItem.getContent().add(feature.getIdentifier());
+			strucDocList.getItem().add(strucDocItem);
+		}
+		sectionText.getContent().add(new ObjectFactory().createStrucDocTextList(strucDocList));
+		section.setText(sectionText);
+
+		for (ObservableFeature feature : studyDataRequest.getFeatures())
+		{
+			POQMMT000001UVEntry entry = new POQMMT000001UVEntry();
+			entry.setTypeCode("DRIV");
+			POQMMT000002UVObservation observation = new POQMMT000002UVObservation();
+			observation.setClassCode(ActClass.OBS);
+			observation.setMoodCode(ActMood.CRT);
+
+			String observationCodeCode = feature.getIdentifier();
+			String observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.4";
+			CD observationCode = new CD();
+			observationCode.setDisplayName(feature.getName());
+			observationCode.setCode(observationCodeCode);
+			observationCode.setCodeSystem(observationCodeCodesystem);
+			ED observationOriginalText = new ED();
+			observationOriginalText.getContent().add(I18nTools.get(feature.getDescription()));
+			observationCode.setOriginalText(observationOriginalText);
+			observation.setCode(observationCode);
+			entry.setObservation(observation);
+			section.getEntry().add(entry);
+		}
+		List<POQMMT000001UVComponent2> components = qualityMeasureDocument.getComponent();
+		component.setSection(section);
+		if (components.size() > 0)
+		{
+			components.set(0, component);
+		}
+		else
+		{
+			components.add(component);
+		}
+
+		try
+		{
+			HL7Container hl7Container = new HL7Container();
+			hl7Container.setQualityMeasureDocument(qualityMeasureDocument);
+			studyDefinitionService.revise(hl7Container);
+		}
+		catch (GenericLayerStudyDefinitionServiceReviseFAULTFaultMessage e)
+		{
+			logger.error("", e);
+			throw new RuntimeException(e);
+		}
+
+		return qualityMeasureDocument;
+	}
+
+	private void sumbitStudyDefinition(String studyDefinitionId)
+	{
+		try
+		{
+			studyDefinitionService.submit(studyDefinitionId);
+		}
+		catch (GenericLayerStudyDefinitionServiceSubmitFAULTFaultMessage e)
+		{
+			logger.error("", e);
+			throw new RuntimeException(e);
+		}
+	}
+
+	private void approveStudyDefinition(String studyDefinitionId)
+	{
+		try
+		{
+			studyDefinitionService.approve(studyDefinitionId);
+		}
+		catch (GenericLayerStudyDefinitionServiceApproveFAULTFaultMessage e)
+		{
+			logger.error("", e);
+			throw new RuntimeException(e);
+		}
+	}
+
 }
