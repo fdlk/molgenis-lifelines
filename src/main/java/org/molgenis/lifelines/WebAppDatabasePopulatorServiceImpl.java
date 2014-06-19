@@ -17,7 +17,6 @@ import org.molgenis.omx.auth.MolgenisUser;
 import org.molgenis.omx.auth.UserAuthority;
 import org.molgenis.omx.core.RuntimeProperty;
 import org.molgenis.omx.protocolviewer.ProtocolViewerController;
-import org.molgenis.search.SearchSecurityHandlerInterceptor;
 import org.molgenis.security.account.AccountService;
 import org.molgenis.security.core.utils.SecurityUtils;
 import org.molgenis.security.runas.RunAsSystem;
@@ -164,10 +163,6 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		runtimePropertyMap.put(KEY_APP_HREF_LOGO, "/img/lifelines_letterbox_65x24.png");
 		runtimePropertyMap.put(KEY_APP_HREF_CSS, "lifelines.css");
 		runtimePropertyMap.put(AccountService.KEY_PLUGIN_AUTH_ACTIVATIONMODE, "user");
-		if (appProfile == LifeLinesAppProfile.WEBSITE)
-		{
-			runtimePropertyMap.put(SearchSecurityHandlerInterceptor.KEY_ACTION_ALLOW_ANONYMOUS_SEARCH, "true");
-		}
 		runtimePropertyMap
 				.put(HomeController.KEY_APP_HOME_HTML,
 						"<div class=\"container-fluid\">"
