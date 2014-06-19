@@ -195,7 +195,7 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 						"{Ensembl: 'http://www.ensembl.org/Homo_sapiens/Location/View?r=${chr}:${start}-${end}',UCSC: 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr${chr}:${start}-${end}',Sequence: 'http://www.derkholm.net:8080/das/hg19comp/sequence?segment=${chr}:${start},${end}'}");
 
 		runtimePropertyMap.put(StudyManagerController.EXPORT_BTN_TITLE, "Export to Generic Layer");
-		runtimePropertyMap.put(StudyManagerController.EXPORT_ENABLED, String.valueOf(false));
+		runtimePropertyMap.put(StudyManagerController.EXPORT_ENABLED, String.valueOf(true));
 
 		for (Entry<String, String> entry : runtimePropertyMap.entrySet())
 		{
