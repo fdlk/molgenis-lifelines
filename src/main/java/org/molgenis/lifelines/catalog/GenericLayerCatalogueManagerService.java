@@ -41,7 +41,6 @@ import org.molgenis.data.support.QueryImpl;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
 import org.molgenis.omx.catalogmanager.OmxCatalog;
 import org.molgenis.omx.observ.Category;
-import org.molgenis.omx.observ.DataSet;
 import org.molgenis.omx.observ.ObservableFeature;
 import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.observ.target.OntologyTerm;
@@ -453,14 +452,14 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	private void deleteCatalog(String protocolIdentifier) throws UnknownCatalogException
 	{
 		Protocol protocol = dataService.findOne(Protocol.ENTITY_NAME,
-				new QueryImpl().eq(DataSet.IDENTIFIER, protocolIdentifier), Protocol.class);
+				new QueryImpl().eq(Protocol.IDENTIFIER, protocolIdentifier), Protocol.class);
 		if (protocol == null)
 		{
 			throw new UnknownCatalogException("unknown catalog identifier [" + protocolIdentifier + "]");
 		}
 		List<Protocol> protocols = ProtocolUtils.getProtocolDescendants(protocol);
 
-		dataService.delete(DataSet.ENTITY_NAME, protocol);
+		dataService.delete(Protocol.ENTITY_NAME, protocol);
 		dataService.delete(Protocol.ENTITY_NAME, protocols);
 	}
 
@@ -513,7 +512,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	{
 		String protocolIdentifier = CatalogIdConverter.catalogIdToOmxIdentifier(id);
 		Protocol protocol = dataService.findOne(Protocol.ENTITY_NAME,
-				new QueryImpl().eq(DataSet.IDENTIFIER, protocolIdentifier), Protocol.class);
+				new QueryImpl().eq(Protocol.IDENTIFIER, protocolIdentifier), Protocol.class);
 		return protocol != null && protocol.getActive();
 	}
 
@@ -521,7 +520,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	{
 		String protocolIdentifier = CatalogIdConverter.catalogIdToOmxIdentifier(id);
 		Protocol protocol = dataService.findOne(Protocol.ENTITY_NAME,
-				new QueryImpl().eq(DataSet.IDENTIFIER, protocolIdentifier), Protocol.class);
+				new QueryImpl().eq(Protocol.IDENTIFIER, protocolIdentifier), Protocol.class);
 		if (protocol == null)
 		{
 			throw new UnknownCatalogException("unknown catalog identifier [" + protocolIdentifier + "]");
