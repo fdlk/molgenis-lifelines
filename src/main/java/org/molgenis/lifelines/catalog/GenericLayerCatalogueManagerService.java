@@ -12,6 +12,7 @@ import nl.umcg.hl7.service.catalog.BL;
 import nl.umcg.hl7.service.catalog.CD;
 import nl.umcg.hl7.service.catalog.CO;
 import nl.umcg.hl7.service.catalog.CatalogService;
+import nl.umcg.hl7.service.catalog.ED;
 import nl.umcg.hl7.service.catalog.GenericLayerCatalogService;
 import nl.umcg.hl7.service.catalog.GenericLayerCatalogServiceGetCatalogFAULTFaultMessage;
 import nl.umcg.hl7.service.catalog.GenericLayerCatalogServiceGetValueSetsFAULTFaultMessage;
@@ -156,9 +157,11 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 			}
 			else
 			{
-				Protocol dataSourceProtocol = new Protocol();
-				dataSourceProtocol.setIdentifier(UUID.randomUUID().toString());
-				dataSourceProtocol.setName(code);
+				if (catalog.getComponent().size() != 1)
+				{
+					throw new RuntimeException("Expected exactly one catalog component for code != Generic");
+				}
+				rootProtocol.setName(code);
 
 				List<Protocol> dataSourceSubprotocols = new ArrayList<Protocol>();
 				if (organizer.getComponent() != null)
@@ -170,9 +173,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 						dataSourceSubprotocols.add(protocol);
 					}
 				}
-				if (!dataSourceSubprotocols.isEmpty()) dataSourceProtocol.setSubprotocols(dataSourceSubprotocols);
-				subprotocols.add(dataSourceProtocol);
-				dataService.add(Protocol.ENTITY_NAME, dataSourceProtocol);
+				if (!dataSourceSubprotocols.isEmpty()) rootProtocol.setSubprotocols(dataSourceSubprotocols);
 			}
 		}
 		if (!subprotocols.isEmpty()) rootProtocol.setSubprotocols(subprotocols);
@@ -296,8 +297,12 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 		observableFeature.setName(code.getDisplayName());
 
 		Map<String, String> descriptions = new HashMap<String, String>();
-		// Content has always exactly one item
-		descriptions.put(code.getOriginalText().getLanguage(), code.getOriginalText().getContent().get(0).toString());
+		ED originalText = code.getOriginalText();
+		if (originalText != null)
+		{
+			// Content has always exactly one item
+			descriptions.put(originalText.getLanguage(), originalText.getContent().get(0).toString());
+		}
 		// get all the translations for the description
 		for (CD translation : code.getTranslation())
 		{
@@ -305,7 +310,10 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 					.get(0).toString());
 		}
 
-		observableFeature.setDescription(gson.toJson(descriptions).toString());
+		if (!descriptions.isEmpty())
+		{
+			observableFeature.setDescription(gson.toJson(descriptions).toString());
+		}
 
 		String dataType;
 		ANY value = observation.getValue();
