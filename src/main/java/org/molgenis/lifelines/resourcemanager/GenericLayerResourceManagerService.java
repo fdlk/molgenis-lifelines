@@ -217,14 +217,16 @@ public class GenericLayerResourceManagerService
 		// id and title
 		II id = qualityMeasureDocument.getId();
 		ST title = qualityMeasureDocument.getTitle();
+		// Content has always exactly one item
 		CatalogSearchResult catalogSearchResult = new CatalogSearchResult(id.getExtension(), title != null ? title
-				.getContent().toString() : "");
+				.getContent().get(0).toString() : "");
 
 		// description
 		ED description = qualityMeasureDocument.getText();
 		if (description != null)
 		{
-			catalogSearchResult.setDescription(description.getContent().toString());
+			// Content has always exactly one item
+			catalogSearchResult.setDescription(description.getContent().get(0).toString());
 		}
 
 		// version
@@ -273,7 +275,8 @@ public class GenericLayerResourceManagerService
 					for (PN namePart : person.getName())
 					{
 						if (authorBuilder.length() > 0) authorBuilder.append(' ');
-						authorBuilder.append(namePart.getContent().toString());
+						// Content has always exactly one item
+						authorBuilder.append(namePart.getContent().get(0).toString());
 					}
 
 					JAXBElement<COCTMT150007UVOrganization> organizationNode = personContainer
@@ -289,7 +292,8 @@ public class GenericLayerResourceManagerService
 							for (ON namePart : organization.getName())
 							{
 								if (organizationBuilder.length() > 0) organizationBuilder.append(' ');
-								organizationBuilder.append(namePart.getContent().toString());
+								// Content has always exactly one item
+								organizationBuilder.append(namePart.getContent().get(0).toString());
 							}
 							if (organizationBuilder.length() > 0) authorBuilder.append(" (")
 									.append(organizationBuilder).append(')');
