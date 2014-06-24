@@ -1,20 +1,25 @@
 package org.molgenis.lifelines;
 
-import static org.molgenis.security.core.utils.SecurityUtils.defaultPluginAuthorities;
 import static org.molgenis.security.core.utils.SecurityUtils.getPluginReadAuthority;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.molgenis.security.MolgenisRoleHierarchy;
 import org.molgenis.security.MolgenisWebAppSecurityConfig;
+import org.molgenis.ui.security.MolgenisAccessDecisionVoter;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDecisionVoter;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
-import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
+import org.springframework.security.access.vote.AffirmativeBased;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.web.access.expression.WebExpressionVoter;
 
 @Configuration
 @EnableWebSecurity
@@ -25,179 +30,40 @@ public class WebAppSecurityConfig extends MolgenisWebAppSecurityConfig
 	protected void configureUrlAuthorization(
 			ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry expressionInterceptUrlRegistry)
 	{
-		expressionInterceptUrlRegistry
-				.antMatchers("/")
-				.permitAll()
+		@SuppressWarnings("rawtypes")
+		List<AccessDecisionVoter> listOfVoters = new ArrayList<AccessDecisionVoter>();
+		listOfVoters.add(new WebExpressionVoter());
+		listOfVoters.add(new MolgenisAccessDecisionVoter());
+		expressionInterceptUrlRegistry.accessDecisionManager(new AffirmativeBased(listOfVoters));
 
-				// main menu
-				.antMatchers("/menu/main")
-				.hasAnyAuthority(
-						defaultPluginAuthorities("home", "protocolviewer", "dataexplorer", "importwizard",
-								"useraccount"))
+		expressionInterceptUrlRegistry.antMatchers("/").permitAll()
+		// DAS datasource uses the database, unauthenticated users can
+		// not see any data
+				.antMatchers("/das/**").permitAll()
 
-				// main menu plugins
-				.antMatchers("/menu/main/home/**", "/plugin/home/**")
-				.hasAnyAuthority(defaultPluginAuthorities("home"))
+				.antMatchers("/myDas/**").permitAll()
 
-				.antMatchers("/menu/main/protocolviewer/**", "/plugin/protocolviewer/**")
-				.hasAnyAuthority(defaultPluginAuthorities("protocolviewer"))
+				.antMatchers("/annotators/**").authenticated()
 
-				.antMatchers("/menu/main/dataexplorer/**", "/plugin/dataexplorer/**")
-				.hasAnyAuthority(defaultPluginAuthorities("dataexplorer"))
-
-				.antMatchers("/menu/main/importwizard/**", "/plugin/importwizard/**")
-				.hasAnyAuthority(defaultPluginAuthorities("importwizard"))
-
-				.antMatchers("/menu/main/useraccount/**", "/plugin/useraccount/**")
-				.hasAnyAuthority(defaultPluginAuthorities("useraccount"))
-
-				// entities menu
-				.antMatchers("/menu/entities")
-				.hasAnyAuthority(
-						defaultPluginAuthorities("formdataSet", "formprotocol", "formobservablefeature",
-								"formontology", "formstudydatarequest", "formruntimeproperty", "formmolgenisuser",
-								"formmolgenisgroup", "formmolgenisgroupmember"))
-
-				// entities menu plugins
-				.antMatchers("/menu/entities/form.DataSet/**", "/plugin/form.DataSet")
-				.hasAnyAuthority(defaultPluginAuthorities("formdataSet"))
-
-				.antMatchers("/menu/entities/form.Protocol/**", "/plugin/form.Protocol/**")
-				.hasAnyAuthority(defaultPluginAuthorities("formprotocol"))
-
-				.antMatchers("/menu/entities/form.ObservableFeature/**", "/plugin/form.ObservableFeature/**")
-				.hasAnyAuthority(defaultPluginAuthorities("formobservablefeature"))
-
-				.antMatchers("/menu/entities/form.Ontology/**", "/plugin/form.Ontology/**")
-				.hasAnyAuthority(defaultPluginAuthorities("formontology"))
-
-				.antMatchers("/menu/entities/form.StudyDataRequest/**", "/plugin/form.StudyDataRequest/**")
-				.hasAnyAuthority(defaultPluginAuthorities("formstudydatarequest"))
-
-				.antMatchers("/menu/entities/form.RuntimeProperty/**", "/plugin/form.RuntimeProperty/**")
-				.hasAnyAuthority(defaultPluginAuthorities("formruntimeproperty"))
-
-				.antMatchers("/menu/entities/form.MolgenisUser/**", "/plugin/form.MolgenisUser/**")
-				.hasAnyAuthority(defaultPluginAuthorities("formmolgenisuser"))
-
-				.antMatchers("/menu/entities/form.MolgenisGroup/**", "/plugin/form.MolgenisGroup/**")
-				.hasAnyAuthority(defaultPluginAuthorities("formmolgenisgroup"))
-
-				.antMatchers("/menu/entities/form.MolgenisGroupMember/**", "/plugin/form.MolgenisGroupMember/**")
-				.hasAnyAuthority(defaultPluginAuthorities("formmolgenisgroupmember"))
-
-				// admin menu
-				.antMatchers("/menu/admin")
-				.hasAnyAuthority(
-						defaultPluginAuthorities("permissionmanager", "usermanager", "catalogmanager", "studymanager",
-								"dataindexer"))
-
-				// admin menu plugins
-				.antMatchers("/menu/admin/permissionmanager/**", "/plugin/permissionmanager/**")
-				.hasAnyAuthority(defaultPluginAuthorities("permissionmanager"))
-
-				.antMatchers("/menu/admin/usermanager/**", "/plugin/usermanager/**")
-				.hasAnyAuthority(defaultPluginAuthorities("usermanager"))
-
-				.antMatchers("/menu/admin/catalogmanager/**", "/plugin/catalogmanager/**")
-				.hasAnyAuthority(defaultPluginAuthorities("catalogmanager"))
-
-				.antMatchers("/menu/admin/studymanager/**", "/plugin/studymanager/**")
-				.hasAnyAuthority(defaultPluginAuthorities("studymanager"))
-
-				.antMatchers("/menu/admin/dataindexer/**", "/plugin/dataindexer/**")
-				.hasAnyAuthority(defaultPluginAuthorities("dataindexer"))
-
-				// protocol viewer plugin dependencies
-				.antMatchers("/plugin/study/**").hasAnyAuthority(defaultPluginAuthorities("protocolviewer"))
-
-				.antMatchers("/cart/**").hasAnyAuthority(defaultPluginAuthorities("protocolviewer"));
+				.antMatchers("/charts/**").authenticated();
 	}
 
 	@Override
 	protected List<GrantedAuthority> createAnonymousUserAuthorities()
 	{
-		return AuthorityUtils.createAuthorityList(getPluginReadAuthority("home"),
-				getPluginReadAuthority("protocolviewer"));
+		String s = getPluginReadAuthority("home");
+		return AuthorityUtils.createAuthorityList(s);
 	}
 
 	@Override
 	public RoleHierarchy roleHierarchy()
 	{
-		StringBuilder hierarchyBuilder = new StringBuilder();
+		return new MolgenisRoleHierarchy();
+	}
 
-		// Plugins: WRITE -> READ
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_BACKGROUND > ROLE_PLUGIN_READ_BACKGROUND").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_CATALOGMANAGER > ROLE_PLUGIN_READ_CATALOGMANAGER").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_CBMTOOMXCONVERTER > ROLE_PLUGIN_READ_CBMTOOMXCONVERTER").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_CONTACT > ROLE_PLUGIN_READ_CONTACT").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_DATAEXPLORER > ROLE_PLUGIN_READ_DATAEXPLORER").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_DATAINDEXER > ROLE_PLUGIN_READ_DATAINDEXER").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_DATASETDELETER > ROLE_PLUGIN_READ_DATASETDELETER").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_ENTITYEXPLORER > ROLE_PLUGIN_READ_ENTITYEXPLORER").append(' ');
-		// TODO add form plugins
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_HOME > ROLE_PLUGIN_READ_HOME").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_IMPORTWIZARD > ROLE_PLUGIN_READ_IMPORTWIZARD").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_NEWS > ROLE_PLUGIN_READ_NEWS").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_PERMISSIONMANAGER > ROLE_PLUGIN_READ_PERMISSIONMANAGER").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_PROTOCOLMANAGER > ROLE_PLUGIN_READ_PROTOCOLMANAGER").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_PROTOCOLVIEWER > ROLE_PLUGIN_READ_PROTOCOLVIEWER").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_REFERENCES > ROLE_PLUGIN_READ_REFERENCES").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_STUDY > ROLE_PLUGIN_READ_STUDY").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_STUDYMANAGER > ROLE_PLUGIN_READ_STUDYMANAGER").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_USERACCOUNT > ROLE_PLUGIN_READ_USERACCOUNT").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_VOID > ROLE_PLUGIN_READ_VOID").append(' ');
-
-		// Entities: WRITE > READ
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_ACCESSION > ROLE_ENTITY_READ_ACCESSION").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_BOOLVALUE > ROLE_ENTITY_READ_BOOLVALUE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_CATEGORICALVALUE > ROLE_ENTITY_READ_CATEGORICALVALUE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_CATEGORY > ROLE_ENTITY_READ_CATEGORY").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_CHARACTERISTIC > ROLE_ENTITY_READ_CHARACTERISTIC").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_DATASET > ROLE_ENTITY_READ_DATASET").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_DATETIMEVALUE > ROLE_ENTITY_READ_DATETIMEVALUE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_DATEVALUE > ROLE_ENTITY_READ_DATEVALUE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_DECIMALVALUE > ROLE_ENTITY_READ_DECIMALVALUE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_EMAILVALUE > ROLE_ENTITY_READ_EMAILVALUE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_HTMLVALUE > ROLE_ENTITY_READ_HTMLVALUE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_HYPERLINKVALUE > ROLE_ENTITY_READ_HYPERLINKVALUE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_INDIVIDUAL > ROLE_ENTITY_READ_INDIVIDUAL").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_INSTITUTE > ROLE_ENTITY_READ_INSTITUTE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_INTVALUE > ROLE_ENTITY_READ_INTVALUE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_LONGVALUE > ROLE_ENTITY_READ_LONGVALUE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_MOLGENISFILE > ROLE_ENTITY_READ_MOLGENISFILE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_MREFVALUE > ROLE_ENTITY_READ_MREFVALUE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_OBSERVABLEFEATURE > ROLE_ENTITY_READ_OBSERVABLEFEATURE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_OBSERVATIONSET > ROLE_ENTITY_READ_OBSERVATIONSET").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_OBSERVATIONTARGET > ROLE_ENTITY_READ_OBSERVATIONTARGET").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_OBSERVEDVALUE > ROLE_ENTITY_READ_OBSERVEDVALUE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_ONTOLOGY > ROLE_ENTITY_READ_ONTOLOGY").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_ONTOLOGYTERM > ROLE_ENTITY_READ_ONTOLOGYTERM").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_PANEL > ROLE_ENTITY_READ_PANEL").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_PANELSOURCE > ROLE_ENTITY_READ_PANELSOURCE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_PERSON > ROLE_ENTITY_READ_PERSON").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_PERSONROLE > ROLE_ENTITY_READ_PERSONROLE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_PROTOCOL > ROLE_ENTITY_READ_PROTOCOL").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_RUNTIMEPROPERTY > ROLE_ENTITY_READ_RUNTIMEPROPERTY").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_SPECIES > ROLE_ENTITY_READ_SPECIES").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_STRINGVALUE > ROLE_ENTITY_READ_STRINGVALUE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_STUDYDATAREQUEST > ROLE_ENTITY_READ_STUDYDATAREQUEST").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_TEXTVALUE > ROLE_ENTITY_READ_TEXTVALUE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_VALUE > ROLE_ENTITY_READ_VALUE").append(' ');
-		hierarchyBuilder.append("ROLE_ENTITY_WRITE_XREFVALUE > ROLE_ENTITY_READ_XREFVALUE").append(' ');
-
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_PROTOCOLVIEWER > ROLE_PLUGIN_READ_PROTOCOLVIEWER").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_WRITE_PROTOCOLVIEWER > ROLE_ENTITY_WRITE_STUDYDATAREQUEST").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_READ_PROTOCOLVIEWER > ROLE_ENTITY_READ_DATASET").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_READ_PROTOCOLVIEWER > ROLE_ENTITY_READ_PROTOCOL").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_READ_PROTOCOLVIEWER > ROLE_ENTITY_READ_OBSERVABLEFEATURE").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_READ_PROTOCOLVIEWER > ROLE_ENTITY_READ_CATEGORY").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_READ_PROTOCOLVIEWER > ROLE_ENTITY_READ_ONTOLOGY").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_READ_PROTOCOLVIEWER > ROLE_ENTITY_READ_ONTOLOGYTERM").append(' ');
-		hierarchyBuilder.append("ROLE_PLUGIN_READ_PROTOCOLVIEWER > ROLE_ENTITY_READ_STUDYDATAREQUEST").append(' ');
-
-		RoleHierarchyImpl roleHierarchyImpl = new RoleHierarchyImpl();
-		roleHierarchyImpl.setHierarchy(hierarchyBuilder.toString());
-		return roleHierarchyImpl;
+	@Bean
+	public MolgenisAccessDecisionVoter molgenisAccessDecisionVoter()
+	{
+		return new MolgenisAccessDecisionVoter();
 	}
 }
