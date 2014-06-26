@@ -70,7 +70,7 @@ public class GenericLayerResourceManagerServiceTest
 		List<CatalogMeta> catalogs = resourceManagerService.findCatalogs();
 		assertEquals(catalogs.size(), 1);
 		assertEquals(catalogs.get(0).getId(), "1");
-		assertEquals(catalogs.get(0).getName(), "[Catalog Release 1]");
+		assertEquals(catalogs.get(0).getName(), "Catalog Release 1");
 	}
 
 	private static String CATALOG_RELEASE_RESPONSE;
