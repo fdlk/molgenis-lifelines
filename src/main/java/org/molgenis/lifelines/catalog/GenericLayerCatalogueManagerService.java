@@ -168,7 +168,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 					for (REPCMT000100UV01Component3 dataSourceComponent : organizer.getComponent())
 					{
 						Protocol protocol = parseDataSourceCatalogOrganizer(dataSourceComponent.getOrganizer()
-								.getValue(), useOntology, valueSetsIndex);
+								.getValue(), useOntology, valueSetsIndex, catalogReleaseId);
 						dataSourceSubprotocols.add(protocol);
 					}
 				}
@@ -197,7 +197,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	}
 
 	private Protocol parseDataSourceCatalogOrganizer(REPCMT000100UV01Organizer cohortOrganizer, boolean useOntology,
-			Map<String, List<Code>> valueSetsIndex)
+			Map<String, List<Code>> valueSetsIndex, String catalogReleaseId)
 	{
 		Protocol cohortProtocol;
 		if (useOntology)
@@ -224,7 +224,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 				{
 					REPCMT000100UV01Organizer componentOrganizer = component.getOrganizer().getValue();
 					Protocol measurementSubprotocol = parseDataSourceCatalogOrganizerRec(componentOrganizer,
-							useOntology, valueSetsIndex, cohortId, measurementId);
+							useOntology, valueSetsIndex, cohortId, measurementId, catalogReleaseId);
 					measurementSubprotocols.add(measurementSubprotocol);
 				}
 				if (!measurementSubprotocols.isEmpty()) measurementProtocol.setSubprotocols(measurementSubprotocols);
@@ -244,7 +244,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	}
 
 	private Protocol parseDataSourceCatalogOrganizerRec(REPCMT000100UV01Organizer organizer, boolean useOntology,
-			Map<String, List<Code>> valueSetsIndex, String cohortId, String measurementId)
+			Map<String, List<Code>> valueSetsIndex, String cohortId, String measurementId, String catalogReleaseId)
 	{
 		Protocol protocol;
 		if (useOntology)
@@ -262,7 +262,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 				{
 					REPCMT000100UV01Organizer componentOrganizer = component.getOrganizer().getValue();
 					Protocol subProtocol = parseDataSourceCatalogOrganizerRec(componentOrganizer, useOntology,
-							valueSetsIndex, cohortId, measurementId);
+							valueSetsIndex, cohortId, measurementId, catalogReleaseId);
 					subprotocols.add(subProtocol);
 				}
 				// create feature
@@ -270,7 +270,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 				{
 					REPCMT000100UV01Observation componentObservation = component.getObservation().getValue();
 					ObservableFeature feature = parseDataSourceCatalogObservation(componentObservation, valueSetsIndex,
-							cohortId, measurementId);
+							cohortId, measurementId, catalogReleaseId);
 					features.add(feature);
 				}
 			}
@@ -287,12 +287,12 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 	}
 
 	private ObservableFeature parseDataSourceCatalogObservation(REPCMT000100UV01Observation observation,
-			Map<String, List<Code>> valueSetsIndex, String cohortId, String measurementId)
+			Map<String, List<Code>> valueSetsIndex, String cohortId, String measurementId, String catalogReleaseId)
 	{
 		Gson gson = new Gson();
 		CD code = observation.getCode();
 		ObservableFeature observableFeature = new ObservableFeature();
-		observableFeature.setIdentifier(code.getCode() + '.' + cohortId + '.' + measurementId);
+		observableFeature.setIdentifier(code.getCode() + '.' + cohortId + '.' + measurementId + '.' + catalogReleaseId);
 		observableFeature.setName(code.getDisplayName());
 
 		Map<String, String> descriptions = new HashMap<String, String>();
