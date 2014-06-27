@@ -18,6 +18,7 @@ import org.molgenis.omx.auth.MolgenisUser;
 import org.molgenis.omx.auth.UserAuthority;
 import org.molgenis.omx.core.RuntimeProperty;
 import org.molgenis.omx.observ.Category;
+import org.molgenis.omx.observ.Characteristic;
 import org.molgenis.omx.observ.ObservableFeature;
 import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.observ.target.Ontology;
@@ -170,8 +171,10 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 
 		// anonymous + all users
 		List<String> entityNames;
-		entityNames = Arrays.asList(Protocol.ENTITY_NAME, ObservableFeature.ENTITY_NAME, Category.ENTITY_NAME,
-				Ontology.ENTITY_NAME, OntologyTerm.ENTITY_NAME);
+		entityNames = Arrays
+				.asList(Protocol.ENTITY_NAME, ObservableFeature.ENTITY_NAME, Category.ENTITY_NAME,
+						Ontology.ENTITY_NAME, OntologyTerm.ENTITY_NAME, Characteristic.ENTITY_NAME,
+						RuntimeProperty.ENTITY_NAME);
 		for (String entityName : entityNames)
 		{
 			String role = SecurityUtils.AUTHORITY_ENTITY_READ_PREFIX + entityName.toUpperCase();
