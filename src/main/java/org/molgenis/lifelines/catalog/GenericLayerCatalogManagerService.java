@@ -52,16 +52,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.google.gson.Gson;
 
-public class GenericLayerCatalogueManagerService implements CatalogManagerService
+public class GenericLayerCatalogManagerService implements CatalogManagerService
 {
-	private static final Logger logger = Logger.getLogger(GenericLayerCatalogueManagerService.class);
+	private static final Logger logger = Logger.getLogger(GenericLayerCatalogManagerService.class);
 
 	private final DataService dataService;
 	private final GenericLayerCatalogService genericLayerCatalogService;
 	private final GenericLayerResourceManagerService resourceManagerService;
 	private final DataSetsIndexer dataSetsIndexer;
 
-	public GenericLayerCatalogueManagerService(DataService dataService,
+	public GenericLayerCatalogManagerService(DataService dataService,
 			GenericLayerCatalogService genericLayerCatalogService,
 			GenericLayerResourceManagerService resourceManagerService, DataSetsIndexer dataSetsIndexer)
 	{
@@ -434,7 +434,7 @@ public class GenericLayerCatalogueManagerService implements CatalogManagerServic
 		return dataService.count(Protocol.ENTITY_NAME, new QueryImpl().eq(Protocol.IDENTIFIER, catalogIdentifier)) == 1;
 	}
 
-	private String getCatalogIdentifier(String catalogReleaseId, String studyDefinitionId)
+	public String getCatalogIdentifier(String catalogReleaseId, String studyDefinitionId)
 	{
 		if (catalogReleaseId != null) return CatalogIdConverter.catalogIdToOmxIdentifier(catalogReleaseId);
 		else return CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(studyDefinitionId);
