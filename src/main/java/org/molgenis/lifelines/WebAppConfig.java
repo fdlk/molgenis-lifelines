@@ -18,7 +18,8 @@ import org.molgenis.DatabaseConfig;
 import org.molgenis.catalogmanager.CatalogManagerService;
 import org.molgenis.data.DataService;
 import org.molgenis.elasticsearch.config.EmbeddedElasticSearchConfig;
-import org.molgenis.lifelines.catalog.GenericLayerCatalogueManagerService;
+import org.molgenis.lifelines.catalog.GenericLayerCatalogManagerService;
+import org.molgenis.lifelines.catalog.LifeLinesCatalogManagerService;
 import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
 import org.molgenis.lifelines.studymanager.GenericLayerDataQueryService;
 import org.molgenis.lifelines.studymanager.GenericLayerStudyManagerService;
@@ -107,8 +108,11 @@ public class WebAppConfig extends MolgenisWebAppConfig
 	{
 		GenericLayerCatalogService genericLayerCatalogService = new CatalogService()
 				.getBasicHttpBindingGenericLayerCatalogService();
-		return new GenericLayerCatalogueManagerService(dataService, genericLayerCatalogService,
-				genericLayerResourceManagerService(), dataSetsIndexer);
+		GenericLayerCatalogManagerService genericLayerCatalogManagerService = new GenericLayerCatalogManagerService(
+				dataService, genericLayerCatalogService, genericLayerResourceManagerService(), dataSetsIndexer);
+		OmxCatalogManagerService omxCatalogManagerService = new OmxCatalogManagerService(dataService);
+		return new LifeLinesCatalogManagerService(omxCatalogManagerService, genericLayerCatalogManagerService,
+				dataService);
 	}
 
 	@Bean
