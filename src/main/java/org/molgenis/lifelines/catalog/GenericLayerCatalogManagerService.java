@@ -1,7 +1,6 @@
 package org.molgenis.lifelines.catalog;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +23,8 @@ import nl.umcg.hl7.service.catalog.HL7Container;
 import nl.umcg.hl7.service.catalog.HumanLanguage;
 import nl.umcg.hl7.service.catalog.II;
 import nl.umcg.hl7.service.catalog.INT;
+import nl.umcg.hl7.service.catalog.PN;
+import nl.umcg.hl7.service.catalog.POQMMT000001UVAuthor;
 import nl.umcg.hl7.service.catalog.POQMMT000001UVQualityMeasureDocument;
 import nl.umcg.hl7.service.catalog.PQ;
 import nl.umcg.hl7.service.catalog.REAL;
@@ -577,10 +578,20 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 				POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = hl7Container.getQualityMeasureDocument();
 
 				String id = qualityMeasureDocument.getId().getExtension().toString();
-				String name = "I can't get my name!";
+				String name = qualityMeasureDocument.getTitle().getContent().get(0).toString();
 				String description = qualityMeasureDocument.getText().getContent().get(0).toString();
 				String version = qualityMeasureDocument.getVersionNumber().getValue().toString();
-				List<String> authors = Arrays.asList("author#1", "author#2");
+				List<String> authors = new ArrayList<String>();
+
+				List<POQMMT000001UVAuthor> qualityMeasureDocumentAuthors = qualityMeasureDocument.getAuthor();
+				for (POQMMT000001UVAuthor author : qualityMeasureDocumentAuthors)
+				{
+					List<PN> authorNames = author.getAssignedPerson().getAssignedPerson().getValue().getName();
+					for (PN authorName : authorNames)
+					{
+						authors.add(authorName.getContent().get(0).toString());
+					}
+				}
 
 				CatalogMeta catalogMeta = new CatalogMeta(id, name);
 				catalogMeta.setDescription(description);
