@@ -1,6 +1,7 @@
 package org.molgenis.lifelines.catalog;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import nl.umcg.hl7.service.catalog.ANY;
+import nl.umcg.hl7.service.catalog.ArrayOfXElement;
 import nl.umcg.hl7.service.catalog.BL;
 import nl.umcg.hl7.service.catalog.CD;
 import nl.umcg.hl7.service.catalog.CO;
@@ -15,11 +17,14 @@ import nl.umcg.hl7.service.catalog.CatalogService;
 import nl.umcg.hl7.service.catalog.ED;
 import nl.umcg.hl7.service.catalog.GenericLayerCatalogService;
 import nl.umcg.hl7.service.catalog.GenericLayerCatalogServiceGetCatalogFAULTFaultMessage;
+import nl.umcg.hl7.service.catalog.GenericLayerCatalogServiceGetCatalogReleasesFAULTFaultMessage;
 import nl.umcg.hl7.service.catalog.GenericLayerCatalogServiceGetValueSetsFAULTFaultMessage;
+import nl.umcg.hl7.service.catalog.GetCatalogReleasesResponse;
 import nl.umcg.hl7.service.catalog.HL7Container;
 import nl.umcg.hl7.service.catalog.HumanLanguage;
 import nl.umcg.hl7.service.catalog.II;
 import nl.umcg.hl7.service.catalog.INT;
+import nl.umcg.hl7.service.catalog.POQMMT000001UVParentQualityMeasureDocument;
 import nl.umcg.hl7.service.catalog.PQ;
 import nl.umcg.hl7.service.catalog.REAL;
 import nl.umcg.hl7.service.catalog.REPCMT000100UV01Component3;
@@ -38,7 +43,6 @@ import org.molgenis.catalog.UnknownCatalogException;
 import org.molgenis.catalogmanager.CatalogManagerService;
 import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
-import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
 import org.molgenis.omx.catalogmanager.OmxCatalog;
 import org.molgenis.omx.observ.Category;
 import org.molgenis.omx.observ.ObservableFeature;
@@ -50,6 +54,8 @@ import org.molgenis.omx.utils.ProtocolUtils;
 import org.molgenis.study.UnknownStudyDefinitionException;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 import com.google.gson.Gson;
 
 public class GenericLayerCatalogManagerService implements CatalogManagerService
@@ -58,32 +64,47 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 
 	private final DataService dataService;
 	private final GenericLayerCatalogService genericLayerCatalogService;
-	private final GenericLayerResourceManagerService resourceManagerService;
 	private final DataSetsIndexer dataSetsIndexer;
 
 	public GenericLayerCatalogManagerService(DataService dataService,
-			GenericLayerCatalogService genericLayerCatalogService,
-			GenericLayerResourceManagerService resourceManagerService, DataSetsIndexer dataSetsIndexer)
+			GenericLayerCatalogService genericLayerCatalogService, DataSetsIndexer dataSetsIndexer)
 	{
 		if (dataService == null) throw new IllegalArgumentException("dataService is null");
 		if (genericLayerCatalogService == null) throw new IllegalArgumentException("genericLayerCatalogService is null");
-		if (resourceManagerService == null) throw new IllegalArgumentException("resourceManagerService is null");
 		this.dataService = dataService;
 		this.genericLayerCatalogService = new CatalogService().getBasicHttpBindingGenericLayerCatalogService();
-		this.resourceManagerService = resourceManagerService;
 		this.dataSetsIndexer = dataSetsIndexer;
 	}
 
 	@Override
 	public Iterable<CatalogMeta> getCatalogs()
 	{
-		return resourceManagerService.findCatalogs();
+		try
+		{
+			GetCatalogReleasesResponse catalogReleases = genericLayerCatalogService.getCatalogReleases();
+			return convertCatalogReleases(catalogReleases);
+		}
+		catch (GenericLayerCatalogServiceGetCatalogReleasesFAULTFaultMessage e)
+		{
+			logger.error("", e);
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
 	public Catalog getCatalog(String id) throws UnknownCatalogException
 	{
-		CatalogMeta catalogMeta = resourceManagerService.findCatalog(id);
+		CatalogMeta catalogMeta = null;
+		for (CatalogMeta aCatalogMeta : getCatalogs())
+		{
+			if (aCatalogMeta.getId().equals(id))
+			{
+				catalogMeta = aCatalogMeta;
+				break;
+			}
+		}
+		if (catalogMeta == null) throw new UnknownCatalogException("Unknown catalog id [" + id + "]");
+
 		REPCMT000100UV01Organizer catalog = retrieveCatalog(id, null, true);
 		return new OrganizerCatalog(catalog, catalogMeta);
 	}
@@ -478,8 +499,7 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 		REPCMT000100UV01Organizer catalog;
 		try
 		{
-			HL7Container hl7Container = genericLayerCatalogService.getCatalog(catalogReleaseId, null,
-					studyDefinitionId, useOntology);
+			HL7Container hl7Container = genericLayerCatalogService.getCatalog(catalogReleaseId, null, useOntology);
 			if (hl7Container == null) throw new RuntimeException("HL7Container is null");
 			catalog = hl7Container.getCatalog();
 		}
@@ -539,5 +559,36 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 	public void deactivateCatalog(String id) throws UnknownCatalogException
 	{
 		updateCatalogActivation(id, false);
+	}
+
+	private Iterable<CatalogMeta> convertCatalogReleases(GetCatalogReleasesResponse catalogReleasesResponse)
+	{
+		ArrayOfXElement hl7Containers = catalogReleasesResponse.getHL7Containers();
+		if (hl7Containers == null) return Collections.emptyList();
+
+		List<HL7Container> hl7ContainerList = hl7Containers.getHL7Container();
+		if (hl7ContainerList == null || hl7ContainerList.isEmpty()) return Collections.emptyList();
+
+		return Iterables.transform(hl7ContainerList, new Function<HL7Container, CatalogMeta>()
+		{
+			@Override
+			public CatalogMeta apply(HL7Container hl7Container)
+			{
+				POQMMT000001UVParentQualityMeasureDocument qualityMeasureDocument = hl7Container
+						.getQualityMeasureDocument();
+
+				String id = qualityMeasureDocument.getId().getExtension().toString();
+				String name = "I can't get my name!";
+				String description = qualityMeasureDocument.getText().getContent().get(0).toString();
+				String version = qualityMeasureDocument.getVersionNumber().getValue().toString();
+				List<String> authors = Arrays.asList("author#1", "author#2");
+
+				CatalogMeta catalogMeta = new CatalogMeta(id, name);
+				catalogMeta.setDescription(description);
+				catalogMeta.setVersion(version);
+				catalogMeta.setAuthors(authors);
+				return catalogMeta;
+			}
+		});
 	}
 }

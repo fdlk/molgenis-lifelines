@@ -32,7 +32,6 @@ import org.molgenis.hl7.REPCMT000400UV01Component4;
 import org.molgenis.hl7.ST;
 import org.molgenis.hl7.TS;
 import org.molgenis.lifelines.catalog.CatalogIdConverter;
-import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
 import org.molgenis.lifelines.utils.GenericLayerDataBinder;
 import org.molgenis.lifelines.utils.OmxIdentifierGenerator;
 import org.molgenis.lifelines.utils.OutputStreamHttpEntity;
@@ -54,7 +53,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class GenericLayerDataQueryService
 {
-	private static final Logger logger = Logger.getLogger(GenericLayerResourceManagerService.class);
+	private static final Logger logger = Logger.getLogger(GenericLayerDataQueryService.class);
 
 	private static final JAXBContext JAXB_CONTEXT_ACT_CATEGORY;
 
@@ -200,9 +199,9 @@ public class GenericLayerDataQueryService
 	public boolean isStudyDataActivated(String id) throws UnknownStudyDefinitionException, UnknownCatalogException
 	{
 		String dataSetId = CatalogIdConverter.catalogOfStudyDefinitionIdToOmxIdentifier(id);
-		DataSet dataset = (DataSet) dataService.findOne(DataSet.ENTITY_NAME, new QueryImpl().eq(DataSet.IDENTIFIER, dataSetId));
-		if (dataset == null) throw new UnknownStudyDefinitionException(
-				"StudyData [" + id + "] does not exist");
+		DataSet dataset = (DataSet) dataService.findOne(DataSet.ENTITY_NAME,
+				new QueryImpl().eq(DataSet.IDENTIFIER, dataSetId));
+		if (dataset == null) throw new UnknownStudyDefinitionException("StudyData [" + id + "] does not exist");
 
 		if (dataset.getProtocolUsed() == null) throw new UnknownCatalogException("StudyData [" + id
 				+ "] does not exist");
