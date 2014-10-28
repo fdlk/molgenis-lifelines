@@ -24,7 +24,7 @@ import nl.umcg.hl7.service.catalog.HL7Container;
 import nl.umcg.hl7.service.catalog.HumanLanguage;
 import nl.umcg.hl7.service.catalog.II;
 import nl.umcg.hl7.service.catalog.INT;
-import nl.umcg.hl7.service.catalog.POQMMT000001UVParentQualityMeasureDocument;
+import nl.umcg.hl7.service.catalog.POQMMT000001UVQualityMeasureDocument;
 import nl.umcg.hl7.service.catalog.PQ;
 import nl.umcg.hl7.service.catalog.REAL;
 import nl.umcg.hl7.service.catalog.REPCMT000100UV01Component3;
@@ -574,8 +574,7 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 			@Override
 			public CatalogMeta apply(HL7Container hl7Container)
 			{
-				POQMMT000001UVParentQualityMeasureDocument qualityMeasureDocument = hl7Container
-						.getQualityMeasureDocument();
+				POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = hl7Container.getQualityMeasureDocument();
 
 				String id = qualityMeasureDocument.getId().getExtension().toString();
 				String name = "I can't get my name!";
