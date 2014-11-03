@@ -20,7 +20,6 @@ import org.molgenis.data.DataService;
 import org.molgenis.elasticsearch.config.EmbeddedElasticSearchConfig;
 import org.molgenis.lifelines.catalog.GenericLayerCatalogManagerService;
 import org.molgenis.lifelines.catalog.LifeLinesCatalogManagerService;
-import org.molgenis.lifelines.resourcemanager.GenericLayerResourceManagerService;
 import org.molgenis.lifelines.studymanager.GenericLayerDataQueryService;
 import org.molgenis.lifelines.studymanager.GenericLayerStudyManagerService;
 import org.molgenis.lifelines.studymanager.LifeLinesStudyManagerService;
@@ -109,7 +108,7 @@ public class WebAppConfig extends MolgenisWebAppConfig
 		GenericLayerCatalogService genericLayerCatalogService = new CatalogService()
 				.getBasicHttpBindingGenericLayerCatalogService();
 		GenericLayerCatalogManagerService genericLayerCatalogManagerService = new GenericLayerCatalogManagerService(
-				dataService, genericLayerCatalogService, genericLayerResourceManagerService(), dataSetsIndexer);
+				dataService, genericLayerCatalogService, dataSetsIndexer);
 		OmxCatalogManagerService omxCatalogManagerService = new OmxCatalogManagerService(dataService);
 		return new LifeLinesCatalogManagerService(omxCatalogManagerService, genericLayerCatalogManagerService,
 				dataService);
@@ -129,11 +128,5 @@ public class WebAppConfig extends MolgenisWebAppConfig
 				.toUpperCase()) : LifeLinesAppProfile.WEBSITE;
 		return new LifeLinesStudyManagerService(new OmxStudyManagerService(dataService, molgenisUserService),
 				genericLayerStudyManagerService, lifeLinesAppProfile);
-	}
-
-	@Bean
-	public GenericLayerResourceManagerService genericLayerResourceManagerService()
-	{
-		return new GenericLayerResourceManagerService(httpClient(), resourceManagerServiceUrl, genericLayerDataBinder());
 	}
 }

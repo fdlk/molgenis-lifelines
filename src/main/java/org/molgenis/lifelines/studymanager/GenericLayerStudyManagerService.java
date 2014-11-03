@@ -14,13 +14,12 @@ import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionService;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceApproveFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetApprovedFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetByEmailFAULTFaultMessage;
+import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetByIdFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetDraftFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetSubmittedFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceReviseFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceSubmitFAULTFaultMessage;
-import nl.umcg.hl7.service.studydefinition.GetApprovedResponse;
 import nl.umcg.hl7.service.studydefinition.GetByEmailResponse;
-import nl.umcg.hl7.service.studydefinition.GetDraftResponse;
 import nl.umcg.hl7.service.studydefinition.GetSubmittedResponse;
 import nl.umcg.hl7.service.studydefinition.HL7Container;
 import nl.umcg.hl7.service.studydefinition.ObjectFactory;
@@ -94,9 +93,8 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			throw new UnknownStudyDefinitionException("Unknown StudyDataRequest with id [" + id + "]");
 		}
 
-		POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = getStudyDefinitionAsQualityMeasureDocument(
-				StudyDefinitionIdConverter.omxIdentifierToStudyDefinitionId(sdr.getIdentifier()),
-				Status.valueOf(sdr.getRequestStatus().toUpperCase()));
+		POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = getStudyDefinitionAsQualityMeasureDocument(StudyDefinitionIdConverter
+				.omxIdentifierToStudyDefinitionId(sdr.getIdentifier()));
 
 		return new QualityMeasureDocumentStudyDefinition(qualityMeasureDocument, dataService);
 	}
@@ -257,8 +255,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			throw new UnknownStudyDefinitionException(e);
 		}
 
-		POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = getStudyDefinitionAsQualityMeasureDocument(id,
-				Status.APPROVED);
+		POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = getStudyDefinitionAsQualityMeasureDocument(id);
 		if (qualityMeasureDocument == null)
 		{
 			throw new UnknownStudyDefinitionException("unknown submitted study definition id [" + id + "]");
@@ -313,8 +310,8 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			studyDefinition.setId(llId);
 		}
 
-		POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = getStudyDefinitionAsQualityMeasureDocument(
-				studyDefinition.getId(), studyDefinition.getStatus());
+		POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = getStudyDefinitionAsQualityMeasureDocument(studyDefinition
+				.getId());
 
 		// update study definition
 		updateQualityMeasureDocument(qualityMeasureDocument, studyDefinition);
@@ -432,75 +429,19 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		}
 	}
 
-	private POQMMT000001UVQualityMeasureDocument getStudyDefinitionAsQualityMeasureDocument(String id, Status status)
+	private POQMMT000001UVQualityMeasureDocument getStudyDefinitionAsQualityMeasureDocument(String id)
 			throws UnknownStudyDefinitionException
 	{
-		ArrayOfXElement elements;
-		switch (status)
+		try
 		{
-			case APPROVED:
-				GetApprovedResponse approvedResponse;
-				try
-				{
-					approvedResponse = studyDefinitionService.getApproved(null);
-				}
-				catch (GenericLayerStudyDefinitionServiceGetApprovedFAULTFaultMessage e)
-				{
-					logger.error(e.getMessage());
-					throw new RuntimeException(e);
-				}
-				elements = approvedResponse.getHL7Containers();
-				break;
-			case DRAFT:
-				GetDraftResponse draftResponse;
-				try
-				{
-					draftResponse = studyDefinitionService.getDraft(null);
-				}
-				catch (GenericLayerStudyDefinitionServiceGetDraftFAULTFaultMessage e)
-				{
-					logger.error(e.getMessage());
-					throw new RuntimeException(e);
-				}
-				elements = draftResponse.getHL7Containers();
-				break;
-			case REJECTED:
-				throw new UnsupportedOperationException("Get rejected study definitions not implemented");
-			case SUBMITTED:
-				GetSubmittedResponse submittedResponse;
-				try
-				{
-					submittedResponse = studyDefinitionService.getSubmitted(null);
-				}
-				catch (GenericLayerStudyDefinitionServiceGetSubmittedFAULTFaultMessage e)
-				{
-					logger.error(e.getMessage());
-					throw new RuntimeException(e);
-				}
-				elements = submittedResponse.getHL7Containers();
-				break;
-			default:
-				throw new UnsupportedOperationException("Unknown study definition status [" + status + "]");
+			HL7Container hl7Container = studyDefinitionService.getById(id);
+			return hl7Container.getQualityMeasureDocument();
 		}
-
-		if (elements != null)
+		catch (GenericLayerStudyDefinitionServiceGetByIdFAULTFaultMessage e)
 		{
-			List<HL7Container> hl7Containers = elements.getHL7Container();
-			if (hl7Containers != null)
-			{
-				for (HL7Container hl7Container : hl7Containers)
-				{
-					POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = hl7Container
-							.getQualityMeasureDocument();
-					if (id.equals(qualityMeasureDocument.getId().getExtension()))
-					{
-						return qualityMeasureDocument;
-					}
-				}
-			}
+			logger.error(e.getMessage());
+			throw new RuntimeException(e);
 		}
-
-		throw new UnknownStudyDefinitionException("unknown [" + status + "] study definition id [" + id + "]");
 	}
 
 	@Override
@@ -519,15 +460,38 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		{
 			throw new UnknownStudyDefinitionException("StudyDataRequest does not exist [" + id + "]");
 		}
-		sendStudyDataRequestToGenericLayer(studyDataRequest);
+		String externalStudyDefinitionId = sendStudyDataRequestToGenericLayer(studyDataRequest);
+
+		// store external id
+		studyDataRequest.setExternalId(externalStudyDefinitionId);
+		repository.update(studyDataRequest);
 	}
 
-	private void sendStudyDataRequestToGenericLayer(StudyDataRequest studyDataRequest)
+	private String sendStudyDataRequestToGenericLayer(StudyDataRequest studyDataRequest)
 	{
 		MolgenisUser molgenisUser = studyDataRequest.getMolgenisUser();
 
-		// create empty study definition
-		POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = createStudyDefinition(molgenisUser);
+		POQMMT000001UVQualityMeasureDocument qualityMeasureDocument;
+		if (studyDataRequest.getExternalId() == null)
+		{
+			// create empty study definition
+			qualityMeasureDocument = createStudyDefinition(molgenisUser);
+		}
+		else
+		{
+			// get existing study definition
+			try
+			{
+				qualityMeasureDocument = getStudyDefinitionAsQualityMeasureDocument(studyDataRequest.getExternalId());
+			}
+			catch (UnknownStudyDefinitionException e)
+			{
+				logger.error(e.getMessage());
+				throw new RuntimeException(e);
+			}
+			// revert status study definition to submit
+			sumbitStudyDefinition(studyDataRequest.getExternalId());
+		}
 		// update study definition
 		updateStudyDefinition(qualityMeasureDocument, studyDataRequest);
 
@@ -537,6 +501,8 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		sumbitStudyDefinition(studyDefinitionId);
 		// approve study definition
 		approveStudyDefinition(studyDefinitionId);
+
+		return studyDefinitionId;
 	}
 
 	private POQMMT000001UVQualityMeasureDocument createStudyDefinition(MolgenisUser molgenisUser)
