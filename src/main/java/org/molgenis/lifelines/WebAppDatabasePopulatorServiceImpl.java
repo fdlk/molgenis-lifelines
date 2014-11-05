@@ -100,7 +100,6 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		runtimePropertyMap.put(GenomeConfig.GENOMEBROWSER_DESCRIPTION, "INFO");
 		runtimePropertyMap.put(GenomeConfig.GENOMEBROWSER_PATIENT_ID, "patient_id");
 
-		runtimePropertyMap.put(StudyManagerController.EXPORT_BTN_TITLE, "Export");
 		runtimePropertyMap.put(StudyManagerController.EXPORT_ENABLED, String.valueOf(false));
 
 		// lifelines database populator

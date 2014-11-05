@@ -296,4 +296,16 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 	{
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public String getExternalId()
+	{
+		return qualityMeasureDocument.getId().getExtension();
+	}
+
+	@Override
+	public void setExternalId(String externalId)
+	{
+		qualityMeasureDocument.getId().setExtension(externalId);
+	}
 }

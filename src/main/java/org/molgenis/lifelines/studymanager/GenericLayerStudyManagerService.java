@@ -19,6 +19,7 @@ import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGet
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetSubmittedFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceReviseFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceSubmitFAULTFaultMessage;
+import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceWithdrawFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GetByEmailResponse;
 import nl.umcg.hl7.service.studydefinition.GetSubmittedResponse;
 import nl.umcg.hl7.service.studydefinition.HL7Container;
@@ -489,16 +490,39 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				logger.error(e.getMessage());
 				throw new RuntimeException(e);
 			}
-			// revert status study definition to submit
-			sumbitStudyDefinition(studyDataRequest.getExternalId());
+
+			// withdraw existing study definition
+			try
+			{
+				studyDefinitionService.withdraw(studyDataRequest.getExternalId());
+			}
+			catch (GenericLayerStudyDefinitionServiceWithdrawFAULTFaultMessage e)
+			{
+				logger.error(e.getMessage());
+				throw new RuntimeException(e);
+			}
+
+			// get withdrawn study definition
+			try
+			{
+				qualityMeasureDocument = getStudyDefinitionAsQualityMeasureDocument(studyDataRequest.getExternalId());
+			}
+			catch (UnknownStudyDefinitionException e)
+			{
+				logger.error(e.getMessage());
+				throw new RuntimeException(e);
+			}
 		}
 		// update study definition
 		updateStudyDefinition(qualityMeasureDocument, studyDataRequest);
 
 		String studyDefinitionId = qualityMeasureDocument.getId().getExtension();
+		if (studyDataRequest.getExternalId() == null)
+		{
+			// submit study definition
+			sumbitStudyDefinition(studyDefinitionId);
+		}
 
-		// submit study definition
-		sumbitStudyDefinition(studyDefinitionId);
 		// approve study definition
 		approveStudyDefinition(studyDefinitionId);
 
