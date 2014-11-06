@@ -46,7 +46,6 @@ import org.molgenis.data.support.QueryImpl;
 import org.molgenis.omx.auth.MolgenisUser;
 import org.molgenis.omx.observ.ObservableFeature;
 import org.molgenis.omx.study.StudyDataRequest;
-import org.molgenis.omx.utils.I18nTools;
 import org.molgenis.security.user.MolgenisUserService;
 import org.molgenis.study.StudyDefinition;
 import org.molgenis.study.StudyDefinition.Status;
@@ -145,6 +144,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		switch (status)
 		{
 			case APPROVED:
+			case EXPORTED:
 				try
 				{
 					hl7Containers = studyDefinitionService.getApproved(null).getHL7Containers();
@@ -411,9 +411,6 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			observationCode.setDisplayName(item.getName());
 			observationCode.setCode(observationCodeCode);
 			observationCode.setCodeSystem(observationCodeCodesystem);
-			ED observationOriginalText = new ED();
-			observationOriginalText.getContent().add(I18nTools.get(item.getDescription()));
-			observationCode.setOriginalText(observationOriginalText);
 			observation.setCode(observationCode);
 			entry.setObservation(observation);
 			section.getEntry().add(entry);
@@ -600,9 +597,6 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			observationCode.setDisplayName(feature.getName());
 			observationCode.setCode(observationCodeCode);
 			observationCode.setCodeSystem(observationCodeCodesystem);
-			ED observationOriginalText = new ED();
-			observationOriginalText.getContent().add(I18nTools.get(feature.getDescription()));
-			observationCode.setOriginalText(observationOriginalText);
 			observation.setCode(observationCode);
 			entry.setObservation(observation);
 			section.getEntry().add(entry);
