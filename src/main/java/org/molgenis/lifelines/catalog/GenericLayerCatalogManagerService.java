@@ -54,6 +54,7 @@ import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.omx.utils.ProtocolUtils;
 import org.molgenis.study.UnknownStudyDefinitionException;
 import org.springframework.transaction.annotation.Transactional;
+import org.molgenis.lifelines.catalog.CatalogIdConverter;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;

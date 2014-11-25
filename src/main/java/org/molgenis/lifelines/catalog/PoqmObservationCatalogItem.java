@@ -3,15 +3,15 @@ package org.molgenis.lifelines.catalog;
 import nl.umcg.hl7.service.studydefinition.POQMMT000002UVObservation;
 
 import org.molgenis.omx.catalogmanager.OmxCatalogItem;
-import org.molgenis.omx.observ.ObservableFeature;
+import org.molgenis.omx.observ.Protocol;
 
 public class PoqmObservationCatalogItem extends OmxCatalogItem
 {
 	private final POQMMT000002UVObservation observation;
 
-	public PoqmObservationCatalogItem(POQMMT000002UVObservation observation, ObservableFeature observableFeature)
+	public PoqmObservationCatalogItem(POQMMT000002UVObservation observation, Protocol protocol)
 	{
-		super(observableFeature);
+		super(protocol);
 		if (observation == null) throw new IllegalArgumentException("observation is null");
 		this.observation = observation;
 	}
