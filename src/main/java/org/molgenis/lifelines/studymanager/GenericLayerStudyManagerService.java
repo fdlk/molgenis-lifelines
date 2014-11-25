@@ -45,6 +45,7 @@ import org.molgenis.data.Query;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.omx.auth.MolgenisUser;
 import org.molgenis.omx.observ.ObservableFeature;
+import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.security.user.MolgenisUserService;
 import org.molgenis.study.StudyDefinition;
@@ -574,16 +575,16 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 
 		StrucDocText sectionText = new StrucDocText();
 		StrucDocList strucDocList = new StrucDocList();
-		for (ObservableFeature feature : studyDataRequest.getFeatures())
+		for (Protocol protocol : studyDataRequest.getProtocols())
 		{
 			StrucDocItem strucDocItem = new StrucDocItem();
-			strucDocItem.getContent().add(feature.getIdentifier());
+			strucDocItem.getContent().add(protocol.getIdentifier());
 			strucDocList.getItem().add(strucDocItem);
 		}
 		sectionText.getContent().add(new ObjectFactory().createStrucDocTextList(strucDocList));
 		section.setText(sectionText);
 
-		for (ObservableFeature feature : studyDataRequest.getFeatures())
+		for (Protocol protocol : studyDataRequest.getProtocols())
 		{
 			POQMMT000001UVEntry entry = new POQMMT000001UVEntry();
 			entry.setTypeCode("DRIV");
@@ -591,10 +592,10 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			observation.setClassCode(ActClass.OBS);
 			observation.setMoodCode(ActMood.CRT);
 
-			String observationCodeCode = feature.getIdentifier();
+			String observationCodeCode = protocol.getIdentifier();
 			String observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.4";
 			CD observationCode = new CD();
-			observationCode.setDisplayName(feature.getName());
+			observationCode.setDisplayName(protocol.getName());
 			observationCode.setCode(observationCodeCode);
 			observationCode.setCodeSystem(observationCodeCodesystem);
 			observation.setCode(observationCode);
