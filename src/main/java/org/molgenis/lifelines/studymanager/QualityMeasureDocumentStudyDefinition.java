@@ -123,7 +123,7 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 			public CatalogItem apply(POQMMT000001UVEntry entry)
 			{
 				Protocol protocol = dataService.findOne(Protocol.ENTITY_NAME,
-						new QueryImpl().eq(ObservableFeature.IDENTIFIER, entry.getObservation().getCode().getCode()),
+						new QueryImpl().eq(Protocol.IDENTIFIER, entry.getObservation().getCode().getCode()),
 						Protocol.class);
 
 				if (protocol == null)
