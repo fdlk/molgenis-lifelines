@@ -276,7 +276,15 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 		if (useOntology)
 		{
 			protocol = new Protocol();
-			protocol.setIdentifier(UUID.randomUUID().toString());
+			String code = organizer.getCode().getCode();
+			if (code != null)
+			{
+				protocol.setIdentifier(code + '.' + cohortId + '.' + measurementId + '.' + catalogReleaseId);
+			}
+			else
+			{
+				protocol.setIdentifier(UUID.randomUUID().toString());
+			}
 			protocol.setName(organizer.getCode().getDisplayName());
 			protocol.setActive(isAvailable(organizer));
 

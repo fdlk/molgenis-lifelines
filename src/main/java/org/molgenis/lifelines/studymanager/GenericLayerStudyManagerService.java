@@ -466,6 +466,28 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		repository.update(studyDataRequest);
 	}
 
+	@Override
+	public void withdrawStudyDefinition(String id) throws UnknownStudyDefinitionException
+	{
+		CrudRepository repository = dataService.getCrudRepository(StudyDataRequest.ENTITY_NAME);
+		StudyDataRequest studyDataRequest = repository.findOne(id, StudyDataRequest.class);
+		if (studyDataRequest == null)
+		{
+			throw new UnknownStudyDefinitionException("StudyDataRequest does not exist [" + id + "]");
+		}
+		String externalId = studyDataRequest.getExternalId();
+
+		try
+		{
+			studyDefinitionService.withdraw(externalId);
+		}
+		catch (GenericLayerStudyDefinitionServiceWithdrawFAULTFaultMessage e)
+		{
+			logger.error(e.getMessage());
+			throw new RuntimeException(e);
+		}
+	}
+
 	private String sendStudyDataRequestToGenericLayer(StudyDataRequest studyDataRequest)
 	{
 		MolgenisUser molgenisUser = studyDataRequest.getMolgenisUser();
@@ -653,5 +675,4 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			throw new RuntimeException(e);
 		}
 	}
-
 }

@@ -9,7 +9,7 @@
 			<plugin id="studymanager" name="Study Manager" url="studymanager"/>
 			<plugin id="permissionmanager" name="Permission Manager" url="permissionmanager"/>
 			<plugin id="usermanager" name="User Manager" url="usermanager"/>
-			<plugin id="datasetindexer" name="Data Set Indexer" url="dataindexer"/>
+			<plugin id="dataindexer" name="Data Set Indexer" url="dataindexer"/>
 			<menu label="Entities" name ="entities">
 				<plugin id="form.DataSet" name="DataSet" url="form.DataSet"/>
         		<plugin id="form.Protocol" name="Protocol" url="form.Protocol?subForms=DataSet.ProtocolUsed"/>
