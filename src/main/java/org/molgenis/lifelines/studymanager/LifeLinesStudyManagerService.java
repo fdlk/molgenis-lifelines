@@ -118,4 +118,11 @@ public class LifeLinesStudyManagerService implements StudyManagerService
 		// omxStudyManagerService.exportStudyDefinition(id, catalogId);
 		genericLayerStudyManagerService.exportStudyDefinition(id, catalogId);
 	}
+
+	@Override
+	public void withdrawStudyDefinition(String id) throws UnknownStudyDefinitionException
+	{
+		omxStudyManagerService.withdrawStudyDefinition(id);
+		genericLayerStudyManagerService.withdrawStudyDefinition(id);
+	}
 }

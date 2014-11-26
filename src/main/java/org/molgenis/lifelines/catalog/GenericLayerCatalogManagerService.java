@@ -54,7 +54,6 @@ import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.omx.utils.ProtocolUtils;
 import org.molgenis.study.UnknownStudyDefinitionException;
 import org.springframework.transaction.annotation.Transactional;
-import org.molgenis.lifelines.catalog.CatalogIdConverter;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
@@ -274,8 +273,14 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 		{
 			protocol = new Protocol();
 			String code = organizer.getCode().getCode();
-			if (code != null) protocol.setIdentifier(code + '.' + catalogReleaseId);
-			else protocol.setIdentifier(UUID.randomUUID().toString());
+			if (code != null)
+			{
+				protocol.setIdentifier(code + '.' + cohortId + '.' + measurementId + '.' + catalogReleaseId);
+			}
+			else
+			{
+				protocol.setIdentifier(UUID.randomUUID().toString());
+			}
 			protocol.setName(organizer.getCode().getDisplayName());
 
 			List<Protocol> subprotocols = new ArrayList<Protocol>();
