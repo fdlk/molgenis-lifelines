@@ -30,6 +30,7 @@ import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.lifelines.catalog.PoqmObservationCatalogItem;
 import org.molgenis.omx.observ.ObservableFeature;
+import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.omx.utils.I18nTools;
 import org.molgenis.study.StudyDefinition;
@@ -121,16 +122,16 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 			@Override
 			public CatalogItem apply(POQMMT000001UVEntry entry)
 			{
-				ObservableFeature observableFeature = dataService.findOne(ObservableFeature.ENTITY_NAME,
+				Protocol protocol = dataService.findOne(Protocol.ENTITY_NAME,
 						new QueryImpl().eq(ObservableFeature.IDENTIFIER, entry.getObservation().getCode().getCode()),
-						ObservableFeature.class);
+						Protocol.class);
 
-				if (observableFeature == null)
+				if (protocol == null)
 				{
-					throw new RuntimeException("Unknown ObservableFeature with identifier ["
+					throw new RuntimeException("Unknown Protocol with identifier ["
 							+ entry.getObservation().getCode().getCode() + "]");
 				}
-				return new PoqmObservationCatalogItem(entry.getObservation(), observableFeature);
+				return new PoqmObservationCatalogItem(entry.getObservation(), protocol);
 			}
 		}));
 	}
