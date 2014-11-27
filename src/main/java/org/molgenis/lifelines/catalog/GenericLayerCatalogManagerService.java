@@ -156,11 +156,13 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 		{
 			REPCMT000100UV01Organizer organizer = component.getOrganizer().getValue();
 			String code = organizer.getCode().getCode();
+
 			if (code.equals("Generic"))
 			{
 				Protocol genericProtocol = new Protocol();
 				genericProtocol.setIdentifier(UUID.randomUUID().toString());
 				genericProtocol.setName(code);
+				genericProtocol.setActive(isAvailable(organizer));
 
 				List<Protocol> genericSubprotocols = new ArrayList<Protocol>();
 				if (organizer.getComponent() != null)
@@ -227,6 +229,8 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 			cohortProtocol = new Protocol();
 			cohortProtocol.setIdentifier(UUID.randomUUID().toString());
 			cohortProtocol.setName(cohortOrganizer.getCode().getDisplayName());
+			cohortProtocol.setActive(isAvailable(cohortOrganizer));
+
 			String cohortId = cohortOrganizer.getCode().getCode();
 
 			// measurement components
@@ -282,6 +286,7 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 				protocol.setIdentifier(UUID.randomUUID().toString());
 			}
 			protocol.setName(organizer.getCode().getDisplayName());
+			protocol.setActive(isAvailable(organizer));
 
 			List<Protocol> subprotocols = new ArrayList<Protocol>();
 			List<ObservableFeature> features = new ArrayList<ObservableFeature>();
@@ -398,6 +403,7 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 			protocol = new Protocol();
 			protocol.setIdentifier(UUID.randomUUID().toString());
 			protocol.setName(organizer.getCode().getDisplayName());
+			protocol.setActive(isAvailable(organizer));
 
 			List<Protocol> subprotocols = new ArrayList<Protocol>();
 			List<ObservableFeature> features = new ArrayList<ObservableFeature>();
@@ -608,5 +614,11 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 				return catalogMeta;
 			}
 		});
+	}
+
+	// EffectiveTime.low is set when group is unavailable.
+	private boolean isAvailable(REPCMT000100UV01Organizer organizer)
+	{
+		return (organizer.getEffectiveTime() == null);
 	}
 }
