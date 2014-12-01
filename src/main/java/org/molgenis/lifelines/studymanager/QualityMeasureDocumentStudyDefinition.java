@@ -25,6 +25,7 @@ import nl.umcg.hl7.service.studydefinition.POQMMT000001UVSection;
 import nl.umcg.hl7.service.studydefinition.POQMMT000002UVObservation;
 import nl.umcg.hl7.service.studydefinition.ST;
 
+import org.molgenis.catalog.CatalogFolder;
 import org.molgenis.catalog.CatalogItem;
 import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
@@ -107,7 +108,7 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 	}
 
 	@Override
-	public List<CatalogItem> getItems()
+	public List<CatalogFolder> getItems()
 	{
 		List<POQMMT000001UVComponent2> components = qualityMeasureDocument.getComponent();
 		if (components == null || components.isEmpty()) return Collections.emptyList();
@@ -117,27 +118,28 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 		POQMMT000001UVSection section = component.getSection();
 		if (section == null) return Collections.emptyList();
 
-		return Lists.newArrayList(Lists.transform(section.getEntry(), new Function<POQMMT000001UVEntry, CatalogItem>()
-		{
-			@Override
-			public CatalogItem apply(POQMMT000001UVEntry entry)
-			{
-				Protocol protocol = dataService.findOne(Protocol.ENTITY_NAME,
-						new QueryImpl().eq(Protocol.IDENTIFIER, entry.getObservation().getCode().getCode()),
-						Protocol.class);
-
-				if (protocol == null)
+		return Lists.newArrayList(Lists.transform(section.getEntry(),
+				new Function<POQMMT000001UVEntry, CatalogFolder>()
 				{
-					throw new RuntimeException("Unknown Protocol with identifier ["
-							+ entry.getObservation().getCode().getCode() + "]");
-				}
-				return new PoqmObservationCatalogItem(entry.getObservation(), protocol);
-			}
-		}));
+					@Override
+					public CatalogFolder apply(POQMMT000001UVEntry entry)
+					{
+						Protocol protocol = dataService.findOne(Protocol.ENTITY_NAME,
+								new QueryImpl().eq(Protocol.IDENTIFIER, entry.getObservation().getCode().getCode()),
+								Protocol.class);
+
+						if (protocol == null)
+						{
+							throw new RuntimeException("Unknown Protocol with identifier ["
+									+ entry.getObservation().getCode().getCode() + "]");
+						}
+						return new PoqmObservationCatalogItem(entry.getObservation(), protocol);
+					}
+				}));
 	}
 
 	@Override
-	public void setItems(Iterable<CatalogItem> items)
+	public void setItems(Iterable<CatalogFolder> items)
 	{
 		List<POQMMT000001UVComponent2> components = qualityMeasureDocument.getComponent();
 		POQMMT000001UVComponent2 component;
@@ -278,7 +280,7 @@ public class QualityMeasureDocumentStudyDefinition implements StudyDefinition
 	}
 
 	@Override
-	public boolean containsItem(CatalogItem anItem)
+	public boolean containsItem(CatalogFolder anItem)
 	{
 		boolean contains = false;
 		for (CatalogItem item : getItems())

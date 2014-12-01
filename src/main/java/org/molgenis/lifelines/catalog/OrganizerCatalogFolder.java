@@ -5,6 +5,7 @@ import java.util.List;
 import nl.umcg.hl7.service.catalog.CD;
 import nl.umcg.hl7.service.catalog.REPCMT000100UV01Component3;
 import nl.umcg.hl7.service.catalog.REPCMT000100UV01Organizer;
+
 import org.molgenis.catalog.CatalogFolder;
 import org.molgenis.catalog.CatalogItem;
 
@@ -75,5 +76,29 @@ public class OrganizerCatalogFolder implements CatalogFolder
 								.getObservation().getValue()) : null;
 					}
 				}), Predicates.notNull()));
+	}
+
+	@Override
+	public String getCode()
+	{
+		return organizer.getCode().getCode();
+	}
+
+	@Override
+	public String getCodeSystem()
+	{
+		return organizer.getCode().getCodeSystem();
+	}
+
+	@Override
+	public Iterable<CatalogFolder> getPath()
+	{
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String getExternalId()
+	{
+		return getId();
 	}
 }
