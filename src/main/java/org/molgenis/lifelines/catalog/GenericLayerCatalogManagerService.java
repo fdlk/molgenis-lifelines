@@ -44,6 +44,8 @@ import org.molgenis.catalog.UnknownCatalogException;
 import org.molgenis.catalogmanager.CatalogManagerService;
 import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
+import org.molgenis.lifelines.utils.MeasurementIdConverter;
+import org.molgenis.lifelines.utils.ObservationIdConverter;
 import org.molgenis.omx.catalogmanager.OmxCatalog;
 import org.molgenis.omx.observ.Category;
 import org.molgenis.omx.observ.ObservableFeature;
@@ -224,10 +226,13 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 		Protocol cohortProtocol;
 		if (useOntology)
 		{
+			CD cohortOrganizerCode = cohortOrganizer.getCode();
+
 			cohortProtocol = new Protocol();
 			cohortProtocol.setIdentifier(UUID.randomUUID().toString());
-			cohortProtocol.setName(cohortOrganizer.getCode().getDisplayName());
-			String cohortId = cohortOrganizer.getCode().getCode();
+			cohortProtocol.setName(cohortOrganizerCode.getDisplayName());
+
+			String cohortId = cohortOrganizerCode.getCode();
 
 			// measurement components
 			List<Protocol> cohortSubprotocols = new ArrayList<Protocol>();
@@ -236,10 +241,41 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 				if (measurementComponent.getOrganizer() == null) break; // FIXME remove
 				REPCMT000100UV01Organizer measurementOrganizer = measurementComponent.getOrganizer().getValue();
 
+				CD measurementCode = measurementOrganizer.getCode();
+				String measurementCodeCode = measurementCode.getCode();
+				if (measurementCodeCode == null || measurementCodeCode.isEmpty())
+				{
+					throw new RuntimeException("Expected code for measurement [" + measurementCode.getDisplayName()
+							+ "]");
+				}
+
+				String measurementCodeCodeSystem = measurementCode.getCodeSystem();
+				if (measurementCodeCodeSystem == null || measurementCodeCodeSystem.isEmpty())
+				{
+					throw new RuntimeException("Expected code system for measurement ["
+							+ measurementCode.getDisplayName() + "]");
+				}
+
+				String cohortCodeCode = cohortOrganizerCode.getCode();
+				if (cohortCodeCode == null || cohortCodeCode.isEmpty())
+				{
+					throw new RuntimeException("Expected code for cohort [" + cohortOrganizerCode.getDisplayName()
+							+ "]");
+				}
+
+				String cohortCodeCodeSystem = cohortOrganizerCode.getCodeSystem();
+				if (cohortCodeCodeSystem == null || cohortCodeCodeSystem.isEmpty())
+				{
+					throw new RuntimeException("Expected code system for cohort ["
+							+ cohortOrganizerCode.getDisplayName() + "]");
+				}
+
+				String omxProtocolIdentifier = MeasurementIdConverter.toOmxProtocolIdentifier(cohortCodeCode,
+						cohortCodeCodeSystem, measurementCodeCode, measurementCodeCodeSystem);
 				Protocol measurementProtocol = new Protocol();
-				measurementProtocol.setIdentifier(UUID.randomUUID().toString());
-				measurementProtocol.setName(measurementOrganizer.getCode().getDisplayName());
-				String measurementId = measurementOrganizer.getCode().getCode();
+				measurementProtocol.setIdentifier(omxProtocolIdentifier);
+				measurementProtocol.setName(measurementCode.getDisplayName());
+				String measurementId = measurementCode.getCode();
 
 				List<Protocol> measurementSubprotocols = new ArrayList<Protocol>();
 				for (REPCMT000100UV01Component3 component : measurementOrganizer.getComponent())
@@ -275,7 +311,8 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 			String code = organizer.getCode().getCode();
 			if (code != null)
 			{
-				protocol.setIdentifier(code + '.' + cohortId + '.' + measurementId + '.' + catalogReleaseId);
+				protocol.setIdentifier(ObservationIdConverter.toOmxProtocolIdentifier(code, cohortId, measurementId,
+						catalogReleaseId));
 			}
 			else
 			{

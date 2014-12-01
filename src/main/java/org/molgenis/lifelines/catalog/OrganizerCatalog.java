@@ -85,12 +85,36 @@ public class OrganizerCatalog implements Catalog
 	}
 
 	@Override
-	public CatalogItem findItem(String catalogItemId)
+	public CatalogFolder findItem(String catalogItemId)
 	{
-		for (CatalogItem item : getItems())
+		for (CatalogFolder item : getChildren())
 		{
 			if (item.getId().equals(catalogItemId)) return item;
 		}
 		return null;
+	}
+
+	@Override
+	public String getCode()
+	{
+		return organizer.getCode().getCode();
+	}
+
+	@Override
+	public String getCodeSystem()
+	{
+		return organizer.getCode().getCodeSystem();
+	}
+
+	@Override
+	public Iterable<CatalogFolder> getPath()
+	{
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String getExternalId()
+	{
+		return getId();
 	}
 }

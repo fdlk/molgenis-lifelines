@@ -2,10 +2,10 @@ package org.molgenis.lifelines.catalog;
 
 import nl.umcg.hl7.service.studydefinition.POQMMT000002UVObservation;
 
-import org.molgenis.omx.catalogmanager.OmxCatalogItem;
+import org.molgenis.omx.catalogmanager.OmxCatalogFolder;
 import org.molgenis.omx.observ.Protocol;
 
-public class PoqmObservationCatalogItem extends OmxCatalogItem
+public class PoqmObservationCatalogItem extends OmxCatalogFolder
 {
 	private final POQMMT000002UVObservation observation;
 

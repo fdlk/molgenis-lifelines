@@ -6,6 +6,7 @@ import java.util.List;
 
 import nl.umcg.hl7.service.studydefinition.ActClass;
 import nl.umcg.hl7.service.studydefinition.ActMood;
+import nl.umcg.hl7.service.studydefinition.ActRelationshipType;
 import nl.umcg.hl7.service.studydefinition.ArrayOfXElement;
 import nl.umcg.hl7.service.studydefinition.CD;
 import nl.umcg.hl7.service.studydefinition.CreateResponse;
@@ -28,7 +29,9 @@ import nl.umcg.hl7.service.studydefinition.POQMMT000001UVComponent2;
 import nl.umcg.hl7.service.studydefinition.POQMMT000001UVEntry;
 import nl.umcg.hl7.service.studydefinition.POQMMT000001UVQualityMeasureDocument;
 import nl.umcg.hl7.service.studydefinition.POQMMT000001UVSection;
+import nl.umcg.hl7.service.studydefinition.POQMMT000002UVEncounter;
 import nl.umcg.hl7.service.studydefinition.POQMMT000002UVObservation;
+import nl.umcg.hl7.service.studydefinition.POQMMT000002UVSourceOf;
 import nl.umcg.hl7.service.studydefinition.ST;
 import nl.umcg.hl7.service.studydefinition.StrucDocItem;
 import nl.umcg.hl7.service.studydefinition.StrucDocList;
@@ -36,14 +39,18 @@ import nl.umcg.hl7.service.studydefinition.StrucDocText;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.molgenis.catalog.CatalogItem;
+import org.elasticsearch.common.collect.Lists;
+import org.molgenis.catalog.CatalogFolder;
 import org.molgenis.catalog.UnknownCatalogException;
 import org.molgenis.catalogmanager.CatalogManagerService;
 import org.molgenis.data.CrudRepository;
 import org.molgenis.data.DataService;
 import org.molgenis.data.Query;
 import org.molgenis.data.support.QueryImpl;
+import org.molgenis.lifelines.utils.MeasurementIdConverter;
+import org.molgenis.lifelines.utils.ObservationIdConverter;
 import org.molgenis.omx.auth.MolgenisUser;
+import org.molgenis.omx.catalogmanager.OmxCatalogFolder;
 import org.molgenis.omx.observ.ObservableFeature;
 import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.study.StudyDataRequest;
@@ -377,7 +384,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 
 		StrucDocText sectionText = new StrucDocText();
 		StrucDocList strucDocList = new StrucDocList();
-		for (CatalogItem item : studyDefinition.getItems())
+		for (CatalogFolder item : studyDefinition.getItems())
 		{
 			StrucDocItem strucDocItem = new StrucDocItem();
 			strucDocItem.getContent().add(item.getName());
@@ -386,7 +393,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		sectionText.getContent().add(new ObjectFactory().createStrucDocTextList(strucDocList));
 		section.setText(sectionText);
 
-		for (CatalogItem item : studyDefinition.getItems())
+		for (CatalogFolder item : studyDefinition.getItems())
 		{
 			POQMMT000001UVEntry entry = new POQMMT000001UVEntry();
 			entry.setTypeCode("DRIV");
@@ -413,6 +420,38 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			observationCode.setCode(observationCodeCode);
 			observationCode.setCodeSystem(observationCodeCodesystem);
 			observation.setCode(observationCode);
+
+			// set measurement (e.g. baseline, follow-up) for item
+			POQMMT000002UVSourceOf sourceOf = new POQMMT000002UVSourceOf();
+			sourceOf.setTypeCode(ActRelationshipType.DRIV);
+
+			POQMMT000002UVEncounter encounter = new POQMMT000002UVEncounter();
+			encounter.setClassCode(ActClass.ENC);
+			encounter.setMoodCode(ActMood.CRT);
+
+			List<CatalogFolder> itemPath = Lists.newArrayList(item.getPath());
+			if (itemPath.size() <= 2)
+			{
+				throw new RuntimeException("Missing measurement for catalog item with id [" + item.getId() + "]");
+			}
+			String measurementItemId = itemPath.get(2).getId();
+
+			int idx = measurementItemId.lastIndexOf('_');
+			if (idx == -1 || idx == measurementItemId.length() - 1)
+			{
+				throw new RuntimeException("Invalid Measurement id [" + measurementItemId + "]");
+			}
+			String measurementCode = MeasurementIdConverter.getMeasurementCode(measurementItemId);
+			String measurementCodeSystem = MeasurementIdConverter.getMeasurementCodeSystem(measurementItemId);
+
+			CD encounterCode = new CD();
+			encounterCode.setCode(measurementCode);
+			encounterCode.setCodeSystem(measurementCodeSystem);
+			encounter.setCode(encounterCode);
+
+			sourceOf.setEncounter(encounter);
+			observation.getSourceOf().add(sourceOf);
+
 			entry.setObservation(observation);
 			section.getEntry().add(entry);
 		}
@@ -510,28 +549,6 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				logger.error(e.getMessage());
 				throw new RuntimeException(e);
 			}
-
-			// withdraw existing study definition
-			try
-			{
-				studyDefinitionService.withdraw(studyDataRequest.getExternalId());
-			}
-			catch (GenericLayerStudyDefinitionServiceWithdrawFAULTFaultMessage e)
-			{
-				logger.error(e.getMessage());
-				throw new RuntimeException(e);
-			}
-
-			// get withdrawn study definition
-			try
-			{
-				qualityMeasureDocument = getStudyDefinitionAsQualityMeasureDocument(studyDataRequest.getExternalId());
-			}
-			catch (UnknownStudyDefinitionException e)
-			{
-				logger.error(e.getMessage());
-				throw new RuntimeException(e);
-			}
 		}
 		// update study definition
 		updateStudyDefinition(qualityMeasureDocument, studyDataRequest);
@@ -600,7 +617,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		for (Protocol protocol : studyDataRequest.getProtocols())
 		{
 			StrucDocItem strucDocItem = new StrucDocItem();
-			strucDocItem.getContent().add(protocol.getIdentifier());
+			strucDocItem.getContent().add(ObservationIdConverter.getObservationCode(protocol.getIdentifier()));
 			strucDocList.getItem().add(strucDocItem);
 		}
 		sectionText.getContent().add(new ObjectFactory().createStrucDocTextList(strucDocList));
@@ -614,13 +631,40 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			observation.setClassCode(ActClass.OBS);
 			observation.setMoodCode(ActMood.CRT);
 
-			String observationCodeCode = protocol.getIdentifier();
+			String observationCodeCode = ObservationIdConverter.getObservationCode(protocol.getIdentifier());
 			String observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.4";
 			CD observationCode = new CD();
 			observationCode.setDisplayName(protocol.getName());
 			observationCode.setCode(observationCodeCode);
 			observationCode.setCodeSystem(observationCodeCodesystem);
 			observation.setCode(observationCode);
+
+			// set measurement (e.g. baseline, follow-up) for item
+			POQMMT000002UVSourceOf sourceOf = new POQMMT000002UVSourceOf();
+			sourceOf.setTypeCode(ActRelationshipType.DRIV);
+
+			POQMMT000002UVEncounter encounter = new POQMMT000002UVEncounter();
+			encounter.setClassCode(ActClass.ENC);
+			encounter.setMoodCode(ActMood.CRT);
+
+			List<CatalogFolder> itemPath = Lists.newArrayList(new OmxCatalogFolder(protocol).getPath());
+			if (itemPath.size() <= 2)
+			{
+				throw new RuntimeException("Missing measurement for catalog item with id [" + protocol.getIdentifier()
+						+ "]");
+			}
+			String measurementItemId = itemPath.get(2).getExternalId();
+			String measurementCode = MeasurementIdConverter.getMeasurementCode(measurementItemId);
+			String measurementCodeSystem = MeasurementIdConverter.getMeasurementCodeSystem(measurementItemId);
+
+			CD encounterCode = new CD();
+			encounterCode.setCode(measurementCode);
+			encounterCode.setCodeSystem(measurementCodeSystem);
+			encounter.setCode(encounterCode);
+
+			sourceOf.setEncounter(encounter);
+			observation.getSourceOf().add(sourceOf);
+
 			entry.setObservation(observation);
 			section.getEntry().add(entry);
 		}
