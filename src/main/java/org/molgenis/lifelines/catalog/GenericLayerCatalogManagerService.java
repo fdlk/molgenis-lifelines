@@ -322,7 +322,6 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 				protocol.setIdentifier(UUID.randomUUID().toString());
 			}
 			protocol.setName(organizer.getCode().getDisplayName());
-			protocol.setActive(isAvailable(organizer));
 
 			List<Protocol> subprotocols = new ArrayList<Protocol>();
 			List<ObservableFeature> features = new ArrayList<ObservableFeature>();
@@ -345,6 +344,23 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 					features.add(feature);
 				}
 			}
+
+			boolean active = isAvailable(organizer);
+			if (active && !subprotocols.isEmpty())
+			{
+				boolean activeSubprotocol = false;
+				for (Protocol subprotocol : subprotocols)
+				{
+					if (subprotocol.getActive() == null || subprotocol.getActive().booleanValue() == true)
+					{
+						activeSubprotocol = true;
+						break;
+					}
+				}
+				if (!activeSubprotocol) active = false;
+			}
+			protocol.setActive(active);
+
 			if (!subprotocols.isEmpty()) protocol.setSubprotocols(subprotocols);
 			if (!features.isEmpty()) protocol.setFeatures(features);
 		}
@@ -439,7 +455,6 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 			protocol = new Protocol();
 			protocol.setIdentifier(UUID.randomUUID().toString());
 			protocol.setName(organizer.getCode().getDisplayName());
-			protocol.setActive(isAvailable(organizer));
 
 			List<Protocol> subprotocols = new ArrayList<Protocol>();
 			List<ObservableFeature> features = new ArrayList<ObservableFeature>();
@@ -460,6 +475,23 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 					features.add(feature);
 				}
 			}
+
+			boolean active = isAvailable(organizer);
+			if (active && !subprotocols.isEmpty())
+			{
+				boolean activeSubprotocol = false;
+				for (Protocol subprotocol : subprotocols)
+				{
+					if (subprotocol.getActive() == null || subprotocol.getActive().booleanValue() == true)
+					{
+						activeSubprotocol = true;
+						break;
+					}
+				}
+				if (!activeSubprotocol) active = false;
+			}
+			protocol.setActive(active);
+
 			if (!subprotocols.isEmpty()) protocol.setSubprotocols(subprotocols);
 			if (!features.isEmpty()) protocol.setFeatures(features);
 		}
