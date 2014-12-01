@@ -413,7 +413,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				}
 
 				observationCodeCode = of.getIdentifier();
-				observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.4";
+				observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.8";
 			}
 			CD observationCode = new CD();
 			observationCode.setDisplayName(item.getName());
@@ -632,7 +632,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 			observation.setMoodCode(ActMood.CRT);
 
 			String observationCodeCode = ObservationIdConverter.getObservationCode(protocol.getIdentifier());
-			String observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.4";
+			String observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.8";
 			CD observationCode = new CD();
 			observationCode.setDisplayName(protocol.getName());
 			observationCode.setCode(observationCodeCode);
