@@ -2,11 +2,12 @@ package org.molgenis.lifelines.utils;
 
 /**
  * Converts measurement identifiers to omx protocol identifiers and back:
- * - cohort code system     : 2.16.840.1.113883.2.4.3.8.1000.54.5.2
- * - cohort code            : 1
+ * - catalog release id: 4 
+ * - cohort code system : 2.16.840.1.113883.2.4.3.8.1000.54.5.2 
+ * - cohort code : 1 
  * - measurement code system: 2.16.840.1.113883.2.4.3.8.1000.54.5.6
- * - measurement code       : 11
- * = omx protocol identifier: 2.16.840.1.113883.2.4.3.8.1000.54.5.2_1/2.16.840.1.113883.2.4.3.8.1000.54.5.6_11
+ * - measurement code : 11
+ * = omx protocol identifier: 4_2.16.840.1.113883.2.4.3.8.1000.54.5.2_1/2.16.840.1.113883.2.4.3.8.1000.54.5.6_11
  * 
  * @author Dennis
  */
@@ -14,6 +15,7 @@ public class MeasurementIdConverter
 {
 	private static final char CODESYSTEM_CODE_SEPARATOR = '_';
 	private static final char COHORT_MEASUREMENT_SEPARATOR = '/';
+	private static final char CATALOGRELEASE_COHORT_SEPARATOR = ':';
 
 	private MeasurementIdConverter()
 	{
@@ -55,10 +57,12 @@ public class MeasurementIdConverter
 		return measurementCodeSystem;
 	}
 
-	public static String toOmxProtocolIdentifier(String cohortCode, String cohortCodeSystem, String measurementCode,
-			String measurementCodeSystem)
+	public static String toOmxProtocolIdentifier(String catalogReleaseId, String cohortCode, String cohortCodeSystem,
+			String measurementCode, String measurementCodeSystem)
 	{
 		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append(catalogReleaseId);
+		stringBuilder.append(CATALOGRELEASE_COHORT_SEPARATOR);
 		stringBuilder.append(cohortCodeSystem);
 		stringBuilder.append(CODESYSTEM_CODE_SEPARATOR);
 		stringBuilder.append(cohortCode);

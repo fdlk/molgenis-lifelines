@@ -273,8 +273,8 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 							+ cohortOrganizerCode.getDisplayName() + "]");
 				}
 
-				String omxProtocolIdentifier = MeasurementIdConverter.toOmxProtocolIdentifier(cohortCodeCode,
-						cohortCodeCodeSystem, measurementCodeCode, measurementCodeCodeSystem);
+				String omxProtocolIdentifier = MeasurementIdConverter.toOmxProtocolIdentifier(catalogReleaseId,
+						cohortCodeCode, cohortCodeCodeSystem, measurementCodeCode, measurementCodeCodeSystem);
 				Protocol measurementProtocol = new Protocol();
 				measurementProtocol.setIdentifier(omxProtocolIdentifier);
 				measurementProtocol.setName(measurementCode.getDisplayName());
