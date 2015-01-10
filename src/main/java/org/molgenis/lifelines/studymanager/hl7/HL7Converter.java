@@ -58,14 +58,14 @@ public class HL7Converter
 	}
 
 	public void updateQualityMeasureDocument(POQMMT000001UVQualityMeasureDocument qualityMeasureDocument,
-			StudyDefinitionBean info)
+			StudyDefinitionBean studyDefinitionBean)
 	{
 		ST title = new ST();
-		title.getContent().add(info.getName());
+		title.getContent().add(studyDefinitionBean.getName());
 		qualityMeasureDocument.setTitle(title);
 
 		ED text = new ED();
-		text.getContent().add(info.getCreatedBy());
+		text.getContent().add(studyDefinitionBean.getCreatedBy());
 		qualityMeasureDocument.setText(text);
 
 		POQMMT000001UVComponent2 component = new POQMMT000001UVComponent2();
@@ -83,19 +83,36 @@ public class HL7Converter
 
 		StrucDocText sectionText = new StrucDocText();
 		StrucDocList strucDocList = new StrucDocList();
-		for (MeasurementBean observationInfo : info.getObservationInfo())
-		{
-			StrucDocItem strucDocItem = new StrucDocItem();
-			strucDocItem.getContent().add(observationInfo.getTextCode());
-			strucDocList.getItem().add(strucDocItem);
-		}
 		sectionText.getContent().add(new ObjectFactory().createStrucDocTextList(strucDocList));
 		section.setText(sectionText);
 
-		Map<String, POQMMT000001UVEntry> entries = new LinkedHashMap<String, POQMMT000001UVEntry>();
-		for (MeasurementBean observationInfo : info.getObservationInfo())
+		addMeasurements(studyDefinitionBean, section, strucDocList);
+
+		List<POQMMT000001UVComponent2> components = qualityMeasureDocument.getComponent();
+		component.setSection(section);
+		if (components.size() > 0)
 		{
-			String observationCodeCode = observationInfo.getCode();
+			components.set(0, component);
+		}
+		else
+		{
+			components.add(component);
+		}
+	}
+
+	private void addMeasurementCode(StrucDocList strucDocList, MeasurementBean measurementBean)
+	{
+		StrucDocItem strucDocItem = new StrucDocItem();
+		strucDocItem.getContent().add(measurementBean.getTextCode());
+		strucDocList.getItem().add(strucDocItem);
+	}
+
+	private void addMeasurements(StudyDefinitionBean studyDefinition, POQMMT000001UVSection section, StrucDocList strucDocList)
+	{
+		Map<String, POQMMT000001UVEntry> entries = new LinkedHashMap<String, POQMMT000001UVEntry>();
+		for (MeasurementBean measurement : studyDefinition.getMeasurements())
+		{
+			String observationCodeCode = measurement.getCode();
 			final POQMMT000001UVEntry entry;
 			final POQMMT000002UVObservation observation;
 
@@ -103,10 +120,12 @@ public class HL7Converter
 			{
 				entry = new POQMMT000001UVEntry();
 				entry.setTypeCode("DRIV");
-				observation = createObservation(observationInfo.getDisplayName(), observationCodeCode,
-						observationInfo.getCodeSystem());
+				observation = createObservation(measurement.getDisplayName(), observationCodeCode,
+						measurement.getCodeSystem());
 				entry.setObservation(observation);
 				section.getEntry().add(entry);
+				entries.put(observationCodeCode, entry);
+				addMeasurementCode(strucDocList, measurement);
 			}
 			else
 			{
@@ -114,8 +133,8 @@ public class HL7Converter
 				observation = entry.getObservation();
 			}
 
-			POQMMT000002UVEncounter encounter = createEncounter(observationInfo.getMeasurementCode(),
-					observationInfo.getMeasurementCodeSystem());
+			POQMMT000002UVEncounter encounter = createEncounter(measurement.getMeasurementCode(),
+					measurement.getMeasurementCodeSystem());
 
 			boolean exists = false;
 			for (POQMMT000002UVSourceOf sourceOfItem : observation.getSourceOf())
@@ -127,7 +146,7 @@ public class HL7Converter
 				}
 			}
 
-			// add sourceOf (e.g. baseline, follow-up) after determine if it already exists
+			// add new encounter
 			if (!exists)
 			{
 				POQMMT000002UVSourceOf sourceOf = new POQMMT000002UVSourceOf();
@@ -135,17 +154,6 @@ public class HL7Converter
 				sourceOf.setEncounter(encounter);
 				observation.getSourceOf().add(sourceOf);
 			}
-		}
-
-		List<POQMMT000001UVComponent2> components = qualityMeasureDocument.getComponent();
-		component.setSection(section);
-		if (components.size() > 0)
-		{
-			components.set(0, component);
-		}
-		else
-		{
-			components.add(component);
 		}
 	}
 

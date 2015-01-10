@@ -26,7 +26,7 @@ public class StudyDefinitionBean
 {
 	private String createdBy;
 	private String name;
-	private List<MeasurementBean> observationInfo = new ArrayList<MeasurementBean>();
+	private List<MeasurementBean> measurements = new ArrayList<MeasurementBean>();
 
 	public StudyDefinitionBean(StudyDefinition studyDefinition, DataService dataService)
 	{
@@ -38,9 +38,9 @@ public class StudyDefinitionBean
 
 		for (CatalogFolder item : studyDefinition.getItems())
 		{
-			MeasurementBean observationInfo = new MeasurementBean();
-			observationInfo.setTextCode(item.getName());
-			addObservationInfo(observationInfo);
+			MeasurementBean measurementBean = new MeasurementBean();
+			measurementBean.setTextCode(item.getName());
+			addMeasurement(measurementBean);
 
 			String observationCodeCode = item.getCode();
 			String observationCodeCodesystem = item.getCodeSystem();
@@ -56,9 +56,9 @@ public class StudyDefinitionBean
 				observationCodeCode = of.getIdentifier();
 				observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.8";
 			}
-			observationInfo.setCode(observationCodeCode);
-			observationInfo.setCodeSystem(observationCodeCodesystem);
-			observationInfo.setDisplayName(item.getName());
+			measurementBean.setCode(observationCodeCode);
+			measurementBean.setCodeSystem(observationCodeCodesystem);
+			measurementBean.setDisplayName(item.getName());
 
 			List<CatalogFolder> itemPath = Lists.newArrayList(item.getPath());
 			if (itemPath.size() <= 2)
@@ -72,8 +72,8 @@ public class StudyDefinitionBean
 			{
 				throw new RuntimeException("Invalid Measurement id [" + measurementItemId + "]");
 			}
-			observationInfo.setMeasurementCode(MeasurementIdConverter.getMeasurementCode(measurementItemId));
-			observationInfo
+			measurementBean.setMeasurementCode(MeasurementIdConverter.getMeasurementCode(measurementItemId));
+			measurementBean
 					.setMeasurementCodeSystem(MeasurementIdConverter.getMeasurementCodeSystem(measurementItemId));
 		}
 	}
@@ -88,12 +88,12 @@ public class StudyDefinitionBean
 
 		for (Protocol protocol : studyDataRequest.getProtocols())
 		{
-			MeasurementBean observationInfo = new MeasurementBean();
-			observationInfo.setTextCode(ObservationIdConverter.getObservationCode(protocol.getIdentifier()));
-			observationInfo.setCode(ObservationIdConverter.getObservationCode(protocol.getIdentifier()));
-			observationInfo.setCodeSystem("2.16.840.1.113883.2.4.3.8.1000.54.8");
-			observationInfo.setDisplayName(protocol.getName());
-			addObservationInfo(observationInfo);
+			MeasurementBean measurementBean = new MeasurementBean();
+			measurementBean.setTextCode(ObservationIdConverter.getObservationCode(protocol.getIdentifier()));
+			measurementBean.setCode(ObservationIdConverter.getObservationCode(protocol.getIdentifier()));
+			measurementBean.setCodeSystem("2.16.840.1.113883.2.4.3.8.1000.54.8");
+			measurementBean.setDisplayName(protocol.getName());
+			addMeasurement(measurementBean);
 			List<CatalogFolder> itemPath = Lists.newArrayList(new OmxCatalogFolder(protocol).getPath());
 			if (itemPath.size() <= 2)
 			{
@@ -101,8 +101,8 @@ public class StudyDefinitionBean
 						+ "]");
 			}
 			String measurementItemId = itemPath.get(2).getExternalId();
-			observationInfo.setMeasurementCode(MeasurementIdConverter.getMeasurementCode(measurementItemId));
-			observationInfo
+			measurementBean.setMeasurementCode(MeasurementIdConverter.getMeasurementCode(measurementItemId));
+			measurementBean
 					.setMeasurementCodeSystem(MeasurementIdConverter.getMeasurementCodeSystem(measurementItemId));
 
 		}
@@ -128,13 +128,13 @@ public class StudyDefinitionBean
 		this.name = name;
 	}
 
-	public List<MeasurementBean> getObservationInfo()
+	public List<MeasurementBean> getMeasurements()
 	{
-		return observationInfo;
+		return measurements;
 	}
 
-	public void addObservationInfo(MeasurementBean info)
+	public void addMeasurement(MeasurementBean info)
 	{
-		observationInfo.add(info);
+		measurements.add(info);
 	}
 }
