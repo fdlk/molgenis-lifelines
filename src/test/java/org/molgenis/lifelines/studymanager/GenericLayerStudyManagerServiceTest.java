@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.Collections;
 
 import javax.xml.bind.JAXB;
 
@@ -24,6 +25,8 @@ import org.mockito.ArgumentCaptor;
 import org.molgenis.catalog.CatalogFolder;
 import org.molgenis.catalogmanager.CatalogManagerService;
 import org.molgenis.data.DataService;
+import org.molgenis.omx.auth.MolgenisUser;
+import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.security.user.MolgenisUserService;
 import org.molgenis.study.StudyDefinition;
@@ -61,6 +64,65 @@ public class GenericLayerStudyManagerServiceTest
 	}
 
 	@Test
+	public void testUpdateStudyDataRequestMergesEncountersIntoSameObservation() throws UnknownStudyDefinitionException,
+			GenericLayerStudyDefinitionServiceGetByIdFAULTFaultMessage,
+			GenericLayerStudyDefinitionServiceReviseFAULTFaultMessage, IOException
+	{
+		Protocol protocol1 = mock(Protocol.class);
+		Protocol protocol2 = mock(Protocol.class);
+		Protocol protocol3 = mock(Protocol.class);
+		Protocol smokingBaseline = mock(Protocol.class);
+		when(smokingBaseline.getName()).thenReturn("Current smoking");
+		when(smokingBaseline.getIdentifier()).thenReturn("Que_Smo_Cur1.b.c.d_1");
+		when(smokingBaseline.getSubprotocolsProtocolCollection()).thenReturn(
+				Collections.<Protocol> singletonList(protocol1));
+		when(protocol1.getIdentifier()).thenReturn("x/2.16.840.1.113883.2.4.3.8.1000.54.5.2_6");
+		when(protocol1.getSubprotocolsProtocolCollection()).thenReturn(Collections.<Protocol> singletonList(protocol2));
+		when(protocol2.getSubprotocolsProtocolCollection()).thenReturn(Collections.<Protocol> singletonList(protocol3));
+		when(protocol3.getSubprotocolsProtocolCollection()).thenReturn(Collections.<Protocol> emptyList());
+
+		Protocol protocol4 = mock(Protocol.class);
+		Protocol protocol5 = mock(Protocol.class);
+		Protocol protocol6 = mock(Protocol.class);
+		Protocol smokingCurrent = mock(Protocol.class);
+		when(smokingCurrent.getName()).thenReturn("Current smoking");
+		when(smokingCurrent.getIdentifier()).thenReturn("Que_Smo_Cur1.b.c.d_1");
+		when(smokingCurrent.getSubprotocolsProtocolCollection()).thenReturn(
+				Collections.<Protocol> singletonList(protocol4));
+		when(protocol4.getIdentifier()).thenReturn("x/2.16.840.1.113883.2.4.3.8.1000.54.5.2_1");
+		when(protocol4.getSubprotocolsProtocolCollection()).thenReturn(Collections.<Protocol> singletonList(protocol5));
+		when(protocol5.getSubprotocolsProtocolCollection()).thenReturn(Collections.<Protocol> singletonList(protocol6));
+		when(protocol6.getSubprotocolsProtocolCollection()).thenReturn(Collections.<Protocol> emptyList());
+
+		StudyDataRequest studyDataRequest = mock(StudyDataRequest.class);
+		MolgenisUser molgenisUser = mock(MolgenisUser.class);
+		when(studyDataRequest.getMolgenisUser()).thenReturn(molgenisUser);
+		when(molgenisUser.getEmail()).thenReturn("author@email.com");
+		when(molgenisUser.getUsername()).thenReturn("Username");
+		when(studyDataRequest.getName()).thenReturn("studyDataRequestName");
+
+		when(studyDataRequest.getProtocols()).thenReturn(Arrays.asList(smokingBaseline, smokingCurrent));
+
+		when(dataService.findOne(StudyDataRequest.ENTITY_NAME, new Integer(908), StudyDataRequest.class)).thenReturn(
+				null);
+
+		HL7Container container = new HL7Container();
+		POQMMT000001UVQualityMeasureDocument qualityMeasureDocument = new POQMMT000001UVQualityMeasureDocument();
+		container.setQualityMeasureDocument(qualityMeasureDocument);
+		when(studyDefinitionService.getById("908")).thenReturn(container);
+
+		service.updateStudyDefinition(qualityMeasureDocument, studyDataRequest);
+
+		ArgumentCaptor<HL7Container> containerCaptor = ArgumentCaptor.forClass(HL7Container.class);
+		verify(studyDefinitionService).revise(containerCaptor.capture());
+		HL7Container revisedContainer = containerCaptor.getValue();
+
+		StringWriter sw = new StringWriter();
+		JAXB.marshal(revisedContainer, sw);
+		assertEquals(sw.toString(), readExpectedResult("revisedContainerStudyDataRequest.xml"));
+	}
+
+	@Test
 	public void testUpdateStudyDefinitionMergesEncountersIntoSameObservation() throws UnknownStudyDefinitionException,
 			GenericLayerStudyDefinitionServiceGetByIdFAULTFaultMessage,
 			GenericLayerStudyDefinitionServiceReviseFAULTFaultMessage, IOException
@@ -91,6 +153,7 @@ public class GenericLayerStudyManagerServiceTest
 		when(studyDefinition.getItems()).thenReturn(Arrays.asList(smokingBaseline, smokingFollowup));
 		when(studyDefinition.getAuthors()).thenReturn(Arrays.asList("Author 1", "Author 2"));
 		when(studyDefinition.getAuthorEmail()).thenReturn("author@email.com");
+		when(studyDefinition.getName()).thenReturn("StudyDefinitionName");
 
 		when(dataService.findOne(StudyDataRequest.ENTITY_NAME, new Integer(908), StudyDataRequest.class)).thenReturn(
 				null);
@@ -109,7 +172,6 @@ public class GenericLayerStudyManagerServiceTest
 		StringWriter sw = new StringWriter();
 		JAXB.marshal(revisedContainer, sw);
 		assertEquals(sw.toString(), readExpectedResult("revisedContainer.xml"));
-
 	}
 
 	private static String readExpectedResult(String name) throws IOException

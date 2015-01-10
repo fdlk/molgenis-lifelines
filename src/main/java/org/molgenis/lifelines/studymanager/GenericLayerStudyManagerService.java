@@ -301,7 +301,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				.getId());
 
 		// update study definition
-		hl7Converter.updateQualityMeasureDocument(qualityMeasureDocument, studyDefinition);
+		hl7Converter.updateQualityMeasureDocument(qualityMeasureDocument, hl7Converter.createInfo(studyDefinition));
 
 		// submit study definition
 		try
@@ -451,7 +451,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 	POQMMT000001UVQualityMeasureDocument updateStudyDefinition(
 			POQMMT000001UVQualityMeasureDocument qualityMeasureDocument, StudyDataRequest studyDataRequest)
 	{
-		hl7Converter.updateQualityMeasureDocumentFixed(qualityMeasureDocument, studyDataRequest);
+		hl7Converter.updateQualityMeasureDocument(qualityMeasureDocument, hl7Converter.createInfo(studyDataRequest));
 
 		try
 		{

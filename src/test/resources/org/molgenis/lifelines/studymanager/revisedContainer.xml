@@ -1,33 +1,37 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<HL7Container xmlns:ns2="http://hl7.umcg.nl" xmlns:ns4="urn:hl7-org:v3" xmlns:ns3="http://schemas.microsoft.com/2003/10/Serialization/">
-    <ns4:QualityMeasureDocument>
-        <ns4:title/>
-        <ns4:text>Created by Author 1 Author 2 (author@email.com)</ns4:text>
-        <ns4:component>
-            <ns4:section>
-                <ns4:code code="57025-9" codeSystem="2.16.840.1.113883.6.1" displayName="Data Criteria section"/>
-                <ns4:title>Data criteria</ns4:title>
-                <ns4:text>
-                    <ns4:list>
-                        <ns4:item>smoking</ns4:item>
-                    </ns4:list>
-                </ns4:text>
-                <ns4:entry typeCode="DRIV">
-                    <ns4:observation classCode="OBS" moodCode="CRT">
-                        <ns4:code code="smokingCode" codeSystem="codeSystem1" displayName="smoking"/>
-                        <ns4:sourceOf typeCode="DRIV">
-                            <ns4:encounter classCode="ENC" moodCode="CRT">
-                                <ns4:code code="1" codeSystem="baseline"/>
-                            </ns4:encounter>
-                        </ns4:sourceOf>
-                        <ns4:sourceOf typeCode="DRIV">
-                            <ns4:encounter classCode="ENC" moodCode="CRT">
-                                <ns4:code code="6" codeSystem="followup"/>
-                            </ns4:encounter>
-                        </ns4:sourceOf>
-                    </ns4:observation>
-                </ns4:entry>
-            </ns4:section>
-        </ns4:component>
-    </ns4:QualityMeasureDocument>
+<HL7Container xmlns:ns2="http://hl7.umcg.nl" xmlns:ns4="urn:hl7-org:v3"
+	xmlns:ns3="http://schemas.microsoft.com/2003/10/Serialization/">
+	<ns4:QualityMeasureDocument>
+		<ns4:title>StudyDefinitionName</ns4:title>
+		<ns4:text>Created by Author 1 Author 2 (author@email.com)</ns4:text>
+		<ns4:component>
+			<ns4:section>
+				<ns4:code code="57025-9" codeSystem="2.16.840.1.113883.6.1"
+					displayName="Data Criteria section" />
+				<ns4:title>Data criteria</ns4:title>
+				<ns4:text>
+					<ns4:list>
+						<ns4:item>Que_Smo_Cur1</ns4:item>
+					</ns4:list>
+				</ns4:text>
+				<ns4:entry typeCode="DRIV">
+					<ns4:observation classCode="OBS" moodCode="CRT">
+						<ns4:code code="Que_Smo_Cur1" codeSystem="2.16.840.1.113883.2.4.3.8.1000.54.8"
+							displayName="Current smoking" />
+						<ns4:sourceOf typeCode="DRIV">
+							<ns4:encounter classCode="ENC" moodCode="CRT">
+								<ns4:code code="1" codeSystem="2.16.840.1.113883.2.4.3.8.1000.54.5.2" />
+							</ns4:encounter>
+						</ns4:sourceOf>
+						<ns4:sourceOf typeCode="DRIV">
+							<ns4:encounter classCode="ENC" moodCode="CRT">
+								<ns4:code code="6" codeSystem="2.16.840.1.113883.2.4.3.8.1000.54.5.2" />
+							</ns4:encounter>
+						</ns4:sourceOf>
+					</ns4:observation>
+
+				</ns4:entry>
+			</ns4:section>
+		</ns4:component>
+	</ns4:QualityMeasureDocument>
 </HL7Container>
