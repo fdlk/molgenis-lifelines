@@ -21,10 +21,7 @@ import nl.umcg.hl7.service.studydefinition.GetSubmittedResponse;
 import nl.umcg.hl7.service.studydefinition.HL7Container;
 import nl.umcg.hl7.service.studydefinition.POQMMT000001UVQualityMeasureDocument;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.elasticsearch.common.collect.Lists;
-import org.molgenis.catalog.CatalogFolder;
 import org.molgenis.catalog.UnknownCatalogException;
 import org.molgenis.catalogmanager.CatalogManagerService;
 import org.molgenis.data.CrudRepository;
@@ -32,14 +29,8 @@ import org.molgenis.data.DataService;
 import org.molgenis.data.Query;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.lifelines.studymanager.hl7.HL7Converter;
-import org.molgenis.lifelines.studymanager.hl7.MeasurementBean;
 import org.molgenis.lifelines.studymanager.hl7.StudyDefinitionBean;
-import org.molgenis.lifelines.utils.MeasurementIdConverter;
-import org.molgenis.lifelines.utils.ObservationIdConverter;
 import org.molgenis.omx.auth.MolgenisUser;
-import org.molgenis.omx.catalogmanager.OmxCatalogFolder;
-import org.molgenis.omx.observ.ObservableFeature;
-import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.security.user.MolgenisUserService;
 import org.molgenis.study.StudyDefinition;
@@ -294,60 +285,6 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		}
 		return new QualityMeasureDocumentStudyDefinition(qualityMeasureDocument, dataService);
 	}
-	
-	private StudyDefinitionBean createBean(StudyDefinition studyDefinition)
-	{
-		StudyDefinitionBean result = new StudyDefinitionBean();
-
-		StringBuilder textBuilder = new StringBuilder("Created by ")
-				.append(StringUtils.join(studyDefinition.getAuthors(), ' ')).append(" (")
-				.append(studyDefinition.getAuthorEmail()).append(')');
-		result.setCreatedBy(textBuilder.toString());
-		result.setName(studyDefinition.getName());
-
-		for (CatalogFolder item : studyDefinition.getItems())
-		{
-			MeasurementBean observationInfo = new MeasurementBean();
-			observationInfo.setTextCode(item.getName());
-			result.addObservationInfo(observationInfo);
-
-			String observationCodeCode = item.getCode();
-			String observationCodeCodesystem = item.getCodeSystem();
-			if (observationCodeCode == null || observationCodeCodesystem == null)
-			{
-				ObservableFeature of = dataService.findOne(ObservableFeature.ENTITY_NAME,
-						Integer.valueOf(item.getId()), ObservableFeature.class);
-				if (of == null)
-				{
-					throw new RuntimeException("Unknown Observablefeature with id [" + item.getId() + "]");
-				}
-
-				observationCodeCode = of.getIdentifier();
-				observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.8";
-			}
-			observationInfo.setCode(observationCodeCode);
-			observationInfo.setCodeSystem(observationCodeCodesystem);
-			observationInfo.setDisplayName(item.getName());
-
-			List<CatalogFolder> itemPath = Lists.newArrayList(item.getPath());
-			if (itemPath.size() <= 2)
-			{
-				throw new RuntimeException("Missing measurement for catalog item with id [" + item.getId() + "]");
-			}
-			String measurementItemId = itemPath.get(2).getId();
-
-			int idx = measurementItemId.lastIndexOf('_');
-			if (idx == -1 || idx == measurementItemId.length() - 1)
-			{
-				throw new RuntimeException("Invalid Measurement id [" + measurementItemId + "]");
-			}
-			observationInfo.setMeasurementCode(MeasurementIdConverter.getMeasurementCode(measurementItemId));
-			observationInfo
-					.setMeasurementCodeSystem(MeasurementIdConverter.getMeasurementCodeSystem(measurementItemId));
-		}
-
-		return result;
-	}
 
 	@Override
 	public void updateStudyDefinition(StudyDefinition studyDefinition) throws UnknownStudyDefinitionException
@@ -366,7 +303,8 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				.getId());
 
 		// update study definition
-		hl7Converter.updateQualityMeasureDocument(qualityMeasureDocument, createBean(studyDefinition));
+		hl7Converter.updateQualityMeasureDocument(qualityMeasureDocument, new StudyDefinitionBean(studyDefinition,
+				dataService));
 
 		// submit study definition
 		try
@@ -513,42 +451,10 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		}
 	}
 
-	private StudyDefinitionBean createBean(StudyDataRequest studyDataRequest)
-	{
-		StudyDefinitionBean result = new StudyDefinitionBean();
-		MolgenisUser molgenisUser = studyDataRequest.getMolgenisUser();
-		StringBuilder textBuilder = new StringBuilder("Created by ").append(molgenisUser.getUsername()).append(" (")
-				.append(molgenisUser.getEmail()).append(')');
-		result.setCreatedBy(textBuilder.toString());
-		result.setName(studyDataRequest.getName());
-
-		for (Protocol protocol : studyDataRequest.getProtocols())
-		{
-			MeasurementBean observationInfo = new MeasurementBean();
-			observationInfo.setTextCode(ObservationIdConverter.getObservationCode(protocol.getIdentifier()));
-			observationInfo.setCode(ObservationIdConverter.getObservationCode(protocol.getIdentifier()));
-			observationInfo.setCodeSystem("2.16.840.1.113883.2.4.3.8.1000.54.8");
-			observationInfo.setDisplayName(protocol.getName());
-			result.addObservationInfo(observationInfo);
-			List<CatalogFolder> itemPath = Lists.newArrayList(new OmxCatalogFolder(protocol).getPath());
-			if (itemPath.size() <= 2)
-			{
-				throw new RuntimeException("Missing measurement for catalog item with id [" + protocol.getIdentifier()
-						+ "]");
-			}
-			String measurementItemId = itemPath.get(2).getExternalId();
-			observationInfo.setMeasurementCode(MeasurementIdConverter.getMeasurementCode(measurementItemId));
-			observationInfo
-					.setMeasurementCodeSystem(MeasurementIdConverter.getMeasurementCodeSystem(measurementItemId));
-
-		}
-		return result;
-	}
-	
 	POQMMT000001UVQualityMeasureDocument updateStudyDefinition(
 			POQMMT000001UVQualityMeasureDocument qualityMeasureDocument, StudyDataRequest studyDataRequest)
 	{
-		hl7Converter.updateQualityMeasureDocument(qualityMeasureDocument, createBean(studyDataRequest));
+		hl7Converter.updateQualityMeasureDocument(qualityMeasureDocument, new StudyDefinitionBean(studyDataRequest));
 
 		try
 		{
