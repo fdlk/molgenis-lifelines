@@ -425,7 +425,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		if (studyDataRequest.getExternalId() == null)
 		{
 			// submit study definition
-			sumbitStudyDefinition(studyDefinitionId);
+			submitStudyDefinition(studyDefinitionId);
 		}
 
 		// approve study definition
@@ -471,7 +471,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		return qualityMeasureDocument;
 	}
 
-	private void sumbitStudyDefinition(String studyDefinitionId)
+	private void submitStudyDefinition(String studyDefinitionId)
 	{
 		try
 		{
