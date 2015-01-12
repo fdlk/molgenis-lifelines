@@ -17,18 +17,25 @@ import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.study.StudyDefinition;
 
 /**
- * All the information needed to create a POQMMT000001UVQualityMeasureDocument.
- * 
- * @author fkelpin
- *
+ * All the information regarding a study. Used as a common model to create the HL7 document.
  */
-public class StudyDefinitionBean
+public class StudyBean
 {
 	private String createdBy;
 	private String name;
-	private List<MeasurementBean> measurements = new ArrayList<MeasurementBean>();
+	private List<SelectedCatalogFolderBean> selectedCatalogFolders = new ArrayList<SelectedCatalogFolderBean>();
 
-	public StudyDefinitionBean(StudyDefinition studyDefinition, DataService dataService)
+	/**
+	 * Creates a StudyBean with all the information in a {@link StudyDefinition} that gets converted by the
+	 * {@link HL7StudyConverter}
+	 * 
+	 * @param studyDefinition
+	 *            The {@link StudyDefinition} to get the information from.
+	 * @param dataService
+	 *            The {@link DataService} used to retrieve {@link ObservableFeature}s with extra information about the
+	 *            selected catalog folders.
+	 */
+	public StudyBean(StudyDefinition studyDefinition, DataService dataService)
 	{
 		StringBuilder textBuilder = new StringBuilder("Created by ")
 				.append(StringUtils.join(studyDefinition.getAuthors(), ' ')).append(" (")
@@ -38,9 +45,9 @@ public class StudyDefinitionBean
 
 		for (CatalogFolder item : studyDefinition.getItems())
 		{
-			MeasurementBean measurementBean = new MeasurementBean();
+			SelectedCatalogFolderBean measurementBean = new SelectedCatalogFolderBean();
 			measurementBean.setTextCode(item.getName());
-			addMeasurement(measurementBean);
+			addSelectedCatalogFolder(measurementBean);
 
 			String observationCodeCode = item.getCode();
 			String observationCodeCodesystem = item.getCodeSystem();
@@ -78,7 +85,14 @@ public class StudyDefinitionBean
 		}
 	}
 
-	public StudyDefinitionBean(StudyDataRequest studyDataRequest)
+	/**
+	 * Creates a {@link StudyBean} filled with the information from a {@link StudyDataRequest} that gets converted by
+	 * the {@link HL7StudyConverter}.
+	 * 
+	 * @param studyDataRequest
+	 *            The {@link StudyDataRequest} to get the information from.
+	 */
+	public StudyBean(StudyDataRequest studyDataRequest)
 	{
 		MolgenisUser molgenisUser = studyDataRequest.getMolgenisUser();
 		StringBuilder textBuilder = new StringBuilder("Created by ").append(molgenisUser.getUsername()).append(" (")
@@ -88,12 +102,12 @@ public class StudyDefinitionBean
 
 		for (Protocol protocol : studyDataRequest.getProtocols())
 		{
-			MeasurementBean measurementBean = new MeasurementBean();
+			SelectedCatalogFolderBean measurementBean = new SelectedCatalogFolderBean();
 			measurementBean.setTextCode(ObservationIdConverter.getObservationCode(protocol.getIdentifier()));
 			measurementBean.setCode(ObservationIdConverter.getObservationCode(protocol.getIdentifier()));
 			measurementBean.setCodeSystem("2.16.840.1.113883.2.4.3.8.1000.54.8");
 			measurementBean.setDisplayName(protocol.getName());
-			addMeasurement(measurementBean);
+			addSelectedCatalogFolder(measurementBean);
 			List<CatalogFolder> itemPath = Lists.newArrayList(new OmxCatalogFolder(protocol).getPath());
 			if (itemPath.size() <= 2)
 			{
@@ -128,13 +142,13 @@ public class StudyDefinitionBean
 		this.name = name;
 	}
 
-	public List<MeasurementBean> getMeasurements()
+	public List<SelectedCatalogFolderBean> getSelectedCatalogFolders()
 	{
-		return measurements;
+		return selectedCatalogFolders;
 	}
 
-	public void addMeasurement(MeasurementBean info)
+	public void addSelectedCatalogFolder(SelectedCatalogFolderBean selection)
 	{
-		measurements.add(info);
+		selectedCatalogFolders.add(selection);
 	}
 }

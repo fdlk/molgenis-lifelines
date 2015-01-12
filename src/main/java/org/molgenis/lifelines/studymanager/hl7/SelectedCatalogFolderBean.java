@@ -1,6 +1,9 @@
 package org.molgenis.lifelines.studymanager.hl7;
 
-public class MeasurementBean
+/**
+ * All the information regarding a selected catalog folder. Used as a common model to create the HL7 document.
+ */
+public class SelectedCatalogFolderBean
 {
 	private String code;
 	private String displayName;

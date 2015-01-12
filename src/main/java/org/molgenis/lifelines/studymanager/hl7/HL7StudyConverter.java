@@ -23,12 +23,10 @@ import nl.umcg.hl7.service.studydefinition.StrucDocList;
 import nl.umcg.hl7.service.studydefinition.StrucDocText;
 
 /**
- * Converts a {@link StudyDefinitionBean} to HL7
+ * Converts a {@link StudyBean} to a {@link POQMMT000001UVQualityMeasureDocument}
  * 
- * @author fkelpin
- *
  */
-public class HL7Converter
+public class HL7StudyConverter
 {
 	private static POQMMT000002UVEncounter createEncounter(String measurementCode, String measurementCodeSystem)
 	{
@@ -58,7 +56,7 @@ public class HL7Converter
 	}
 
 	public void updateQualityMeasureDocument(POQMMT000001UVQualityMeasureDocument qualityMeasureDocument,
-			StudyDefinitionBean studyDefinitionBean)
+			StudyBean studyDefinitionBean)
 	{
 		ST title = new ST();
 		title.getContent().add(studyDefinitionBean.getName());
@@ -100,17 +98,17 @@ public class HL7Converter
 		}
 	}
 
-	private void addMeasurementCode(StrucDocList strucDocList, MeasurementBean measurementBean)
+	private void addMeasurementCode(StrucDocList strucDocList, SelectedCatalogFolderBean measurementBean)
 	{
 		StrucDocItem strucDocItem = new StrucDocItem();
 		strucDocItem.getContent().add(measurementBean.getTextCode());
 		strucDocList.getItem().add(strucDocItem);
 	}
 
-	private void addMeasurements(StudyDefinitionBean studyDefinition, POQMMT000001UVSection section, StrucDocList strucDocList)
+	private void addMeasurements(StudyBean studyDefinition, POQMMT000001UVSection section, StrucDocList strucDocList)
 	{
 		Map<String, POQMMT000001UVEntry> entries = new LinkedHashMap<String, POQMMT000001UVEntry>();
-		for (MeasurementBean measurement : studyDefinition.getMeasurements())
+		for (SelectedCatalogFolderBean measurement : studyDefinition.getSelectedCatalogFolders())
 		{
 			String observationCodeCode = measurement.getCode();
 			final POQMMT000001UVEntry entry;

@@ -28,8 +28,8 @@ import org.molgenis.data.CrudRepository;
 import org.molgenis.data.DataService;
 import org.molgenis.data.Query;
 import org.molgenis.data.support.QueryImpl;
-import org.molgenis.lifelines.studymanager.hl7.HL7Converter;
-import org.molgenis.lifelines.studymanager.hl7.StudyDefinitionBean;
+import org.molgenis.lifelines.studymanager.hl7.HL7StudyConverter;
+import org.molgenis.lifelines.studymanager.hl7.StudyBean;
 import org.molgenis.omx.auth.MolgenisUser;
 import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.security.user.MolgenisUserService;
@@ -47,7 +47,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 	private final GenericLayerDataQueryService dataQueryService;
 	private final MolgenisUserService userService;
 	final DataService dataService;
-	private final HL7Converter hl7Converter;
+	private final HL7StudyConverter hl7Converter;
 
 	public GenericLayerStudyManagerService(GenericLayerStudyDefinitionService studyDefinitionService,
 			CatalogManagerService catalogLoaderService, GenericLayerDataQueryService dataQueryService,
@@ -62,7 +62,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		this.dataQueryService = dataQueryService;
 		this.userService = userService;
 		this.dataService = dataService;
-		this.hl7Converter = new HL7Converter();
+		this.hl7Converter = new HL7StudyConverter();
 	}
 
 	/**
@@ -303,7 +303,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				.getId());
 
 		// update study definition
-		hl7Converter.updateQualityMeasureDocument(qualityMeasureDocument, new StudyDefinitionBean(studyDefinition,
+		hl7Converter.updateQualityMeasureDocument(qualityMeasureDocument, new StudyBean(studyDefinition,
 				dataService));
 
 		// submit study definition
@@ -454,7 +454,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 	POQMMT000001UVQualityMeasureDocument updateStudyDefinition(
 			POQMMT000001UVQualityMeasureDocument qualityMeasureDocument, StudyDataRequest studyDataRequest)
 	{
-		hl7Converter.updateQualityMeasureDocument(qualityMeasureDocument, new StudyDefinitionBean(studyDataRequest));
+		hl7Converter.updateQualityMeasureDocument(qualityMeasureDocument, new StudyBean(studyDataRequest));
 
 		try
 		{
