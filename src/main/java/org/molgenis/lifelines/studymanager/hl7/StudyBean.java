@@ -45,9 +45,9 @@ public class StudyBean
 
 		for (CatalogFolder item : studyDefinition.getItems())
 		{
-			SelectedCatalogFolderBean measurementBean = new SelectedCatalogFolderBean();
-			measurementBean.setTextCode(item.getName());
-			addSelectedCatalogFolder(measurementBean);
+			SelectedCatalogFolderBean folderBean = new SelectedCatalogFolderBean();
+			folderBean.setTextCode(item.getName());
+			addSelectedCatalogFolder(folderBean);
 
 			String observationCodeCode = item.getCode();
 			String observationCodeCodesystem = item.getCodeSystem();
@@ -63,9 +63,9 @@ public class StudyBean
 				observationCodeCode = of.getIdentifier();
 				observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.8";
 			}
-			measurementBean.setCode(observationCodeCode);
-			measurementBean.setCodeSystem(observationCodeCodesystem);
-			measurementBean.setDisplayName(item.getName());
+			folderBean.setCode(observationCodeCode);
+			folderBean.setCodeSystem(observationCodeCodesystem);
+			folderBean.setDisplayName(item.getName());
 
 			List<CatalogFolder> itemPath = Lists.newArrayList(item.getPath());
 			if (itemPath.size() <= 2)
@@ -79,8 +79,8 @@ public class StudyBean
 			{
 				throw new RuntimeException("Invalid Measurement id [" + measurementItemId + "]");
 			}
-			measurementBean.setMeasurementCode(MeasurementIdConverter.getMeasurementCode(measurementItemId));
-			measurementBean
+			folderBean.setMeasurementCode(MeasurementIdConverter.getMeasurementCode(measurementItemId));
+			folderBean
 					.setMeasurementCodeSystem(MeasurementIdConverter.getMeasurementCodeSystem(measurementItemId));
 		}
 	}
