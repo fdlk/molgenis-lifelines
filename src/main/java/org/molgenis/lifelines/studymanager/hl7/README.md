@@ -1,6 +1,7 @@
 The GenericLayerStudyManagerService converts both StudyDataRequests and StudyDefinitions to HL7 documents and sends them to the server.
 
 The mapping is as follows:
+
 | HL7 QualityMeasureDocument | StudyBean | StudyDataRequest | StudyDefinition |
 |------------------------------------------------------------------------|-----------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
 | title | name | name | name |
