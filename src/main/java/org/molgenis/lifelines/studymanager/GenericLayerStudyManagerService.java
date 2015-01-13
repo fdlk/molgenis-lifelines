@@ -4,13 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import nl.umcg.hl7.service.studydefinition.ActClass;
-import nl.umcg.hl7.service.studydefinition.ActMood;
-import nl.umcg.hl7.service.studydefinition.ActRelationshipType;
 import nl.umcg.hl7.service.studydefinition.ArrayOfXElement;
-import nl.umcg.hl7.service.studydefinition.CD;
 import nl.umcg.hl7.service.studydefinition.CreateResponse;
-import nl.umcg.hl7.service.studydefinition.ED;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionService;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceApproveFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetApprovedFAULTFaultMessage;
@@ -24,35 +19,18 @@ import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceWit
 import nl.umcg.hl7.service.studydefinition.GetByEmailResponse;
 import nl.umcg.hl7.service.studydefinition.GetSubmittedResponse;
 import nl.umcg.hl7.service.studydefinition.HL7Container;
-import nl.umcg.hl7.service.studydefinition.ObjectFactory;
-import nl.umcg.hl7.service.studydefinition.POQMMT000001UVComponent2;
-import nl.umcg.hl7.service.studydefinition.POQMMT000001UVEntry;
 import nl.umcg.hl7.service.studydefinition.POQMMT000001UVQualityMeasureDocument;
-import nl.umcg.hl7.service.studydefinition.POQMMT000001UVSection;
-import nl.umcg.hl7.service.studydefinition.POQMMT000002UVEncounter;
-import nl.umcg.hl7.service.studydefinition.POQMMT000002UVObservation;
-import nl.umcg.hl7.service.studydefinition.POQMMT000002UVSourceOf;
-import nl.umcg.hl7.service.studydefinition.ST;
-import nl.umcg.hl7.service.studydefinition.StrucDocItem;
-import nl.umcg.hl7.service.studydefinition.StrucDocList;
-import nl.umcg.hl7.service.studydefinition.StrucDocText;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.elasticsearch.common.collect.Lists;
-import org.molgenis.catalog.CatalogFolder;
 import org.molgenis.catalog.UnknownCatalogException;
 import org.molgenis.catalogmanager.CatalogManagerService;
 import org.molgenis.data.CrudRepository;
 import org.molgenis.data.DataService;
 import org.molgenis.data.Query;
 import org.molgenis.data.support.QueryImpl;
-import org.molgenis.lifelines.utils.MeasurementIdConverter;
-import org.molgenis.lifelines.utils.ObservationIdConverter;
+import org.molgenis.lifelines.studymanager.hl7.HL7StudyConverter;
+import org.molgenis.lifelines.studymanager.hl7.StudyBean;
 import org.molgenis.omx.auth.MolgenisUser;
-import org.molgenis.omx.catalogmanager.OmxCatalogFolder;
-import org.molgenis.omx.observ.ObservableFeature;
-import org.molgenis.omx.observ.Protocol;
 import org.molgenis.omx.study.StudyDataRequest;
 import org.molgenis.security.user.MolgenisUserService;
 import org.molgenis.study.StudyDefinition;
@@ -68,7 +46,8 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 	private final CatalogManagerService catalogLoaderService;
 	private final GenericLayerDataQueryService dataQueryService;
 	private final MolgenisUserService userService;
-	private final DataService dataService;
+	final DataService dataService;
+	private final HL7StudyConverter hl7Converter;
 
 	public GenericLayerStudyManagerService(GenericLayerStudyDefinitionService studyDefinitionService,
 			CatalogManagerService catalogLoaderService, GenericLayerDataQueryService dataQueryService,
@@ -83,6 +62,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		this.dataQueryService = dataQueryService;
 		this.userService = userService;
 		this.dataService = dataService;
+		this.hl7Converter = new HL7StudyConverter();
 	}
 
 	/**
@@ -323,7 +303,8 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 				.getId());
 
 		// update study definition
-		updateQualityMeasureDocument(qualityMeasureDocument, studyDefinition);
+		hl7Converter.updateQualityMeasureDocument(qualityMeasureDocument, new StudyBean(studyDefinition,
+				dataService));
 
 		// submit study definition
 		try
@@ -351,119 +332,6 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		{
 			logger.error(e.getMessage());
 			throw new RuntimeException(e);
-		}
-	}
-
-	private void updateQualityMeasureDocument(POQMMT000001UVQualityMeasureDocument qualityMeasureDocument,
-			StudyDefinition studyDefinition)
-	{
-		ST title = new ST();
-		title.getContent().add(studyDefinition.getName());
-		qualityMeasureDocument.setTitle(title);
-
-		StringBuilder textBuilder = new StringBuilder("Created by ")
-				.append(StringUtils.join(studyDefinition.getAuthors(), ' ')).append(" (")
-				.append(studyDefinition.getAuthorEmail()).append(')');
-
-		ED text = new ED();
-		text.getContent().add(textBuilder.toString());
-		qualityMeasureDocument.setText(text);
-
-		POQMMT000001UVComponent2 component = new POQMMT000001UVComponent2();
-		POQMMT000001UVSection section = new POQMMT000001UVSection();
-
-		CD sectionCode = new CD();
-		sectionCode.setCode("57025-9");
-		sectionCode.setCodeSystem("2.16.840.1.113883.6.1");
-		sectionCode.setDisplayName("Data Criteria section");
-		section.setCode(sectionCode);
-
-		ED sectionTitle = new ED();
-		sectionTitle.getContent().add("Data criteria");
-		section.setTitle(sectionTitle);
-
-		StrucDocText sectionText = new StrucDocText();
-		StrucDocList strucDocList = new StrucDocList();
-		for (CatalogFolder item : studyDefinition.getItems())
-		{
-			StrucDocItem strucDocItem = new StrucDocItem();
-			strucDocItem.getContent().add(item.getName());
-			strucDocList.getItem().add(strucDocItem);
-		}
-		sectionText.getContent().add(new ObjectFactory().createStrucDocTextList(strucDocList));
-		section.setText(sectionText);
-
-		for (CatalogFolder item : studyDefinition.getItems())
-		{
-			POQMMT000001UVEntry entry = new POQMMT000001UVEntry();
-			entry.setTypeCode("DRIV");
-			POQMMT000002UVObservation observation = new POQMMT000002UVObservation();
-			observation.setClassCode(ActClass.OBS);
-			observation.setMoodCode(ActMood.CRT);
-
-			String observationCodeCode = item.getCode();
-			String observationCodeCodesystem = item.getCodeSystem();
-			if (observationCodeCode == null || observationCodeCodesystem == null)
-			{
-				ObservableFeature of = dataService.findOne(ObservableFeature.ENTITY_NAME,
-						Integer.valueOf(item.getId()), ObservableFeature.class);
-				if (of == null)
-				{
-					throw new RuntimeException("Unknown Observablefeature with id [" + item.getId() + "]");
-				}
-
-				observationCodeCode = of.getIdentifier();
-				observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.8";
-			}
-			CD observationCode = new CD();
-			observationCode.setDisplayName(item.getName());
-			observationCode.setCode(observationCodeCode);
-			observationCode.setCodeSystem(observationCodeCodesystem);
-			observation.setCode(observationCode);
-
-			// set measurement (e.g. baseline, follow-up) for item
-			POQMMT000002UVSourceOf sourceOf = new POQMMT000002UVSourceOf();
-			sourceOf.setTypeCode(ActRelationshipType.DRIV);
-
-			POQMMT000002UVEncounter encounter = new POQMMT000002UVEncounter();
-			encounter.setClassCode(ActClass.ENC);
-			encounter.setMoodCode(ActMood.CRT);
-
-			List<CatalogFolder> itemPath = Lists.newArrayList(item.getPath());
-			if (itemPath.size() <= 2)
-			{
-				throw new RuntimeException("Missing measurement for catalog item with id [" + item.getId() + "]");
-			}
-			String measurementItemId = itemPath.get(2).getId();
-
-			int idx = measurementItemId.lastIndexOf('_');
-			if (idx == -1 || idx == measurementItemId.length() - 1)
-			{
-				throw new RuntimeException("Invalid Measurement id [" + measurementItemId + "]");
-			}
-			String measurementCode = MeasurementIdConverter.getMeasurementCode(measurementItemId);
-			String measurementCodeSystem = MeasurementIdConverter.getMeasurementCodeSystem(measurementItemId);
-
-			CD encounterCode = new CD();
-			encounterCode.setCode(measurementCode);
-			encounterCode.setCodeSystem(measurementCodeSystem);
-			encounter.setCode(encounterCode);
-
-			sourceOf.setEncounter(encounter);
-			observation.getSourceOf().add(sourceOf);
-
-			entry.setObservation(observation);
-			section.getEntry().add(entry);
-		}
-		List<POQMMT000001UVComponent2> components = qualityMeasureDocument.getComponent();
-		component.setSection(section);
-		if (components.size() > 0)
-		{
-			components.set(0, component);
-		}
-		else
-		{
-			components.add(component);
 		}
 	}
 
@@ -557,7 +425,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		if (studyDataRequest.getExternalId() == null)
 		{
 			// submit study definition
-			sumbitStudyDefinition(studyDefinitionId);
+			submitStudyDefinition(studyDefinitionId);
 		}
 
 		// approve study definition
@@ -583,101 +451,10 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		}
 	}
 
-	private POQMMT000001UVQualityMeasureDocument updateStudyDefinition(
+	POQMMT000001UVQualityMeasureDocument updateStudyDefinition(
 			POQMMT000001UVQualityMeasureDocument qualityMeasureDocument, StudyDataRequest studyDataRequest)
 	{
-		MolgenisUser molgenisUser = studyDataRequest.getMolgenisUser();
-
-		ST title = new ST();
-		title.getContent().add(studyDataRequest.getName());
-		qualityMeasureDocument.setTitle(title);
-
-		StringBuilder textBuilder = new StringBuilder("Created by ").append(molgenisUser.getUsername()).append(" (")
-				.append(molgenisUser.getEmail()).append(')');
-
-		ED text = new ED();
-		text.getContent().add(textBuilder.toString());
-		qualityMeasureDocument.setText(text);
-
-		POQMMT000001UVComponent2 component = new POQMMT000001UVComponent2();
-		POQMMT000001UVSection section = new POQMMT000001UVSection();
-
-		CD sectionCode = new CD();
-		sectionCode.setCode("57025-9");
-		sectionCode.setCodeSystem("2.16.840.1.113883.6.1");
-		sectionCode.setDisplayName("Data Criteria section");
-		section.setCode(sectionCode);
-
-		ED sectionTitle = new ED();
-		sectionTitle.getContent().add("Data criteria");
-		section.setTitle(sectionTitle);
-
-		StrucDocText sectionText = new StrucDocText();
-		StrucDocList strucDocList = new StrucDocList();
-		for (Protocol protocol : studyDataRequest.getProtocols())
-		{
-			StrucDocItem strucDocItem = new StrucDocItem();
-			strucDocItem.getContent().add(ObservationIdConverter.getObservationCode(protocol.getIdentifier()));
-			strucDocList.getItem().add(strucDocItem);
-		}
-		sectionText.getContent().add(new ObjectFactory().createStrucDocTextList(strucDocList));
-		section.setText(sectionText);
-
-		for (Protocol protocol : studyDataRequest.getProtocols())
-		{
-			POQMMT000001UVEntry entry = new POQMMT000001UVEntry();
-			entry.setTypeCode("DRIV");
-			POQMMT000002UVObservation observation = new POQMMT000002UVObservation();
-			observation.setClassCode(ActClass.OBS);
-			observation.setMoodCode(ActMood.CRT);
-
-			String observationCodeCode = ObservationIdConverter.getObservationCode(protocol.getIdentifier());
-			String observationCodeCodesystem = "2.16.840.1.113883.2.4.3.8.1000.54.8";
-			CD observationCode = new CD();
-			observationCode.setDisplayName(protocol.getName());
-			observationCode.setCode(observationCodeCode);
-			observationCode.setCodeSystem(observationCodeCodesystem);
-			observation.setCode(observationCode);
-
-			// set measurement (e.g. baseline, follow-up) for item
-			POQMMT000002UVSourceOf sourceOf = new POQMMT000002UVSourceOf();
-			sourceOf.setTypeCode(ActRelationshipType.DRIV);
-
-			POQMMT000002UVEncounter encounter = new POQMMT000002UVEncounter();
-			encounter.setClassCode(ActClass.ENC);
-			encounter.setMoodCode(ActMood.CRT);
-
-			List<CatalogFolder> itemPath = Lists.newArrayList(new OmxCatalogFolder(protocol).getPath());
-			if (itemPath.size() <= 2)
-			{
-				throw new RuntimeException("Missing measurement for catalog item with id [" + protocol.getIdentifier()
-						+ "]");
-			}
-			String measurementItemId = itemPath.get(2).getExternalId();
-			String measurementCode = MeasurementIdConverter.getMeasurementCode(measurementItemId);
-			String measurementCodeSystem = MeasurementIdConverter.getMeasurementCodeSystem(measurementItemId);
-
-			CD encounterCode = new CD();
-			encounterCode.setCode(measurementCode);
-			encounterCode.setCodeSystem(measurementCodeSystem);
-			encounter.setCode(encounterCode);
-
-			sourceOf.setEncounter(encounter);
-			observation.getSourceOf().add(sourceOf);
-
-			entry.setObservation(observation);
-			section.getEntry().add(entry);
-		}
-		List<POQMMT000001UVComponent2> components = qualityMeasureDocument.getComponent();
-		component.setSection(section);
-		if (components.size() > 0)
-		{
-			components.set(0, component);
-		}
-		else
-		{
-			components.add(component);
-		}
+		hl7Converter.updateQualityMeasureDocument(qualityMeasureDocument, new StudyBean(studyDataRequest));
 
 		try
 		{
@@ -694,7 +471,7 @@ public class GenericLayerStudyManagerService implements StudyManagerService
 		return qualityMeasureDocument;
 	}
 
-	private void sumbitStudyDefinition(String studyDefinitionId)
+	private void submitStudyDefinition(String studyDefinitionId)
 	{
 		try
 		{
