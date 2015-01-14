@@ -95,6 +95,11 @@ public class OrganizerCatalogFolder implements CatalogFolder
 	{
 		throw new UnsupportedOperationException();
 	}
+	
+	public String getGroup()
+	{
+		throw new UnsupportedOperationException();
+	}
 
 	@Override
 	public String getExternalId()

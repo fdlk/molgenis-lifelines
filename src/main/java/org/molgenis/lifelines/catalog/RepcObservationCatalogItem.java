@@ -64,4 +64,10 @@ public class RepcObservationCatalogItem implements CatalogItem
 	{
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public String getGroup()
+	{
+		throw new UnsupportedOperationException();
+	}
 }
