@@ -111,6 +111,12 @@ public class OrganizerCatalog implements Catalog
 	{
 		throw new UnsupportedOperationException();
 	}
+	
+	@Override
+	public List<String> getGroup()
+	{
+		throw new UnsupportedOperationException();
+	}
 
 	@Override
 	public String getExternalId()
