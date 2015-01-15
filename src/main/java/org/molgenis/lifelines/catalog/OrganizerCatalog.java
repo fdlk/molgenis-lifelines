@@ -113,7 +113,7 @@ public class OrganizerCatalog implements Catalog
 	}
 	
 	@Override
-	public String getGroup()
+	public List<String> getGroup()
 	{
 		throw new UnsupportedOperationException();
 	}

@@ -96,7 +96,7 @@ public class OrganizerCatalogFolder implements CatalogFolder
 		throw new UnsupportedOperationException();
 	}
 	
-	public String getGroup()
+	public List<String> getGroup()
 	{
 		throw new UnsupportedOperationException();
 	}

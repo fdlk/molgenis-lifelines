@@ -66,7 +66,7 @@ public class RepcObservationCatalogItem implements CatalogItem
 	}
 
 	@Override
-	public String getGroup()
+	public List<String> getGroup()
 	{
 		throw new UnsupportedOperationException();
 	}
