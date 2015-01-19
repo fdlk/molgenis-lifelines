@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema elementFormDefault="qualified" targetNamespace="urn:hl7-org:v3" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="urn:hl7-org:v3">
+  <xs:include schemaLocation="multicacheschemas/REPC_MT000100UV01.xsd"/>
+  <xs:include schemaLocation="emeasureschemas/POQM_MT000001UV.xsd"/>
+  <xs:include schemaLocation="ValueSet.xsd"/>
+  <xs:complexType name="HL7Container">
+    <xs:choice>
+      <xs:element name="catalog" type="REPC_MT000100UV01.Organizer" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="valueSets" type="valueSets"/>
+      <xs:element name="QualityMeasureDocument" type="POQM_MT000001UV.QualityMeasureDocument"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="ArrayOfXElement">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="HL7Container" type="HL7Container"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>

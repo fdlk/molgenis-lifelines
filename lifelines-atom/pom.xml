@@ -1,0 +1,42 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.molgenis</groupId>
+		<artifactId>molgenis-lifelines</artifactId>
+		<version>1.2.2-SNAPSHOT</version>
+	</parent>
+	<packaging>jar</packaging>
+	<build>
+		<plugins>
+			<!-- compile XML schemas -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>jaxb2-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>atom-xjc</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>xjc</goal>
+						</goals>
+						<configuration>
+							<quiet>true</quiet>
+							<packageName>org.molgenis.atom</packageName>
+							<schemaDirectory>src/main/resources/schemas</schemaDirectory>
+							<clearOutputDir>false</clearOutputDir>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+		    <groupId>com.sun.xml.bind</groupId>
+		    <artifactId>jaxb-impl</artifactId>
+		    <version>${jaxb.version}</version>
+		</dependency>
+	</dependencies>
+	<artifactId>lifelines-atom</artifactId>
+</project>

@@ -1,0 +1,73 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.molgenis</groupId>
+		<artifactId>molgenis-lifelines</artifactId>
+		<version>1.2.2-SNAPSHOT</version>
+	</parent>
+	<packaging>jar</packaging>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-wsimport-sources</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${basedir}/target/generated-sources/wsimport</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- generate generic layer client -->
+			<plugin>
+				<groupId>org.jvnet.jax-ws-commons</groupId>
+				<artifactId>jaxws-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>wsimport-studydefinition</id>
+						<goals>
+							<goal>wsimport</goal>
+						</goals>
+						<configuration>
+							<verbose>true</verbose>
+							<extension>true</extension>
+							<bindingDirectory>src/main/resources/xjb</bindingDirectory>
+							<bindingFiles>
+								<bindingFile>bindings-hl7.xjb</bindingFile>
+								<bindingFile>hl7.episode</bindingFile>
+							</bindingFiles>
+							<wsdlDirectory>src/main/resources/wsdl</wsdlDirectory>
+							<packageName>nl.umcg.hl7.service.studydefinition</packageName>
+							<!-- for JDK 6 compilation compatibility -->
+							<xnocompile>false</xnocompile>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.sun.xml.bind</groupId>
+			<artifactId>jaxb-impl</artifactId>
+			<version>${jaxb.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.molgenis</groupId>
+			<artifactId>lifelines-hl7</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+	</dependencies>
+
+	<artifactId>lifelines-studydefinition</artifactId>
+</project>

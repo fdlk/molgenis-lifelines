@@ -1,0 +1,44 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.molgenis</groupId>
+		<artifactId>molgenis-lifelines</artifactId>
+		<version>1.2.2-SNAPSHOT</version>
+	</parent>
+	<packaging>jar</packaging>
+	<build>
+		<plugins>
+			<!-- compile XML schemas -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>jaxb2-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>hl7-xjc</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>xjc</goal>
+						</goals>
+						<configuration>
+							<packageName>org.molgenis.hl7</packageName>
+							<bindingDirectory>src/main/resources/xjb</bindingDirectory>
+							<bindingFiles>bindings-hl7.xjb</bindingFiles>
+							<schemaDirectory>src/main/resources/schemas</schemaDirectory>
+							<arguments>-episode "${project.build.directory}/generated-sources/hl7.episode"</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>com.sun.xml.bind</groupId>
+			<artifactId>jaxb-impl</artifactId>
+			<version>${jaxb.version}</version>
+		</dependency>
+	</dependencies>
+	<artifactId>lifelines-hl7</artifactId>
+	<groupId>org.molgenis</groupId>
+</project>

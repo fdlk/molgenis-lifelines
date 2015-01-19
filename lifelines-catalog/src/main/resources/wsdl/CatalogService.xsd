@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema elementFormDefault="qualified" targetNamespace="http://hl7.umcg.nl" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://hl7.umcg.nl">
+  <xs:import schemaLocation="schemas.xsd" namespace="urn:hl7-org:v3"/>
+  <xs:element name="GetVersion">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="GetVersionResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" name="GetVersionResult" type="xs:string"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetCatalog">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" name="catalogReleaseId" type="xs:string"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="language" nillable="true" type="tns:HumanLanguage"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="useOntology" nillable="true" type="xs:boolean"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:simpleType name="HumanLanguage">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="nl"/>
+      <xs:enumeration value="en"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:element name="GetCatalogResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="q1:HL7Container" xmlns:q1="urn:hl7-org:v3"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="FAULT" nillable="true" type="xs:string"/>
+  <xs:element name="GetValueSets">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" name="catalogReleaseId" type="xs:string"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="language" nillable="true" type="tns:HumanLanguage"/>
+        <xs:element minOccurs="0" maxOccurs="1" name="studyDefinitionId" type="xs:string"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetValueSetsResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="q2:HL7Container" xmlns:q2="urn:hl7-org:v3"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetCatalogReleasesResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" name="HL7Containers" type="q3:ArrayOfXElement" xmlns:q3="urn:hl7-org:v3"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
