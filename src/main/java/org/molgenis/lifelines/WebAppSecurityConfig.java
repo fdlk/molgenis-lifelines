@@ -1,12 +1,17 @@
 package org.molgenis.lifelines;
 
+import static org.molgenis.framework.ui.ResourcePathPatterns.PATTERN_CSS;
+import static org.molgenis.framework.ui.ResourcePathPatterns.PATTERN_IMG;
+import static org.molgenis.framework.ui.ResourcePathPatterns.PATTERN_JS;
 import static org.molgenis.security.core.utils.SecurityUtils.getPluginReadAuthority;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.molgenis.security.MolgenisAnonymousAuthenticationFilter;
 import org.molgenis.security.MolgenisRoleHierarchy;
 import org.molgenis.security.MolgenisWebAppSecurityConfig;
+import org.molgenis.security.account.AccountController;
 import org.molgenis.ui.security.MolgenisAccessDecisionVoter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,12 +25,51 @@ import org.springframework.security.config.annotation.web.configurers.Expression
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.web.access.expression.WebExpressionVoter;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import org.springframework.security.web.authentication.switchuser.SwitchUserFilter;
+import org.springframework.security.web.header.writers.CacheControlHeadersWriter;
+import org.springframework.security.web.header.writers.DelegatingRequestMatcherHeaderWriter;
+import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
+import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter.XFrameOptionsMode;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebAppSecurityConfig extends MolgenisWebAppSecurityConfig
 {
+
+	protected void configure(HttpSecurity http) throws Exception
+	{
+		super.configure(http);
+		reconfigureHeaderWriters(http);
+	}
+
+	/**
+	 * Reconfigures the HTTP header writers to allow same origin frames.
+	 * This is needed to allow an iframe to upload files in the study data request form.
+	 * The "normal" xhr request without iframe, using FormData, does not work in IE9.
+	 */
+	private void reconfigureHeaderWriters(HttpSecurity http) throws Exception
+	{
+		http.headers().disable();
+		// do not write cache control headers for static resources
+		RequestMatcher matcher = new NegatedRequestMatcher(new OrRequestMatcher(new AntPathRequestMatcher(PATTERN_CSS),
+				new AntPathRequestMatcher(PATTERN_JS), new AntPathRequestMatcher(PATTERN_IMG)));
+
+		DelegatingRequestMatcherHeaderWriter cacheControlHeaderWriter = new DelegatingRequestMatcherHeaderWriter(
+				matcher, new CacheControlHeadersWriter());
+
+		XFrameOptionsHeaderWriter xframeOptionsWriter = new XFrameOptionsHeaderWriter(XFrameOptionsMode.SAMEORIGIN);
+
+		// add default header options but use custom cache control header writer
+		http.headers().contentTypeOptions().xssProtection().httpStrictTransportSecurity().addHeaderWriter(xframeOptionsWriter)
+				.addHeaderWriter(cacheControlHeaderWriter);
+	}
+
 	@Override
 	protected void configureUrlAuthorization(
 			ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry expressionInterceptUrlRegistry)
