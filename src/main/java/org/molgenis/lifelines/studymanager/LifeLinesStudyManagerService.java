@@ -8,6 +8,7 @@ import org.molgenis.study.StudyDefinition;
 import org.molgenis.study.StudyDefinition.Status;
 import org.molgenis.study.UnknownStudyDefinitionException;
 import org.molgenis.studymanager.StudyManagerService;
+import org.springframework.transaction.annotation.Transactional;
 
 public class LifeLinesStudyManagerService implements StudyManagerService
 {
@@ -120,6 +121,7 @@ public class LifeLinesStudyManagerService implements StudyManagerService
 	}
 
 	@Override
+	@Transactional
 	public void withdrawStudyDefinition(String id) throws UnknownStudyDefinitionException
 	{
 		omxStudyManagerService.withdrawStudyDefinition(id);
