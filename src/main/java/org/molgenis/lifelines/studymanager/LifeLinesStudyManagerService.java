@@ -121,7 +121,7 @@ public class LifeLinesStudyManagerService implements StudyManagerService
 	}
 
 	@Override
-    @Transactional
+	@Transactional
 	public void withdrawStudyDefinition(String id) throws UnknownStudyDefinitionException
 	{
 		omxStudyManagerService.withdrawStudyDefinition(id);
