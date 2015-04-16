@@ -53,7 +53,7 @@ public class WebAppSecurityConfig extends MolgenisWebAppSecurityConfig
 	 * This is needed to allow an iframe to upload files in the study data request form.
 	 * The "normal" xhr request without iframe, using FormData, does not work in IE9.
 	 */
-	private void reconfigureHeaderWriters(HttpSecurity http) throws Exception
+	private static void reconfigureHeaderWriters(HttpSecurity http) throws Exception
 	{
 		http.headers().disable();
 		// do not write cache control headers for static resources

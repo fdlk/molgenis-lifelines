@@ -4,15 +4,11 @@
     <parent>
         <groupId>org.molgenis</groupId>
         <artifactId>molgenis</artifactId>
-        <version>1.2.2</version>
+        <version>1.2.3-SNAPSHOT</version>
     </parent>
     <artifactId>molgenis-lifelines</artifactId>
     <packaging>pom</packaging>
 	<modules>
-		<module>lifelines-atom</module>
-		<module>lifelines-hl7</module>
-		<module>lifelines-catalog</module>
-		<module>lifelines-studydefinition</module>
 		<module>molgenis-app-lifelines</module>
 	</modules>
 	<properties>
