@@ -1,7 +1,6 @@
 package org.molgenis.lifelines.catalog;
 
-import nl.umcg.hl7.service.studydefinition.POQMMT000002UVObservation;
-
+import org.hl7.v3.POQMMT000002UVObservation;
 import org.molgenis.omx.catalogmanager.OmxCatalogFolder;
 import org.molgenis.omx.observ.Protocol;
 

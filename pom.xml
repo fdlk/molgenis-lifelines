@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.molgenis</groupId>
         <artifactId>molgenis</artifactId>
-        <version>1.2.2</version>
+        <version>1.2.3-SNAPSHOT</version>
     </parent>
     <artifactId>molgenis-app-lifelines</artifactId>
     <packaging>war</packaging>
@@ -44,63 +44,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
 			</plugin>
-			<!-- compile XML schemas -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>jaxb2-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>hl7-xjc</id>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>xjc</goal>
-						</goals>
-						<configuration>
-							<quiet>true</quiet>
-							<packageName>org.molgenis.hl7</packageName>
-							<bindingDirectory>src/main/resources/xjb</bindingDirectory>
-							<bindingFiles>bindings-hl7.xjb</bindingFiles>
-							<schemaDirectory>src/main/resources/schemas</schemaDirectory>
-							<staleFile>${project.build.directory}/jaxb2/.hl7XjcStaleFlag</staleFile>
-						</configuration>
-					</execution>
-					<execution>
-						<id>atom-xjc</id>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>xjc</goal>
-						</goals>
-						<configuration>
-							<quiet>true</quiet>
-							<packageName>org.molgenis.atom</packageName>
-							<schemaDirectory>src/main/resources/schemas/atom</schemaDirectory>
-							<staleFile>${project.build.directory}/jaxb2/.atomXjcStaleFlag</staleFile>
-							<clearOutputDir>false</clearOutputDir>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<!-- add sources created by jaxb -->
-			<!-- add sources created by wsimport -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>execution-jaxb</id>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>add-source</goal>
-						</goals>
-						<configuration>
-							<sources>
-								<source>target/generated-sources/jaxb</source>
-								<source>target/generated-sources/wsimport</source>
-							</sources>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+			
 			<!-- Include generated doc in war -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -113,53 +57,6 @@
           			</webResources>
 				</configuration>
 			</plugin>
-            <!-- generate generic layer clients -->
-            <plugin>
-                    <groupId>org.jvnet.jax-ws-commons</groupId>
-                    <artifactId>jaxws-maven-plugin</artifactId>
-                    <executions>
-                            <execution>
-                                    <id>wsimport-catalog</id>
-                                    <goals>
-                                            <goal>wsimport</goal>
-                                    </goals>
-                                    <configuration>
-                                            <verbose>true</verbose>
-                                            <extension>true</extension>
-                                            <bindingDirectory>src/main/resources/xjb</bindingDirectory>
-                                            <bindingFiles>
-                                                    <bindingFile>bindings-hl7.xjb</bindingFile>
-                                            </bindingFiles>
-                                            <wsdlUrls>
-                                                    <wsdlUrl>${lifelines.catalog.service.wsdl.url}</wsdlUrl>
-                                            </wsdlUrls>
-                                            <packageName>nl.umcg.hl7.service.catalog</packageName>
-                                            <!-- for JDK 6 compilation compatibility -->
-                                            <xnocompile>false</xnocompile>
-                                    </configuration>
-                            </execution>
-                            <execution>
-                                    <id>wsimport-study_definition</id>
-                                    <goals>
-                                            <goal>wsimport</goal>
-                                    </goals>
-                                    <configuration>
-                                            <verbose>true</verbose>
-                                            <extension>true</extension>
-                                            <bindingDirectory>src/main/resources/xjb</bindingDirectory>
-                                            <bindingFiles>
-                                                    <bindingFile>bindings-hl7.xjb</bindingFile>
-                                            </bindingFiles>
-                                            <wsdlUrls>
-                                                    <wsdlUrl>${lifelines.study.definition.service.wsdl.url}</wsdlUrl>
-                                            </wsdlUrls>
-                                            <packageName>nl.umcg.hl7.service.studydefinition</packageName>
-                                            <!-- for JDK 6 compilation compatibility -->
-                                            <xnocompile>false</xnocompile>
-                                    </configuration>
-                            </execution>
-                    </executions>
-            </plugin>
 		</plugins>
 		<pluginManagement>
 		    <plugins>
@@ -304,6 +201,21 @@
                     <artifactId>selenium-remote-driver</artifactId>
                 </exclusion>
             </exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.molgenis</groupId>
+			<artifactId>lifelines-catalog</artifactId>
+			<version>1.7.11-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.molgenis</groupId>
+			<artifactId>lifelines-studydefinition</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.molgenis</groupId>
+			<artifactId>lifelines-hl7</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 	</dependencies>
 </project>
