@@ -54,10 +54,10 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 		DataExplorerConfig.class })
 public class WebAppConfig extends MolgenisWebAppConfig
 {
-	@Value("${catalog.wsdl.url}")
+	@Value("${lifelines.catalog.service.wsdl.url}")
 	private String catalogWsdlUrl;
 	
-	@Value("${studydefinition.wsdl.url}")
+	@Value("${lifelines.study.definition.service.wsdl.url}")
 	private String studyDefinitionWsdlUrl;
 	
 	@Autowired
