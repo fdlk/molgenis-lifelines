@@ -6,8 +6,8 @@ import javax.xml.validation.Schema;
 
 import nl.umcg.hl7.service.catalog.CatalogService;
 import nl.umcg.hl7.service.catalog.GenericLayerCatalogService;
-import nl.umcg.hl7.service.catalog.GenericLayerStudyDefinitionService;
-import nl.umcg.hl7.service.catalog.StudyDefinitionService;
+import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionService;
+import nl.umcg.hl7.service.studydefinition.StudyDefinitionService;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ClientConnectionManager;
