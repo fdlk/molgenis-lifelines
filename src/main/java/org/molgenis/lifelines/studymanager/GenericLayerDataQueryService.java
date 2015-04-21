@@ -31,7 +31,6 @@ import org.molgenis.catalog.UnknownCatalogException;
 import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.lifelines.catalog.CatalogIdConverter;
-import org.molgenis.lifelines.utils.GenericLayerDataBinder;
 import org.molgenis.lifelines.utils.OmxIdentifierGenerator;
 import org.molgenis.lifelines.utils.OutputStreamHttpEntity;
 import org.molgenis.omx.observ.Category;
@@ -54,7 +53,20 @@ public class GenericLayerDataQueryService
 {
 	private static final Logger logger = Logger.getLogger(GenericLayerDataQueryService.class);
 
+	private static final JAXBContext JAXB_CONTEXT_QUALITY_MEASURE_DOCUMENT;
 	private static final JAXBContext JAXB_CONTEXT_ACT_CATEGORY;
+
+	static
+	{
+		try
+		{
+			JAXB_CONTEXT_QUALITY_MEASURE_DOCUMENT = JAXBContext.newInstance(POQMMT000001UVQualityMeasureDocument.class);
+		}
+		catch (JAXBException e)
+		{
+			throw new RuntimeException(e);
+		}
+	}
 
 	static
 	{
@@ -73,8 +85,6 @@ public class GenericLayerDataQueryService
 	@Value("${lifelines.data.query.service.url}")
 	private String dataQueryServiceUrl; // Specify in molgenis-server.properties
 	@Autowired
-	private GenericLayerDataBinder genericLayerDataBinder;
-	@Autowired
 	private DataService dataService;
 
 	@Transactional
@@ -92,7 +102,7 @@ public class GenericLayerDataQueryService
 				{
 					try
 					{
-						genericLayerDataBinder.createQualityMeasureDocumentMarshaller().marshal(studyDefinition,
+						JAXB_CONTEXT_QUALITY_MEASURE_DOCUMENT.createMarshaller().marshal(studyDefinition,
 								outstream);
 					}
 					catch (JAXBException e)
