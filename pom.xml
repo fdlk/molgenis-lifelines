@@ -254,12 +254,12 @@
 		<dependency>
 			<groupId>org.molgenis</groupId>
 			<artifactId>lifelines-catalog</artifactId>
-			<version>1.7.11-SNAPSHOT</version>
+			<version>1.7.11</version>
 		</dependency>
 		<dependency>
 			<groupId>org.molgenis</groupId>
 			<artifactId>lifelines-studydefinition</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>1.2.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.molgenis</groupId>
