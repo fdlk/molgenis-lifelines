@@ -8,10 +8,8 @@ import static org.molgenis.security.core.utils.SecurityUtils.getPluginReadAuthor
 import java.util.ArrayList;
 import java.util.List;
 
-import org.molgenis.security.MolgenisAnonymousAuthenticationFilter;
 import org.molgenis.security.MolgenisRoleHierarchy;
 import org.molgenis.security.MolgenisWebAppSecurityConfig;
-import org.molgenis.security.account.AccountController;
 import org.molgenis.ui.security.MolgenisAccessDecisionVoter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,8 +23,6 @@ import org.springframework.security.config.annotation.web.configurers.Expression
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.web.access.expression.WebExpressionVoter;
-import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
-import org.springframework.security.web.authentication.switchuser.SwitchUserFilter;
 import org.springframework.security.web.header.writers.CacheControlHeadersWriter;
 import org.springframework.security.web.header.writers.DelegatingRequestMatcherHeaderWriter;
 import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;

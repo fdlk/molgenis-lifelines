@@ -4,23 +4,23 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import nl.umcg.hl7.service.studydefinition.ActClass;
-import nl.umcg.hl7.service.studydefinition.ActMood;
-import nl.umcg.hl7.service.studydefinition.ActRelationshipType;
-import nl.umcg.hl7.service.studydefinition.CD;
-import nl.umcg.hl7.service.studydefinition.ED;
-import nl.umcg.hl7.service.studydefinition.ObjectFactory;
-import nl.umcg.hl7.service.studydefinition.POQMMT000001UVComponent2;
-import nl.umcg.hl7.service.studydefinition.POQMMT000001UVEntry;
-import nl.umcg.hl7.service.studydefinition.POQMMT000001UVQualityMeasureDocument;
-import nl.umcg.hl7.service.studydefinition.POQMMT000001UVSection;
-import nl.umcg.hl7.service.studydefinition.POQMMT000002UVEncounter;
-import nl.umcg.hl7.service.studydefinition.POQMMT000002UVObservation;
-import nl.umcg.hl7.service.studydefinition.POQMMT000002UVSourceOf;
-import nl.umcg.hl7.service.studydefinition.ST;
-import nl.umcg.hl7.service.studydefinition.StrucDocItem;
-import nl.umcg.hl7.service.studydefinition.StrucDocList;
-import nl.umcg.hl7.service.studydefinition.StrucDocText;
+import org.hl7.v3.ActClass;
+import org.hl7.v3.ActMood;
+import org.hl7.v3.ActRelationshipType;
+import org.hl7.v3.CD;
+import org.hl7.v3.ED;
+import org.hl7.v3.ObjectFactory;
+import org.hl7.v3.POQMMT000001UVComponent2;
+import org.hl7.v3.POQMMT000001UVEntry;
+import org.hl7.v3.POQMMT000001UVQualityMeasureDocument;
+import org.hl7.v3.POQMMT000001UVSection;
+import org.hl7.v3.POQMMT000002UVEncounter;
+import org.hl7.v3.POQMMT000002UVObservation;
+import org.hl7.v3.POQMMT000002UVSourceOf;
+import org.hl7.v3.ST;
+import org.hl7.v3.StrucDocItem;
+import org.hl7.v3.StrucDocList;
+import org.hl7.v3.StrucDocText;
 
 /**
  * Converts a {@link StudyBean} to a {@link POQMMT000001UVQualityMeasureDocument}

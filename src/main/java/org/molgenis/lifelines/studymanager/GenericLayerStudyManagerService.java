@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import nl.umcg.hl7.service.studydefinition.ArrayOfXElement;
 import nl.umcg.hl7.service.studydefinition.CreateResponse;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionService;
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceApproveFAULTFaultMessage;
@@ -18,10 +17,11 @@ import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceSub
 import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceWithdrawFAULTFaultMessage;
 import nl.umcg.hl7.service.studydefinition.GetByEmailResponse;
 import nl.umcg.hl7.service.studydefinition.GetSubmittedResponse;
-import nl.umcg.hl7.service.studydefinition.HL7Container;
-import nl.umcg.hl7.service.studydefinition.POQMMT000001UVQualityMeasureDocument;
 
 import org.apache.log4j.Logger;
+import org.hl7.v3.ArrayOfXElement;
+import org.hl7.v3.HL7Container;
+import org.hl7.v3.POQMMT000001UVQualityMeasureDocument;
 import org.molgenis.catalog.UnknownCatalogException;
 import org.molgenis.catalogmanager.CatalogManagerService;
 import org.molgenis.data.CrudRepository;

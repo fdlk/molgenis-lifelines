@@ -2,9 +2,8 @@ package org.molgenis.lifelines.catalog;
 
 import java.util.List;
 
-import nl.umcg.hl7.service.catalog.CD;
-import nl.umcg.hl7.service.catalog.REPCMT000100UV01Observation;
-
+import org.hl7.v3.CD;
+import org.hl7.v3.REPCMT000100UV01Observation;
 import org.molgenis.catalog.CatalogFolder;
 import org.molgenis.catalog.CatalogItem;
 

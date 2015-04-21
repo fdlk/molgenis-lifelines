@@ -1,5 +1,7 @@
 package org.molgenis.lifelines;
 
+import java.net.URL;
+
 import javax.xml.validation.Schema;
 
 import nl.umcg.hl7.service.catalog.CatalogService;
@@ -52,6 +54,12 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 		DataExplorerConfig.class })
 public class WebAppConfig extends MolgenisWebAppConfig
 {
+	@Value("${lifelines.catalog.service.wsdl.url}")
+	private String catalogWsdlUrl;
+	
+	@Value("${lifelines.study.definition.service.wsdl.url}")
+	private String studyDefinitionWsdlUrl;
+	
 	@Autowired
 	private DataService dataService;
 
@@ -105,7 +113,7 @@ public class WebAppConfig extends MolgenisWebAppConfig
 	@Bean
 	public CatalogManagerService catalogManagerService()
 	{
-		GenericLayerCatalogService genericLayerCatalogService = new CatalogService()
+		GenericLayerCatalogService genericLayerCatalogService = new CatalogService(new URL(catalogWsdlUrl))
 				.getBasicHttpBindingGenericLayerCatalogService();
 		GenericLayerCatalogManagerService genericLayerCatalogManagerService = new GenericLayerCatalogManagerService(
 				dataService, genericLayerCatalogService, dataSetsIndexer);
@@ -117,8 +125,8 @@ public class WebAppConfig extends MolgenisWebAppConfig
 	@Bean
 	public StudyManagerService studyDefinitionManagerService()
 	{
-		GenericLayerStudyDefinitionService genericLayerStudyDefinitionService = new StudyDefinitionService()
-				.getBasicHttpBindingGenericLayerStudyDefinitionService();
+		GenericLayerStudyDefinitionService genericLayerStudyDefinitionService = new StudyDefinitionService(new URL(
+				studyDefinitionWsdlUrl)).getBasicHttpBindingGenericLayerStudyDefinitionService();
 
 		GenericLayerStudyManagerService genericLayerStudyManagerService = new GenericLayerStudyManagerService(
 				genericLayerStudyDefinitionService, catalogManagerService(), genericLayerDataQueryService,

@@ -15,12 +15,12 @@ import java.util.Collections;
 
 import javax.xml.bind.JAXB;
 
-import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionService;
-import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetByIdFAULTFaultMessage;
-import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceReviseFAULTFaultMessage;
-import nl.umcg.hl7.service.studydefinition.HL7Container;
-import nl.umcg.hl7.service.studydefinition.POQMMT000001UVQualityMeasureDocument;
+import nl.umcg.hl7.service.catalog.GenericLayerStudyDefinitionService;
+import nl.umcg.hl7.service.catalog.GenericLayerStudyDefinitionServiceGetByIdFAULTFaultMessage;
+import nl.umcg.hl7.service.catalog.GenericLayerStudyDefinitionServiceReviseFAULTFaultMessage;
 
+import org.hl7.v3.HL7Container;
+import org.hl7.v3.POQMMT000001UVQualityMeasureDocument;
 import org.mockito.ArgumentCaptor;
 import org.molgenis.catalog.CatalogFolder;
 import org.molgenis.catalogmanager.CatalogManagerService;

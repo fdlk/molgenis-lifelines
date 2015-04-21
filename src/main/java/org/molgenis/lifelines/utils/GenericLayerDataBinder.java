@@ -6,7 +6,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 
-import org.molgenis.hl7.POQMMT000001UVQualityMeasureDocument;
+import org.hl7.v3.POQMMT000001UVQualityMeasureDocument;
 
 public class GenericLayerDataBinder
 {
