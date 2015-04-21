@@ -15,9 +15,9 @@ import java.util.Collections;
 
 import javax.xml.bind.JAXB;
 
-import nl.umcg.hl7.service.catalog.GenericLayerStudyDefinitionService;
-import nl.umcg.hl7.service.catalog.GenericLayerStudyDefinitionServiceGetByIdFAULTFaultMessage;
-import nl.umcg.hl7.service.catalog.GenericLayerStudyDefinitionServiceReviseFAULTFaultMessage;
+import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionService;
+import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceGetByIdFAULTFaultMessage;
+import nl.umcg.hl7.service.studydefinition.GenericLayerStudyDefinitionServiceReviseFAULTFaultMessage;
 
 import org.hl7.v3.HL7Container;
 import org.hl7.v3.POQMMT000001UVQualityMeasureDocument;
