@@ -18,6 +18,9 @@
 					<exclude>**/model/*.xml</exclude>
 				</excludes>
 			</resource>
+			<resource>
+				<directory>target/generated-sources/molgenis/java</directory>
+			</resource>
 		</resources>
 		
 		<plugins>
@@ -102,7 +105,6 @@
 					<webResources>
             			<resource>
               				<directory>target/generated-sources/molgenis/doc</directory>
-              				<directory>target/generated-sources/molgenis/java</directory>
             			</resource>
           			</webResources>
 				</configuration>
