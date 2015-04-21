@@ -26,7 +26,6 @@ import org.molgenis.lifelines.catalog.LifeLinesCatalogManagerService;
 import org.molgenis.lifelines.studymanager.GenericLayerDataQueryService;
 import org.molgenis.lifelines.studymanager.GenericLayerStudyManagerService;
 import org.molgenis.lifelines.studymanager.LifeLinesStudyManagerService;
-import org.molgenis.lifelines.utils.GenericLayerDataBinder;
 import org.molgenis.omx.OmxConfig;
 import org.molgenis.omx.catalogmanager.OmxCatalogManagerService;
 import org.molgenis.omx.config.DataExplorerConfig;
@@ -35,7 +34,6 @@ import org.molgenis.omx.studymanager.OmxStudyManagerService;
 import org.molgenis.security.user.MolgenisUserService;
 import org.molgenis.studymanager.StudyManagerService;
 import org.molgenis.ui.MolgenisWebAppConfig;
-import org.molgenis.util.SchemaLoader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -93,13 +91,6 @@ public class WebAppConfig extends MolgenisWebAppConfig
 	private String resourceManagerServiceUrl; // Specify in molgenis-server.properties
 	@Autowired
 	private GenericLayerDataQueryService genericLayerDataQueryService;
-
-	@Bean
-	public GenericLayerDataBinder genericLayerDataBinder()
-	{
-		Schema eMeasureSchema = new SchemaLoader("EMeasure.xsd").getSchema();
-		return new GenericLayerDataBinder(eMeasureSchema);
-	}
 
 	@Value("${lifelines.profile:@null}")
 	private String appProfile;
