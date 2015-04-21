@@ -1,5 +1,6 @@
 package org.molgenis.lifelines;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.xml.validation.Schema;
@@ -111,7 +112,7 @@ public class WebAppConfig extends MolgenisWebAppConfig
 	}
 
 	@Bean
-	public CatalogManagerService catalogManagerService()
+	public CatalogManagerService catalogManagerService() throws MalformedURLException
 	{
 		GenericLayerCatalogService genericLayerCatalogService = new CatalogService(new URL(catalogWsdlUrl))
 				.getBasicHttpBindingGenericLayerCatalogService();
@@ -123,7 +124,7 @@ public class WebAppConfig extends MolgenisWebAppConfig
 	}
 
 	@Bean
-	public StudyManagerService studyDefinitionManagerService()
+	public StudyManagerService studyDefinitionManagerService() throws MalformedURLException
 	{
 		GenericLayerStudyDefinitionService genericLayerStudyDefinitionService = new StudyDefinitionService(new URL(
 				studyDefinitionWsdlUrl)).getBasicHttpBindingGenericLayerStudyDefinitionService();
