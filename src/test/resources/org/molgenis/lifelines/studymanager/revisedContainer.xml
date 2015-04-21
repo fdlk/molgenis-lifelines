@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <HL7Container xmlns:ns2="urn:hl7-org:v3">
     <ns2:QualityMeasureDocument>
         <ns2:title>StudyDefinitionName</ns2:title>
