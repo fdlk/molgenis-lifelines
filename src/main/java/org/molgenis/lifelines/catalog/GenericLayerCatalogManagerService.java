@@ -75,7 +75,7 @@ public class GenericLayerCatalogManagerService implements CatalogManagerService
 		if (dataService == null) throw new IllegalArgumentException("dataService is null");
 		if (genericLayerCatalogService == null) throw new IllegalArgumentException("genericLayerCatalogService is null");
 		this.dataService = dataService;
-		this.genericLayerCatalogService = new CatalogService().getBasicHttpBindingGenericLayerCatalogService();
+		this.genericLayerCatalogService = genericLayerCatalogService;
 		this.dataSetsIndexer = dataSetsIndexer;
 	}
 
